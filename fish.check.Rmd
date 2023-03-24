@@ -1,0 +1,95 @@
+---
+title: "fish check"
+output: html_document
+date: "2023-03-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(tidyverse)
+library(dplyr)
+```
+
+```{r}
+fish1 <- read_csv("./data/fish1.csv")
+```
+
+```{r}
+fish1 <- fish1 %>% 
+  mutate(Date = factor(Date), #note this will probs need to be ordered later
+         Treatment = factor(Treatment),
+         Replicate = factor(Replicate),
+         Family = factor(Family),
+         Species = factor(Species)) %>% 
+ select(-c(Other, Replacement, `Patch note`, Transparency, `ID note`, `Behaviour note`))
+
+fish1
+```
+
+```{r}
+levels(fish1$Date)
+```
+double ups due to different date formats - fix before next step
+
+##check for blanks or missing treatments
+```{r}
+dat <- fish1
+
+#create a lookup table with the combinations of levels, which is done using the expand.grid() #function supplied with the levels of the factors
+dat2 <- with(dat, expand.grid(Date = levels(Date), Treatment = levels(Treatment), Replicate = levels(Replicate)))
+dat2
+
+#A database-like join operation can then be performed using the merge() function in which we #specify that all values from the lookup table are included in the join (all.y = TRUE)
+
+newdat <- merge(dat, dat2, all.y = TRUE)
+newdat
+
+#now check for any missing (NA) values
+ 
+blanks <- as.data.frame(which(is.na(newdat),arr.ind = TRUE))
+blanks$row
+
+to.check <- newdat[blanks$row,]
+
+View(to.check)
+```
+Only 3 instances now of missing family/species values, and they were intentional (there were no fish observed on that plot that day): 25/11 BQ1, 26/11 DL2, 27/11 BH1
+
+##figuring out how to get abundance data
+```{r}
+fish.wide.count <- fish1 %>% 
+  pivot_wider(id_cols = c(Date,Treatment,Replicate), names_from = Species, values_from = Length, #make wide, with species as cols, date*treatment*rep as rows
+              values_fn = length #count the obs (length() fn as opposed to `Length` column. n() or other dplyr fns wouldn't work)
+              ) %>% 
+  as.data.frame() %>% 
+  mutate(Total.abnd = rowSums(select(.,-c(1:3)), na.rm = TRUE) #add total abundance col
+        # , Sp.richness = length(select(.,-c(1:3)), na.rm = TRUE) #add species richness col not working yet
+         )
+
+View(fish.wide.count)
+```
+Probs should've removed apogonids by now, but hey, it's 10 to 5pm
+
+## Abundance summary stats
+```{r}
+fish.abnd.summary <- fish.wide.count %>% 
+  group_by(Treatment) %>% 
+  summarise(.,
+            mean.abundance = mean(Total.abnd),
+            SE.abnd = sd(Total.abnd/sqrt(18*5))) #this is definitely not right - each of the 18 replicate counts aren't independent
+
+fish.abnd.summary
+```
+
+
+```{r ggplot abnd}
+g <- ggplot(fish.wide.count, aes(x = Treatment, y = Total.abnd)) + geom_boxplot()
+g
+#ggsave("./figures/total.abnd.boxplot.jpg", g)
+```
+
