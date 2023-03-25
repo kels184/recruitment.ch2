@@ -1,0 +1,67 @@
+---
+title: "Fish Recruitment Analysis"
+author: "Kelsey Webber"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format: 
+  html:
+    css: resources/AIMS-style.css
+    toc: true
+    toc-float: true
+    number-sections: true
+    number-depth: 3
+    embed-resources: true
+    code-fold: false
+    code-tools: true
+    code-summary: "Show the code"
+crossref:
+  fig-title: '**Figure**'
+  fig-labels: arabic
+  tbl-title: '**Table**'
+  tbl-labels: arabic
+engine: knitr
+bibliography: resources/references.bib
+output_dir: "docs"
+---
+
+```{r chunks, results='markdown', eval=TRUE, echo = FALSE}
+knitr::read_chunk('../R/functions.R')
+knitr::read_chunk('../R/analysis_recruitment.R')
+
+```
+
+# Preparations
+
+- Load any helper functions (functions.R)
+
+```{r loadFunctions, results='markdown', eval=FALSE}
+```
+
+
+
+- Load required packages (functions.R)
+
+```{r loadPackages, results='markdown', eval = TRUE, warnings = FALSE, message = FALSE}
+```
+
+- Prepare paths (functions.R)
+
+```{r preparePaths, results='markdown', eval = TRUE}
+
+```
+
+# Fish Recruitment
+
+## Load data
+
+1. Load the data
+```{r FishRecruitment readData, results = 'markdown', eval = TRUE}
+
+```
+
+2. Glimpse the data
+```{r recruitment glimpse, results='markdown', eval=TRUE}
+```
+
+```{r recruitment report table, results='markdown', eval=TRUE}
+```
+
