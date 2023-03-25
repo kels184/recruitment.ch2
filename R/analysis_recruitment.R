@@ -18,7 +18,7 @@ algaedata <- read_csv(paste0(DATA_PATH,
 
 ## ---- recruitment glimpse
 
-fishdata %>% glimpse()
+fishdata %>% glimpse() #render failing here - fishdata not found
 algaedata %>% glimpse()
 
 ## ---- end

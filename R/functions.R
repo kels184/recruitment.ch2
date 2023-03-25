@@ -41,7 +41,7 @@ library(tidyverse) #data manipulationg
 library(forcats) #for working with categorical data
 library(patchwork) #creating visualisationns from multiple plots
 library(brms) # Bayesian regression modelling
-library(INLA) # Bayesian inference
+# library(INLA) # Bayesian inference - having trouble loading this
 library(glmmTMB) #regression modelling (frequentist)
 library(DHARMa) # model testing
 library(emmeans) # post-hoc analysis of statistical models
