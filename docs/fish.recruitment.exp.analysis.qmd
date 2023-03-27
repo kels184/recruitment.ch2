@@ -73,7 +73,11 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 1. Algae EDA
 
 ```{r recruitment algae EDA. results = 'markdown', eval = TRUE}
-
 ```
+A bit of an outlier in Length - One plot (W5) had an extra long 52cm thallus. I checked in the video and this was not a typo. However its weight was not super high (70g). Lengths otherwise fairly similar, around 30cm
 
+Weights per plot: BQ < DL <= BH <= DM < W
 
+2. Fish EDA
+```{r recruitment fish EDA. results = 'markdown', eval = TRUE}
+```

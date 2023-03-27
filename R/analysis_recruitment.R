@@ -30,12 +30,13 @@ algaedata %>% report::report_table()
 
 ## ----factorise and clean
 fishdata <- fishdata %>% 
-  mutate(Date = factor(Date), #note this will probs need to be ordered later
+  mutate(Date = dmy(Date), #using lubridate, convert Date to proper date format
          Treatment = factor(Treatment),
          Replicate = factor(Replicate),
          Family = factor(Family),
          Species = factor(Species)) %>% 
-  select(-c(Other, Replacement, `Patch note`, Transparency, `ID note`, `Behaviour note`))
+  select(-c(Other, Replacement, `Patch note`, Transparency, `ID note`, `Behaviour note`)) %>% 
+  filter(Family != "Apogonidae")   ## removing apogonidae as they were not counted consistently (and are cryptic)
 glimpse(fishdata)
 
 algaedata <- algaedata %>% 
@@ -56,12 +57,34 @@ algae.sum <- algaedata %>%
             n.thalli = length(Replicate),
             SE.len = sd(Length)/sqrt(length(Replicate)),
             mean.wt = mean(Weight),
-            SE.wt = sd(Weight)/sqrt(length(Replicate)) 
-            )
+            SE.wt = sd(Weight)/sqrt(length(Replicate)),
+)
+
+
+algaedata %>% 
+  group_by(Treatment,Replicate) %>% 
+  summarise(plot.weight = sum(Weight)) %>% 
+  ungroup() %>% group_by(Treatment) %>% 
+  summarise(mean.plot.wt = mean(plot.weight),
+            SE.plot.wt = (sd(plot.weight)/sqrt(5))
+            ) %>% 
+  left_join(algae.sum,.) -> algae.sum
+
+algae.sum <- mutate(algae.sum,
+                    )
+
 algae.sum
+
+
 g.len <- ggplot(algaedata) + aes(y = Length, x = Treatment) + 
   geom_point(alpha = 0.1) +
-  geom_violin(fill = NA) + 
+  geom_violin(fill = NA)
+  labs(y = "Length (cm)") +
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid.major.x = element_blank(), #remove vertical gridlines
+  ) +
   theme_bw()
 
 g.len  
@@ -69,9 +92,112 @@ g.len
 g.wt <- ggplot(algaedata) + aes(y = Weight, x = Treatment) +
   geom_point(alpha = 0.1) + 
   geom_violin(fill = NA) +
-  labs(y = "Length (cm)") +
-  theme_bw(text = element_text(family = "Calibri", size = 8, color = "black"),
+  labs(y = "Biomass (g wet wt)") +
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
            axis.text = element_text(size = 10),
-           axis.title = element_text(size = 12)
-           )
+           axis.title = element_text(size = 12),
+        panel.grid.major.x = element_line(colour = "transparent"),
+           ) +
+  theme_bw()
+g.wt
+
+
+g.plot.wt <- algaedata %>% 
+  group_by(Treatment,Replicate) %>% ## first create a vector with the 
+  summarise(plot.weight = sum(Weight)) %>% ## total biomass of each plot
+  ggplot() + 
+  aes(y = plot.weight, x = Treatment) +
+  geom_point(alpha = 0.1) + 
+  geom_violin(fill = NA) +
+  ylab(expression("Plot Biomass (g wet wt)") ) +
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw()
+g.plot.wt
+
+ggsave(filename = paste0(FIGS_PATH, "/Alg.len.png"),
+       g.len,
+       width = 10,
+       height = 5,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/Alg.wt.png"),
+       g.wt,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.png"),
+       g.plot.wt,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+
+## ----end
+
+
+## ---- recruitment fish EDA
+
+fish.sum <- fishdata %>% 
+  group_by(Treatment,Replicate, Date) %>% 
+  summarise(abundance = sum(count)) %>% ## sum of count will be 0 for empty plots (unlike count[])
+ungroup %>% group_by(Treatment, Replicate) %>% 
+  summarise(mean.abnd = mean(abundance),
+            se.abnd = sd(abundance)/sqrt(length(abundance)))
+
+fish.sum
+
+   ## plot fish abundance
+g.fish.abnd1 <-fishdata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(abundance = sum(count)) %>% 
+  ggplot() + aes(y = abundance, x = Treatment) +
+    geom_count(alpha = 0.1) + 
+    geom_violin(fill = NA) +
+    ylab(expression("Fish Abundance") ) +
+    theme(family = "calibri", text = element_text( size = 8, color = "black"),
+          axis.text = element_text(size = 10),
+          axis.title = element_text(size = 12),
+          panel.grid = element_blank()
+    ) +
+    theme_bw()
+
+g.fish.abnd1
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish1.png"),
+       g.fish.abnd1,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+
+## plot fish abundance, now over time:
+
+g.fish.abnd.time <-fishdata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(abundance = sum(count)) %>% 
+  ggplot() + aes(y = abundance, x = Date, colour = Treatment) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
+  geom_smooth() +
+  ylab(expression("Fish Abundance") ) +
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+ # scale_x_discrete(breaks = "25/11/2022", "5/12/2022" ,"12/12/2022" ) +
+  theme_bw()
+
+g.fish.abnd.time
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
+       g.fish.abnd.time,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+
+
+
 ## ----end
