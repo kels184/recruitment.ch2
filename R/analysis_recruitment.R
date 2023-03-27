@@ -7,7 +7,7 @@ source('../R/functions.R') # includes setup fns, packages, brms DHARMA fns and S
 
 ## ---- recruitment readData
 
-fishdata <- read_csv(paste0(DATA_PATH,
+fishdata1 <- read_csv(paste0(DATA_PATH,
                         "primary/fish1.csv"),
                  trim_ws=TRUE)
 algaedata <- read_csv(paste0(DATA_PATH,
@@ -29,14 +29,17 @@ algaedata %>% report::report_table()
 ## ----end
 
 ## ----factorise and clean
-fishdata <- fishdata %>% 
-  mutate(Date = dmy(Date), #using lubridate, convert Date to proper date format
-         Treatment = factor(Treatment),
-         Replicate = factor(Replicate),
-         Family = factor(Family),
-         Species = factor(Species)) %>% 
+fishdata <- fishdata1 %>% 
   select(-c(Other, Replacement, `Patch note`, Transparency, `ID note`, `Behaviour note`)) %>% 
-  filter(Family != "Apogonidae")   ## removing apogonidae as they were not counted consistently (and are cryptic)
+  
+  mutate(Date = dmy(Date), #using lubridate, convert Date to proper date format
+  ) %>% 
+  mutate_at(c(2:5), ## in the specified cols
+            ~replace_na(.,"empty")) %>%   ## replace NAs with "empty" (there were no fish)
+  mutate_at(c(2:5), ~factor(.) ) %>% 
+filter(Family != "Apogonidae")   ## removing apogonidae as they were not counted consistently (and are cryptic)
+                                 ## NB - filter had to be done AFTER converting NAs to values, or they are removed
+
 glimpse(fishdata)
 
 algaedata <- algaedata %>% 
@@ -83,7 +86,7 @@ g.len <- ggplot(algaedata) + aes(y = Length, x = Treatment) +
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12),
-        panel.grid.major.x = element_blank(), #remove vertical gridlines
+        #panel.grid.major.x = element_blank(), #remove vertical gridlines
   ) +
   theme_bw()
 
@@ -173,7 +176,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish1.png"),
        dpi = 100)
 
 
-## plot fish abundance, now over time:
+  ## plot fish abundance, now over time:
 
 g.fish.abnd.time <-fishdata %>% 
   group_by(Treatment, Replicate, Date) %>% 
@@ -187,7 +190,6 @@ g.fish.abnd.time <-fishdata %>%
         axis.title = element_text(size = 12),
         panel.grid = element_blank()
   ) +
- # scale_x_discrete(breaks = "25/11/2022", "5/12/2022" ,"12/12/2022" ) +
   theme_bw()
 
 g.fish.abnd.time
@@ -197,7 +199,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
        height = 5,
        dpi = 100)
 
-
+  ## plot species richness
 
 
 ## ----end
