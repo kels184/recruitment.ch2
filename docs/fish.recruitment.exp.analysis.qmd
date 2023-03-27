@@ -65,3 +65,15 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 ```{r recruitment report table, results='markdown', eval=TRUE}
 ```
 
+```{r factorise and clean, results = 'markdown, eval = TRUE}
+```
+
+## EDA
+
+1. Algae EDA
+
+```{r recruitment algae EDA. results = 'markdown', eval = TRUE}
+
+```
+
+
