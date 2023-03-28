@@ -76,12 +76,12 @@ algaedata %>%
 algae.sum <- mutate(algae.sum,
                     )
 
-algae.sum
+algae.sum %>% view()
 
 
 g.len <- ggplot(algaedata) + aes(y = Length, x = Treatment) + 
   geom_point(alpha = 0.1) +
-  geom_violin(fill = NA)
+  geom_violin(fill = NA) +
   labs(y = "Length (cm)") +
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
         axis.text = element_text(size = 10),
@@ -200,6 +200,59 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
        dpi = 100)
 
   ## plot species richness
+g.sp.richness <- fishdata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(sp.richness = if_else(Species != "empty", ## unless the plot had no fish
+                                  true = length(unique(Species)), ##count number of unique species levels
+                                  false = 0) ## or else input zero
+            ) %>%  
+  ggplot() + aes(x = Treatment, y = sp.richness) +
+  geom_count(alpha = 0.1) + 
+  geom_violin(fill = NA, 
+              adjust = 2.5) + ## increases bandwidth for kernel density function. without this too 'wiggly'
+  ylab(expression("Species Richness") ) +
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank() ## still not working
+  ) +
+  theme_bw()
+
+g.sp.richness
+
+
+
+  ## sp richness over time
+g.sp.time <- fishdata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(sp.richness = if_else(Species != "empty", 
+                                  true = length(unique(Species)), 
+                                  false = 0) 
+  ) %>%
+  ggplot() + aes(y = sp.richness, x = Date, colour = Treatment) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
+  geom_smooth() +
+  ylab(expression("Species Richness") ) +
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw()
+
+g.sp.time
+
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp1.png"),
+       g.sp.richness,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
+       g.sp.time,
+       width = 10,
+       height = 5,
+       dpi = 100)
 
 
 ## ----end
