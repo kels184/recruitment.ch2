@@ -254,5 +254,63 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
        height = 5,
        dpi = 100)
 
+ ## Siganidae abundance?
 
+
+ ## Plot biomass vs fish variables
+
+ ## ## set up dataset:
+fishalgaedata <- algaedata %>% 
+  group_by(Treatment,Replicate) %>% 
+  summarise(plot.weight = sum(Weight)) %>% 
+    left_join(fishdata, .) # add plot.weight column to fishdata
+
+ ## ## plot abundance 
+fishalgaedata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(abundance = sum(count),
+            x = mean(plot.weight) )%>% ## mean won't change anything, but will ensure plot.weight is kept in the output
+  ggplot() + aes(y = abundance, x = x) + ## set overall aesthetic
+  geom_count(aes(colour = Treatment),  ## make colour vary by treatment in the points
+             alpha = 0.1)  + 
+  geom_smooth() + ## but only a smoother on x and y (not separate for groups)
+  ylab(expression("Fish Abundance") ) +
+  xlab("Plot Biomass (g wet wt)") + 
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw() -> g.alg.fish.abnd
+
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.abnd.png"),
+       g.alg.fish.abnd,
+       width = 10,
+       height = 5,
+       dpi = 100)
+  ##  ## plot sp.richness
+fishalgaedata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(sp.richness = if_else(Species != "empty", 
+                                  true = length(unique(Species)), ##as for sp richness calculation above
+                                  false = 0) ,
+            x = mean(plot.weight) )%>% 
+  ggplot() + aes(y = sp.richness, x = x) + ##as for biomass/abundance plot
+  geom_count(aes(colour = Treatment),  
+             alpha = 0.1)  + 
+  geom_smooth() + 
+  ylab(expression("Fish Abundance") ) +
+  xlab("Plot Biomass (g wet wt)") + 
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw() -> g.alg.fish.sp  ##gam perhaps too many knots, but pattern generally increasing, perhaps with asymptote
+
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.sp.png"),
+       g.alg.fish.sp,
+       width = 10,
+       height = 5,
+       dpi = 100)
 ## ----end
