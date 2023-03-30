@@ -290,6 +290,8 @@ fishalgaedata %>%
   ) +
   theme_bw() -> g.alg.fish.abnd
 
+g.alg.fish.abnd
+
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.abnd.png"),
        g.alg.fish.abnd,
        width = 10,
@@ -314,6 +316,8 @@ fishalgaedata %>%
         panel.grid = element_blank()
   ) +
   theme_bw() -> g.alg.fish.sp  ##gam perhaps too many knots, but pattern generally increasing, perhaps with asymptote
+
+g.alg.fish.sp
 
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.sp.png"),
        g.alg.fish.sp,
@@ -432,8 +436,8 @@ fish.mds <- metaMDS(fish.dist, k=3,
                     seed = 123)
 #stress improvement below 0.2, no convergence
 
-fish.mds.scores <- fish.mds %>%
-  fortify() ## Error in rep("sites", nrow(df)) : invalid 'times' argument
+#fish.mds.scores <- fish.mds %>%
+ # fortify() ## Error in rep("sites", nrow(df)) : invalid 'times' argument
 
 
 

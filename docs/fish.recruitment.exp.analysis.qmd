@@ -8,7 +8,7 @@ format:
     toc: true
     toc-float: true
     number-sections: true
-    number-depth: 3
+    number-depth: 4
     embed-resources: true
     code-fold: false
     code-tools: true
