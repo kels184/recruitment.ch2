@@ -1,4 +1,5 @@
-## ---- setup #copied from Murray, sets up regular expression used to detect chunks in the code, and sets up a function to remove comments
+## ---- setup 
+#copied from Murray, sets up regular expression used to detect chunks in the code, and sets up a function to remove comments
 assignInNamespace('.sep.label',  "^\\ *(#|--)+\\s*(@knitr|----+)(.*?)-*\\s*$", ns='knitr')
 
 tidyverse_style_with_comments_removed <- function() {

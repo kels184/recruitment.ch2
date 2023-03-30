@@ -2,10 +2,11 @@
 source('../R/functions.R') # includes setup fns, packages, brms DHARMA fns and SUYR Prior_Posterior fn
 ## ----end
 
-# Fish Recruitment in Macroalgal Patch Experiment **************************************************
+# Fish Recruitment in Macroalgal Patch Experiment ===============================
 
+## Read data ====================================================================
 
-## ---- recruitment readData
+## ---- FishRecruitment readData
 
 fishdata1 <- read_csv(paste0(DATA_PATH,
                         "primary/fish1.csv"),
@@ -18,17 +19,19 @@ algaedata <- read_csv(paste0(DATA_PATH,
 
 ## ---- recruitment glimpse
 
-fishdata %>% glimpse() #render failing here - fishdata not found
+fishdata1 %>% glimpse() #render failing here - fishdata not found
 algaedata %>% glimpse()
 
 ## ---- end
 
 ## ---- recruitment report table
-fishdata %>% report::report_table() 
+fishdata1 %>% report::report_table() 
 algaedata %>% report::report_table() 
 ## ----end
 
-## ----factorise and clean
+## Process data =================================================================
+
+## ---- factorise and clean
 fishdata <- fishdata1 %>% 
   select(-c(Other, Replacement, `Patch note`, Transparency, `ID note`, `Behaviour note`)) %>% 
   
@@ -52,6 +55,9 @@ algaedata <- algaedata %>%
 glimpse(algaedata)
 ## ----end
 
+## EDA ==========================================================================
+
+### Algae =======================================================================
 
 ## ---- recruitment algae EDA
 algae.sum <- algaedata %>% 
@@ -141,6 +147,7 @@ ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.png"),
 
 ## ----end
 
+### Fish ========================================================================
 
 ## ---- recruitment fish EDA
 

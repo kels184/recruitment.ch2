@@ -36,6 +36,8 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 ```{r loadFunctions, results='markdown', eval=FALSE}
 ```
 
+```{r setup, include=FALSE, warnings=FALSE, message=FALSE}
+```
 
 
 - Load required packages (functions.R)
@@ -55,7 +57,6 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 
 1. Load the data
 ```{r FishRecruitment readData, results = 'markdown', eval = TRUE}
-
 ```
 
 2. Glimpse the data
@@ -65,19 +66,19 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 ```{r recruitment report table, results='markdown', eval=TRUE}
 ```
 
-```{r factorise and clean, results = 'markdown, eval = TRUE}
+```{r factorise and clean, results = 'markdown', eval = TRUE}
 ```
 
 ## EDA
 
 1. Algae EDA
 
-```{r recruitment algae EDA. results = 'markdown', eval = TRUE}
+```{r recruitment algae EDA, results = 'markdown', eval = TRUE}
 ```
 A bit of an outlier in Length - One plot (W5) had an extra long 52cm thallus. I checked in the video and this was not a typo. However its weight was not super high (70g). Lengths otherwise fairly similar, around 30cm
 
 Weights per plot: BQ < DL <= BH <= DM < W
 
 2. Fish EDA
-```{r recruitment fish EDA. results = 'markdown', eval = TRUE}
+```{r recruitment fish EDA, results = 'markdown', eval = TRUE}
 ```
