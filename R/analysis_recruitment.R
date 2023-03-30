@@ -151,6 +151,7 @@ ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.png"),
 
 ## ---- recruitment fish EDA
 
+   ### Total fish abundance =====================================================
 fish.sum <- fishdata %>% 
   group_by(Treatment,Replicate, Date) %>% 
   summarise(abundance = sum(count)) %>% ## sum of count will be 0 for empty plots (unlike count[])
@@ -160,7 +161,7 @@ ungroup %>% group_by(Treatment, Replicate) %>%
 
 fish.sum
 
-   ## plot fish abundance
+
 g.fish.abnd1 <-fishdata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(abundance = sum(count)) %>% 
@@ -183,7 +184,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish1.png"),
        dpi = 100)
 
 
-  ## plot fish abundance, now over time:
+  #### Fish abundance over time: ================================================
 
 g.fish.abnd.time <-fishdata %>% 
   group_by(Treatment, Replicate, Date) %>% 
@@ -206,7 +207,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
        height = 5,
        dpi = 100)
 
-  ## plot species richness
+  ## Species Richness ===========================================================
 g.sp.richness <- fishdata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(sp.richness = if_else(Species != "empty", ## unless the plot had no fish
@@ -229,7 +230,7 @@ g.sp.richness
 
 
 
-  ## sp richness over time
+   #### Species richness over time: =============================================
 g.sp.time <- fishdata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(sp.richness = if_else(Species != "empty", 
@@ -261,18 +262,17 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
        height = 5,
        dpi = 100)
 
- ## Siganidae abundance?
 
+ ## Algal biomass vs fish variables =============================================
 
- ## Plot biomass vs fish variables
-
- ## ## set up dataset:
+ ### set up dataset: ============================================================
 fishalgaedata <- algaedata %>% 
   group_by(Treatment,Replicate) %>% 
   summarise(plot.weight = sum(Weight)) %>% 
     left_join(fishdata, .) # add plot.weight column to fishdata
+fishalgaedata %>% glimpse()
 
- ## ## plot abundance 
+ ### plot abundance =============================================================
 fishalgaedata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(abundance = sum(count),
@@ -295,7 +295,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.abnd.png"),
        width = 10,
        height = 5,
        dpi = 100)
-  ##  ## plot sp.richness
+  ### plot sp.richness ==========================================================
 fishalgaedata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(sp.richness = if_else(Species != "empty", 
@@ -320,4 +320,27 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.sp.png"),
        width = 10,
        height = 5,
        dpi = 100)
+
+ ## Siganid abundance ===========================================================
+
+### set up dataset: =============================================================
+siganidata <- algaedata %>% ##creating the same 'fishalgaedata' set as above
+  group_by(Treatment,Replicate) %>% 
+  summarise(plot.weight = sum(Weight)) %>% 
+  left_join(fishdata, .) %>% 
+  filter(Family == "Siganidae")
+glimpse(siganidata)
+
+## ----end
+
+### add some length weight parameters to the dataset
+seychelles.fish <- read_csv(paste0(DATA_PATH,
+                                            "primary/Seychelles.fish.csv"),
+                            trim_ws = TRUE)
+glimpse(seychelles.fish)
+
+sey.fish <- seychelles.fish %>% 
+  dplyr::select(Family, Species, a, b) %>% 
+  mutate(across(1:2, factor()) )
+
 ## ----end
