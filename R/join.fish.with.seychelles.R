@@ -41,4 +41,7 @@ fishdata %>% dplyr::select(Species) %>%
   inner_join(sey.fish) ##join, return only rows that match
 ## just 4 of 35 species
 
+write_csv(fish.lw, paste0(DATA_PATH,
+                 "processed/fish.lw.csv"))
+
 ## ----end

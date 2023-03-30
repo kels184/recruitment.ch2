@@ -331,16 +331,5 @@ siganidata <- algaedata %>% ##creating the same 'fishalgaedata' set as above
   filter(Family == "Siganidae")
 glimpse(siganidata)
 
-## ----end
-
-### add some length weight parameters to the dataset
-seychelles.fish <- read_csv(paste0(DATA_PATH,
-                                            "primary/Seychelles.fish.csv"),
-                            trim_ws = TRUE)
-glimpse(seychelles.fish)
-
-sey.fish <- seychelles.fish %>% 
-  dplyr::select(Family, Species, a, b) %>% 
-  mutate(across(1:2, factor()) )
 
 ## ----end
