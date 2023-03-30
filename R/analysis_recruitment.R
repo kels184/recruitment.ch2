@@ -332,4 +332,109 @@ siganidata <- algaedata %>% ##creating the same 'fishalgaedata' set as above
 glimpse(siganidata)
 
 
+### plot siganid abundance ========================================================
+siganidata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(abundance = sum(count) )%>% ## 
+  ggplot() + aes(y = abundance, x = Treatment) + ## 
+  geom_count(alpha = 0.1)  +
+  geom_violin(fill = NA) +
+  ylab(expression("Siganid Abundance") ) + 
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw() -> g.sig.abnd
+
+g.sig.abnd ## something of a similar pattern to those above, although highly skewed. 
+## Poisson with Zero Inflation or neg binomial likely necessary
+
+siganidata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(abundance = sum(count),
+            x = mean(plot.weight) )%>% ## mean won't change anything, but will ensure plot.weight is kept in the output
+  ggplot() + aes(y = abundance, x = x) + ## set overall aesthetic
+  geom_count(aes(colour = Treatment),  ## make colour vary by treatment in the points
+             alpha = 0.1)  + 
+  geom_smooth(method = "lm") + ##smoother on x and y (not separate for groups). Linear model method instead of gam
+  ylab(expression("Siganid Abundance") ) +
+  xlab("Plot Biomass (g wet wt)") + 
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw() -> g.alg.sig.abnd
+g.alg.sig.abnd
+
+
+ ## Quick Multivariate ==========================================================
+
+  ## convert to abund/plot (eventually could use biomass if I need to)
+
+fish.wide <- fishdata %>% 
+  group_by(Treatment, Replicate, Date, Species) %>%
+  summarise(abundance = sum(count)) %>% ## get abund/plot per species (eventually could use biomass if I need to)
+  ## convert to wide
+  pivot_wider(names_from = Species,
+              values_from = abundance,
+              values_fill = 0)
+  
+ ## create distance matrix
+#fish.dist <- vegdist(wisconsin(fish.wide[,-c(1:3,5)]^0.25), ## 4th root transformation, remove factors and 'empty' col
+#                     "bray") #bray standardisation, 
+### warning: you have empty rows: their dissimilarities may be meaningless in method “bray”
+
+### withhold empty rows:
+
+#fish.no.0 <- fish.wide %>% 
+#  as.data.frame() %>% ##fish.wide was a tibble. Without changing to df first, the factors were added back after select
+#  dplyr::select(is.numeric) %>% ##select numeric cols
+#  filter(rowSums(.) != 0 ) %>% ## keep only rows with non zero sums
+#  left_join(.,fish.wide, by = c("Halichoeres miniatus", "Siganus doliatus", 
+#                                "Pomacentrus tripunctatus")   ) ## join the factors back on
+
+
+### tried several methods to remove empty rows while keeping the factor cols, but so far this is unfortunately my best:
+wide.row.sums <- fish.wide %>% 
+  as.data.frame() %>% 
+  dplyr::select(is.numeric) %>% 
+  mutate(r.s = rowSums(.)) %>%  
+  select(r.s)
+
+fish.no.0 <- fish.wide[which(wide.row.sums != 0), ]
+
+fish.no.0 %>% glimpse()
+
+
+fish.dist <- vegdist(wisconsin(fish.no.0[,-c(1:3,5)]^0.25), "bray")
+
+
+ ## mds
+fish.mds <- metaMDS(fish.dist, k=2, seed = 123)
+#no convergence -- monoMDS stopping criteria:
+# 2: no. of iterations >= maxit - it reached 20 iterations
+# 18: stress ratio > sratmax
+stressplot(fish.mds)
+
+plot(fish.mds, type="text", display="sites" ) #something weird happening at row 258 - 1 lethrinus nebulosus, that's it
+
+ ## rerun without row 258
+metaMDS(fish.no.0[-258,-c(1:3,5)]) %>% plot(type = "text", display = "sites")
+##more sensible plot, higher stress and need more plotting to see if treatments had any influence
+
+
+ ### 3D, no row 258 =============================================================
+fish.dist <- vegdist(wisconsin(fish.no.0[-258,
+                                         -c(1:3,5)]^0.25), "bray")
+fish.mds <- metaMDS(fish.dist, k=3, 
+                    seed = 123)
+#stress improvement below 0.2, no convergence
+
+fish.mds.scores <- fish.mds %>%
+  fortify() ## Error in rep("sites", nrow(df)) : invalid 'times' argument
+
+
+
 ## ----end

@@ -51,6 +51,8 @@ library(posterior) # posterior analysis
 library(HDInterval) # highest density intervals
 library(tidybayes) #bayesian data analysis
 library(report) #automated reporting
+library(vegan) #multivariate analysis
+library(ggvegan) #multivariate plotting
 ## ----end
 
 ## ---- preparePaths
