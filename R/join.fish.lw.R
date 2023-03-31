@@ -52,6 +52,13 @@ fishdata %>% dplyr::select(Species) %>%
   inner_join(lw.fish) ##join, return only rows that match
 ## 15 of 35 species
 
+## Length-weight from fishbase ==================================================
+# after installation from github in base r
+
+#library(rfishbase)
+#rfishbase::length_weight("Siganus doliatus")
+## lots of errors. maybe better to do it in base r?
+## ----end
 
 ## Length weight calculation ====================================================
 
