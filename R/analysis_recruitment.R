@@ -280,7 +280,7 @@ fishalgaedata %>%
   ggplot() + aes(y = abundance, x = x) + ## set overall aesthetic
   geom_count(aes(colour = Treatment),  ## make colour vary by treatment in the points
              alpha = 0.1)  + 
-  geom_smooth() + ## but only a smoother on x and y (not separate for groups)
+  geom_smooth(method = "lm") + ## but only a smoother on x and y (not separate for groups)
   ylab(expression("Fish Abundance") ) +
   xlab("Plot Biomass (g wet wt)") + 
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
@@ -307,7 +307,7 @@ fishalgaedata %>%
   ggplot() + aes(y = sp.richness, x = x) + ##as for biomass/abundance plot
   geom_count(aes(colour = Treatment),  
              alpha = 0.1)  + 
-  geom_smooth() + 
+  geom_smooth(method = "lm") + 
   ylab(expression("Fish Abundance") ) +
   xlab("Plot Biomass (g wet wt)") + 
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
@@ -431,14 +431,15 @@ metaMDS(fish.no.0[-258,-c(1:3,5)]) %>% plot(type = "text", display = "sites")
 
  ### 3D, no row 258 =============================================================
 fish.dist <- vegdist(wisconsin(fish.no.0[-258,
-                                         -c(1:3,5)]^0.25), "bray")
+                                         -c(1:3,5)]^0.25), "bray") ##something about this messed up the mds and scores couldn't be obtained (ndim = 1)
 fish.mds <- metaMDS(fish.dist, k=3, 
                     seed = 123)
 #stress improvement below 0.2, no convergence
 
-#fish.mds.scores <- fish.mds %>%
- # fortify() ## Error in rep("sites", nrow(df)) : invalid 'times' argument
+fish.mds.scores <- fish.mds %>%
+  fortify() ## Error in rep("sites", nrow(df)) : invalid 'times' argument
 
-
+scores(fish.mds, choices = 1:3, display = c("sites")) #this seemed to work, although 333 rows - shouldn't there be 446, the number of rows of fish.no.0 - 1?
+#also couldn't get "species" scores
 
 ## ----end

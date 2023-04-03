@@ -29,7 +29,7 @@ glimpse(kulbicki)
 lw.fish <- kulbicki %>% 
   dplyr::select(-c(11:15)) %>% ##remove these cols 
   rename(Species = Name...2) %>% ##rename this col to "species"
-  mutate(Familiy = factor(Family),
+  mutate(Family = factor(Family),
          Species = factor(Species),
          Shape = factor(Shape))
 
