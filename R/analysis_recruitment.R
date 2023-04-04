@@ -53,6 +53,17 @@ algaedata <- algaedata %>%
          Weight = `Weight (g)`)
 
 glimpse(algaedata)
+
+
+
+fishalgaedata <- algaedata %>% 
+  group_by(Treatment,Replicate) %>% 
+  summarise(plot.weight = sum(Weight)) %>% 
+  left_join(fishdata, .) # add plot.weight column to fishdata
+fishalgaedata %>% glimpse()
+
+#write_csv(fishalgaedata, file = paste0(DATA_PATH, "processed/fishalgaedata.csv"))
+
 ## ----end
 
 ## EDA ==========================================================================
@@ -151,7 +162,7 @@ ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.png"),
 
 ## ---- recruitment fish EDA
 
-   ### Total fish abundance =====================================================
+   #### Total fish abundance =====================================================
 fish.sum <- fishdata %>% 
   group_by(Treatment,Replicate, Date) %>% 
   summarise(abundance = sum(count)) %>% ## sum of count will be 0 for empty plots (unlike count[])
@@ -207,7 +218,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
        height = 5,
        dpi = 100)
 
-  ## Species Richness ===========================================================
+  #### Species Richness ==========================================================
 g.sp.richness <- fishdata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(sp.richness = if_else(Species != "empty", ## unless the plot had no fish
@@ -263,16 +274,10 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
        dpi = 100)
 
 
- ## Algal biomass vs fish variables =============================================
+ #### Algal biomass vs fish variables =============================================
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+mutate_at(c(2:5), factor)
 
- ### set up dataset: ============================================================
-fishalgaedata <- algaedata %>% 
-  group_by(Treatment,Replicate) %>% 
-  summarise(plot.weight = sum(Weight)) %>% 
-    left_join(fishdata, .) # add plot.weight column to fishdata
-fishalgaedata %>% glimpse()
-
- ### plot abundance =============================================================
 fishalgaedata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(abundance = sum(count),
@@ -297,7 +302,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.abnd.png"),
        width = 10,
        height = 5,
        dpi = 100)
-  ### plot sp.richness ==========================================================
+
 fishalgaedata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(sp.richness = if_else(Species != "empty", 
@@ -308,7 +313,7 @@ fishalgaedata %>%
   geom_count(aes(colour = Treatment),  
              alpha = 0.1)  + 
   geom_smooth(method = "lm") + 
-  ylab(expression("Fish Abundance") ) +
+  ylab(expression("Species Richness") ) +
   xlab("Plot Biomass (g wet wt)") + 
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
         axis.text = element_text(size = 10),
@@ -325,18 +330,46 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.sp.png"),
        height = 5,
        dpi = 100)
 
- ## Siganid abundance ===========================================================
 
-### set up dataset: =============================================================
-siganidata <- algaedata %>% ##creating the same 'fishalgaedata' set as above
-  group_by(Treatment,Replicate) %>% 
-  summarise(plot.weight = sum(Weight)) %>% 
+ #### Abundance/Commonness ========================================================
+
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+mutate_at(c(2:5), factor)
+glimpse(fishalgaedata)
+
+##what species are the most common/are likely to have enough data to do something with
+
+sp.abnd <- fishalgaedata %>% 
+  group_by(Species) %>% 
+    summarise(total.abnd = sum(count)) %>% #total occurrences of each species
+  mutate(abnd.prop = total.abnd/sum(total.abnd)) %>% #as a proportion
+  arrange(-total.abnd) %>%  #order descending
+  mutate(cum.prop = cumsum(abnd.prop)) #as a cumulative proportion
+
+#which species occurred on the most days?
+
+days.observed <- fishalgaedata %>% 
+  group_by(Species,Date) %>% 
+ summarise(total.abnd = sum(count)) %>% 
+  count(sort = TRUE) #count occurences (rows) according to SpeciesxDate and sort descending
+
+sp.abnd <- sp.abnd %>% left_join(days.observed) %>% 
+  rename(days.observed = n)
+
+sp.abnd %>% head(10)
+
+write_csv(sp.abnd, paste0(DATA_PATH, "summarised/species.abundance.csv") )
+#### Siganid abundance ===========================================================
+
+### set up dataset
+
+siganidata <- fishalgaedata
   left_join(fishdata, .) %>% 
   filter(Family == "Siganidae")
 glimpse(siganidata)
 
 
-### plot siganid abundance ========================================================
+### plot siganid abundance
 siganidata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(abundance = sum(count) )%>% ## 
@@ -372,10 +405,24 @@ siganidata %>%
   theme_bw() -> g.alg.sig.abnd
 g.alg.sig.abnd
 
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sig.png"),
+       g.sig.abnd,
+       width = 10,
+       height = 5,
+       dpi = 100)
 
- ## Quick Multivariate ==========================================================
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sig.alg.png"),
+       g.alg.sig.abnd,
+       width = 10,
+       height = 5,
+       dpi = 100)
 
-  ## convert to abund/plot (eventually could use biomass if I need to)
+## ----end
+
+ ## Multivariate ==========================================================
+
+## ---- Recruitment Multivariate
+  ### convert to abund/plot (eventually could use biomass if I need to)
 
 fish.wide <- fishdata %>% 
   group_by(Treatment, Replicate, Date, Species) %>%
@@ -429,7 +476,8 @@ metaMDS(fish.no.0[-258,-c(1:3,5)]) %>% plot(type = "text", display = "sites")
 ##more sensible plot, higher stress and need more plotting to see if treatments had any influence
 
 
- ### 3D, no row 258 =============================================================
+ ### 3D, no row 258
+
 fish.dist <- vegdist(wisconsin(fish.no.0[-258,
                                          -c(1:3,5)]^0.25), "bray") ##something about this messed up the mds and scores couldn't be obtained (ndim = 1)
 fish.mds <- metaMDS(fish.dist, k=3, 
