@@ -385,7 +385,7 @@ write_csv(sp.abnd, paste0(DATA_PATH, "summarised/species.abundance.csv") )
 
 #### Common species patterns =====================================================
 
-## ---- fish EDA common species
+## ---- fish EDA common species1
 
 ### set up dataset
 
@@ -403,17 +403,16 @@ commondata %>%
   ggplot() + aes(y = abundance, x = Treatment) + ## 
   geom_count(alpha = 0.1)  +
   geom_violin(fill = NA) +
-  facet_wrap(Species) +
+  facet_wrap(~Species) + #separate panel for each species
   ylab("Abundance" ) + 
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12),
         panel.grid = element_blank()
   ) +
-  theme_bw() -> g.sig.abnd
+  theme_bw() -> g.common.abnd
 
-g.common.abnd ## something of a similar pattern to those above, although highly skewed. 
-## Poisson with Zero Inflation or neg binomial likely necessary
+g.common.abnd 
 
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.png"),
        g.common.abnd,
@@ -421,31 +420,61 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.png"),
        height = 5,
        dpi = 100)
 
+## ----end
+
+## ---- fish EDA common species2
 ## plot abundance over time
 
+commondata %>% 
+  group_by(Treatment, Replicate, Date, Species) %>% 
+  summarise(abundance = sum(count) )%>%
+  #ungroup() %>% ## 
+  ggplot() + aes(y = abundance, x = Date, colour = Treatment) + ## 
+  geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
+  geom_smooth() +
+  facet_wrap(~Species) +
+  ylab("Abundance" ) + 
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw() -> g.common.abnd.time
+
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.time.png"),
+       g.common.abnd.time,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+## ----end
+
+
+## ----fish EDA common species3
 ## plot abundance vs algal biomass
-siganidata %>% 
-  group_by(Treatment, Replicate, Date) %>% 
-  summarise(abundance = sum(count),
-            x = mean(plot.weight) )%>% ## mean won't change anything, but will ensure plot.weight is kept in the output
+commondata %>% 
+  group_by(Treatment, Replicate, Date, Species) %>% 
+  summarise(abundance = sum(count), 
+           x = mean(plot.weight) )%>% ## mean won't change anything, but will ensure plot.weight is kept in the output
   ggplot() + aes(y = abundance, x = x) + ## set overall aesthetic
   geom_count(aes(colour = Treatment),  ## make colour vary by treatment in the points
-             alpha = 0.1)  + 
+             alpha = 0.2)  + 
   geom_smooth(method = "lm") + ##smoother on x and y (not separate for groups). Linear model method instead of gam
-  ylab(expression("Siganid Abundance") ) +
+  facet_wrap(~Species) +
+  ylab("Abundance") +
   xlab("Plot Biomass (g wet wt)") + 
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12),
         panel.grid = element_blank()
   ) +
-  theme_bw() -> g.alg.sig.abnd
-g.alg.sig.abnd
+  theme_bw() -> g.common.abnd.alg
+g.common.abnd.alg
 
 
 
-ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sig.alg.png"),
-       g.alg.sig.abnd,
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.alg.png"),
+       g.common.abnd.alg,
        width = 10,
        height = 5,
        dpi = 100)
