@@ -41,12 +41,13 @@ library(knitr) #document formatting
 library(tidyverse) #data manipulationg
 library(forcats) #for working with categorical data
 library(patchwork) #creating visualisationns from multiple plots
-library(brms) # Bayesian regression modelling
 # library(INLA) # Bayesian inference - having trouble loading this
 library(glmmTMB) #regression modelling (frequentist)
+library(MuMIn) #for AICc
 library(DHARMa) # model testing
 library(emmeans) # post-hoc analysis of statistical models
 library(ggeffects) #post-hoc analysis of statistical models
+library(brms) # Bayesian regression modelling
 library(posterior) # posterior analysis
 library(HDInterval) # highest density intervals
 library(tidybayes) #bayesian data analysis
