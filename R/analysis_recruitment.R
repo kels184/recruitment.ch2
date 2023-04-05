@@ -195,7 +195,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish1.png"),
        dpi = 100)
 
 ## ----end
-  #### Fish abundance over time: ================================================
+  #### Total abundance over time: ===============================================
 
 ## ---- fish EDA abundance time
 g.fish.abnd.time <-fishdata %>% 
@@ -220,7 +220,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
        dpi = 100)
 
 
-   #### Abundance vs algal biomass
+   #### Total Abundance vs algal biomass ========================================
 
 ## ---- fish EDA abundance vs biomass
 
@@ -264,7 +264,7 @@ g.sp.richness <- fishdata %>%
   summarise(sp.richness = if_else(Species != "empty", ## unless the plot had no fish
                                   true = length(unique(Species)), ##count number of unique species levels
                                   false = 0) ## or else input zero
-            ) %>%  
+            ) %>%  distinct() %>% ##remove rows with duplicate values
   ggplot() + aes(x = Treatment, y = sp.richness) +
   geom_count(alpha = 0.1) + 
   geom_violin(fill = NA, 
@@ -295,7 +295,7 @@ g.sp.time <- fishdata %>%
   summarise(sp.richness = if_else(Species != "empty", 
                                   true = length(unique(Species)), 
                                   false = 0) 
-  ) %>%
+  ) %>%  distinct() %>% 
   ggplot() + aes(y = sp.richness, x = Date, colour = Treatment) +
   geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
   geom_smooth() +
@@ -327,6 +327,7 @@ fishalgaedata %>%
                                   true = length(unique(Species)), ##as for sp richness calculation above
                                   false = 0) ,
             x = mean(plot.weight) )%>% 
+  distinct %>% 
   ggplot() + aes(y = sp.richness, x = x) + ##as for biomass/abundance plot
   geom_count(aes(colour = Treatment),  
              alpha = 0.2)  + 
@@ -481,7 +482,49 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.alg.png"),
 
 ## ----end
 
- ## Multivariate ==========================================================
+ ## Univariate modelling ========================================================
+
+  ### Abundance =================================================================
+## ----recruitment univariate setup data
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+  mutate_at(c(2:5), factor)
+glimpse(fishalgaedata)
+
+
+fish.sp.abnd <-fishalgaedata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(abundance = sum(count), #calculate total abnd
+            sp.richness = if_else(Species != "empty", 
+                                  true = length(unique(Species)), 
+                                  false = 0), #calculate sp. richness
+            plot.weight = plot.weight # include the biomass of each plot in the output
+  ) %>% distinct() #remove duplicate rows
+fish.sp.abnd %>% glimpse()
+## ----end
+
+   #### Fit =====================================================================
+## ---- recruitment univariate fit abundance
+
+## ----end
+   #### Validate/ ReFit =========================================================
+
+   #### Model investigation =====================================================
+
+   #### Summary figures =========================================================
+
+
+
+  ### Species Richness ==========================================================
+   #### Fit =====================================================================
+
+   #### Validate/ ReFit =========================================================
+
+   #### Model investigation =====================================================
+
+   #### Summary figures =========================================================
+
+
+ ## Multivariate ================================================================
 
 ## ---- Recruitment Multivariate
   ### convert to abund/plot (eventually could use biomass if I need to)
@@ -489,8 +532,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.alg.png"),
 fish.wide <- fishdata %>% 
   group_by(Treatment, Replicate, Date, Species) %>%
   summarise(abundance = sum(count)) %>% ## get abund/plot per species (eventually could use biomass if I need to)
-  ## convert to wide
-  pivot_wider(names_from = Species,
+  pivot_wider(names_from = Species,   ## convert to wide
               values_from = abundance,
               values_fill = 0)
   

@@ -141,3 +141,16 @@ H. miniatus, Petroscirtes sp. and tripunctatus accumulated over time, particular
 ```{r fish EDA common species3, results = 'markdown', eval = TRUE}
 ```
 Unlikely to be worth exploring L. atkinsoni and S. fuscescens, but the rest show a bit of a positive relationship (including H. miniatus kind of). Petroscirtes sp. the strongest relationship
+
+# Univariate modelling
+
+## Total abundance
+```{r recruitment univariate setup data, results = 'markdown', eval = TRUE}
+
+```
+
+
+### Fit model
+```{r recruitment univariate fit abundance}
+
+```
