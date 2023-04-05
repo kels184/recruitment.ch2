@@ -70,7 +70,7 @@ fishalgaedata %>% glimpse()
 
 ### Algae =======================================================================
 
-## ---- recruitment algae EDA
+## ---- recruitment algae summary table
 algae.sum <- algaedata %>% 
   group_by(Treatment) %>% 
   summarise(mean.len = mean(Length),
@@ -79,7 +79,6 @@ algae.sum <- algaedata %>%
             mean.wt = mean(Weight),
             SE.wt = sd(Weight)/sqrt(length(Replicate)),
 )
-
 
 algaedata %>% 
   group_by(Treatment,Replicate) %>% 
@@ -90,12 +89,11 @@ algaedata %>%
             ) %>% 
   left_join(algae.sum,.) -> algae.sum
 
-algae.sum <- mutate(algae.sum,
-                    )
-
-algae.sum %>% view()
+algae.sum
+## ----end
 
 
+## ---- recruitment algae summary figures
 g.len <- ggplot(algaedata) + aes(y = Length, x = Treatment) + 
   geom_point(alpha = 0.1) +
   geom_violin(fill = NA) +
@@ -160,9 +158,11 @@ ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.png"),
 
 ### Fish ========================================================================
 
-## ---- recruitment fish EDA
 
-   #### Total fish abundance =====================================================
+
+   #### Total fish abundance ====================================================
+
+## ---- fish EDA total abundance
 fish.sum <- fishdata %>% 
   group_by(Treatment,Replicate, Date) %>% 
   summarise(abundance = sum(count)) %>% ## sum of count will be 0 for empty plots (unlike count[])
@@ -194,9 +194,10 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish1.png"),
        height = 5,
        dpi = 100)
 
-
+## ----end
   #### Fish abundance over time: ================================================
 
+## ---- fish EDA abundance time
 g.fish.abnd.time <-fishdata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(abundance = sum(count)) %>% 
@@ -218,7 +219,46 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
        height = 5,
        dpi = 100)
 
-  #### Species Richness ==========================================================
+
+   #### Abundance vs algal biomass
+
+## ---- fish EDA abundance vs biomass
+
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+  mutate_at(c(2:5), factor)
+
+fishalgaedata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(abundance = sum(count),
+            x = mean(plot.weight) )%>% ## mean won't change anything, but will ensure plot.weight is kept in the output
+  ggplot() + aes(y = abundance, x = x) + ## set overall aesthetic
+  geom_count(aes(colour = Treatment),  ## make colour vary by treatment in the points
+             alpha = 0.2)  + 
+  geom_smooth(method = "lm") + ## but only a smoother on x and y (not separate for groups)
+  ylab(expression("Fish Abundance") ) +
+  xlab("Plot Biomass (g wet wt)") + 
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw() -> g.alg.fish.abnd
+
+g.alg.fish.abnd
+
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.abnd.png"),
+       g.alg.fish.abnd,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+## ----end
+
+
+
+  #### Species Richness =========================================================
+
+## ---- fish EDA Species richness
 g.sp.richness <- fishdata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(sp.richness = if_else(Species != "empty", ## unless the plot had no fish
@@ -239,9 +279,17 @@ g.sp.richness <- fishdata %>%
 
 g.sp.richness
 
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp1.png"),
+       g.sp.richness,
+       width = 10,
+       height = 5,
+       dpi = 100)
 
+## ----end
 
    #### Species richness over time: =============================================
+
+## ---- fish EDA richness vs time
 g.sp.time <- fishdata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(sp.richness = if_else(Species != "empty", 
@@ -261,11 +309,7 @@ g.sp.time <- fishdata %>%
 
 g.sp.time
 
-ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp1.png"),
-       g.sp.richness,
-       width = 10,
-       height = 5,
-       dpi = 100)
+
 
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
        g.sp.time,
@@ -274,35 +318,9 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
        dpi = 100)
 
 
- #### Algal biomass vs fish variables =============================================
-fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
-mutate_at(c(2:5), factor)
+ #### Species richness vs algal biomass =========================================
 
-fishalgaedata %>% 
-  group_by(Treatment, Replicate, Date) %>% 
-  summarise(abundance = sum(count),
-            x = mean(plot.weight) )%>% ## mean won't change anything, but will ensure plot.weight is kept in the output
-  ggplot() + aes(y = abundance, x = x) + ## set overall aesthetic
-  geom_count(aes(colour = Treatment),  ## make colour vary by treatment in the points
-             alpha = 0.1)  + 
-  geom_smooth(method = "lm") + ## but only a smoother on x and y (not separate for groups)
-  ylab(expression("Fish Abundance") ) +
-  xlab("Plot Biomass (g wet wt)") + 
-  theme(family = "calibri", text = element_text( size = 8, color = "black"),
-        axis.text = element_text(size = 10),
-        axis.title = element_text(size = 12),
-        panel.grid = element_blank()
-  ) +
-  theme_bw() -> g.alg.fish.abnd
-
-g.alg.fish.abnd
-
-ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.abnd.png"),
-       g.alg.fish.abnd,
-       width = 10,
-       height = 5,
-       dpi = 100)
-
+## ---- fish EDA richness vs biomass
 fishalgaedata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(sp.richness = if_else(Species != "empty", 
@@ -311,7 +329,7 @@ fishalgaedata %>%
             x = mean(plot.weight) )%>% 
   ggplot() + aes(y = sp.richness, x = x) + ##as for biomass/abundance plot
   geom_count(aes(colour = Treatment),  
-             alpha = 0.1)  + 
+             alpha = 0.2)  + 
   geom_smooth(method = "lm") + 
   ylab(expression("Species Richness") ) +
   xlab("Plot Biomass (g wet wt)") + 
@@ -330,12 +348,15 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.sp.png"),
        height = 5,
        dpi = 100)
 
+## ----end
 
- #### Abundance/Commonness ========================================================
+ #### Abundance/Commonness ======================================================
+## ---- fish EDA commonness
 
-fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
-mutate_at(c(2:5), factor)
-glimpse(fishalgaedata)
+#fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+#mutate_at(c(2:5), factor)
+#glimpse(fishalgaedata)
+
 
 ##what species are the most common/are likely to have enough data to do something with
 
@@ -359,14 +380,18 @@ sp.abnd <- sp.abnd %>% left_join(days.observed) %>%
 sp.abnd %>% head(10)
 
 write_csv(sp.abnd, paste0(DATA_PATH, "summarised/species.abundance.csv") )
-#### Siganid abundance ===========================================================
+
+## ----end
+
+#### Common species patterns =====================================================
+
+## ---- 
 
 ### set up dataset
 
-siganidata <- fishalgaedata
-  left_join(fishdata, .) %>% 
-  filter(Family == "Siganidae")
-glimpse(siganidata)
+commondata <- fishalgaedata %>% 
+  filter(Species == paste0(sp.abnd$Species[1:6]) )
+glimpse(commondata)
 
 
 ### plot siganid abundance

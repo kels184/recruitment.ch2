@@ -51,9 +51,7 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 
 ```
 
-# Fish Recruitment
-
-## Load data
+# Load Fish Recruitment data
 
 1. Load the data
 ```{r FishRecruitment readData, results = 'markdown', eval = TRUE}
@@ -66,19 +64,65 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 ```{r recruitment report table, results='markdown', eval=TRUE}
 ```
 
+3. Factorise and clean
 ```{r factorise and clean, results = 'markdown', eval = TRUE}
 ```
 
-## EDA
+# EDA
 
-1. Algae EDA
+## Algae EDA
 
-```{r recruitment algae EDA, results = 'markdown', eval = TRUE}
+```{r recruitment algae summary table, results = 'markdown', eval = TRUE}
+```
+
+```{r recruitment algae summary figures, results = 'markdown', eval = TRUE}
 ```
 A bit of an outlier in Length - One plot (W5) had an extra long 52cm thallus. I checked in the video and this was not a typo. However its weight was not super high (70g). Lengths otherwise fairly similar, around 30cm
 
 Weights per plot: BQ < DL <= BH <= DM < W
 
-2. Fish EDA
-```{r recruitment fish EDA, results = 'markdown', eval = TRUE}
+## Fish EDA
+
+### 1.0 Total abundance
+```{r fish EDA total abundance, results = 'markdown', eval = TRUE}
 ```
+Total abundance seems to follow a similar pattern to the biomass of macroalgae. It’s also very nice that the variance doesn’t seem to differ among treatments
+
+1.1 Total abundance over time
+```{r fish EDA abundance time, results = 'markdown', eval = TRUE}
+```
+Does abundance/diversity/biomass (size) change differently over time among treatments?
+
+Yes (Abundance) – W treatment seems to continuously increase, while other treatments (esp DL and BQ) flatten early. Carrying capacity being reached earlier? DM shows a hump in abundance
+
+1.2 Abundance vs Algal biomass
+```{r fish EDA abundance vs biomass, results = 'markdown', eval = TRUE}
+```
+Could the plot biomass be used as a predictor of total abundance?- yeah seems so
+
+### 2.0 Species Richness
+
+```{r fish EDA Species richness, results = 'markdown', eval = TRUE}
+```
+Similarly to abundance, richness seems to follow a similar pattern to the biomass of macroalgae.
+
+
+2.1 Species richness over time
+```{r fish EDA richness vs time, results = 'markdown', eval = TRUE}
+```
+Does abundance/diversity/biomass (size) change differently over time among treatments?
+
+For diversity,  W again seems to continuously increase, while other treatments (esp DL and BQ) flatten early. DM shows an even more prominent hump in abundance around day 8.
+
+2.2 Species Richness vs Algal biomass
+```{r fish EDA richness vs biomass, results = 'markdown', eval = TRUE}
+```
+
+Could the plot biomass be used as a predictor of diversity ?- yeah seems so
+
+### 3 Find Common Species
+```{r fish EDA commonness, results = 'markdown', eval = TRUE}
+```
+The top 6 (Halichoeres miniatus to Siganus fuscescens) collectively accounted for 90% of total abundance, each individually accounted for more than 2% of total abundance and appeared every day. Only Steothjulis strigiventer also appeared every day (but why analyse it if not something else more abundant?) Using just the top 6 or less makes sense
+
+### Common species patterns
