@@ -385,23 +385,26 @@ write_csv(sp.abnd, paste0(DATA_PATH, "summarised/species.abundance.csv") )
 
 #### Common species patterns =====================================================
 
-## ---- 
+## ---- fish EDA common species
 
 ### set up dataset
 
 commondata <- fishalgaedata %>% 
-  filter(Species == paste0(sp.abnd$Species[1:6]) )
+  filter(Species %in% paste0(sp.abnd$Species[1:6]) ) %>% #include only the commonest 6 sp
+  droplevels #remove the levels with no data
 glimpse(commondata)
+commondata$Species %>% levels
 
-
-### plot siganid abundance
-siganidata %>% 
-  group_by(Treatment, Replicate, Date) %>% 
-  summarise(abundance = sum(count) )%>% ## 
+## plot abundance
+commondata %>% 
+  group_by(Treatment, Replicate, Date, Species) %>% 
+  summarise(abundance = sum(count) )%>%
+ #ungroup() %>% ## 
   ggplot() + aes(y = abundance, x = Treatment) + ## 
   geom_count(alpha = 0.1)  +
   geom_violin(fill = NA) +
-  ylab(expression("Siganid Abundance") ) + 
+  facet_wrap(Species) +
+  ylab("Abundance" ) + 
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12),
@@ -409,9 +412,18 @@ siganidata %>%
   ) +
   theme_bw() -> g.sig.abnd
 
-g.sig.abnd ## something of a similar pattern to those above, although highly skewed. 
+g.common.abnd ## something of a similar pattern to those above, although highly skewed. 
 ## Poisson with Zero Inflation or neg binomial likely necessary
 
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.png"),
+       g.common.abnd,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+## plot abundance over time
+
+## plot abundance vs algal biomass
 siganidata %>% 
   group_by(Treatment, Replicate, Date) %>% 
   summarise(abundance = sum(count),
@@ -430,11 +442,7 @@ siganidata %>%
   theme_bw() -> g.alg.sig.abnd
 g.alg.sig.abnd
 
-ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sig.png"),
-       g.sig.abnd,
-       width = 10,
-       height = 5,
-       dpi = 100)
+
 
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sig.alg.png"),
        g.alg.sig.abnd,

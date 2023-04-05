@@ -126,3 +126,7 @@ Could the plot biomass be used as a predictor of diversity ?- yeah seems so
 The top 6 (Halichoeres miniatus to Siganus fuscescens) collectively accounted for 90% of total abundance, each individually accounted for more than 2% of total abundance and appeared every day. Only Steothjulis strigiventer also appeared every day (but why analyse it if not something else more abundant?) Using just the top 6 or less makes sense
 
 ### Common species patterns
+```{r fish EDA common species, results = 'markdown', eval = TRUE}
+
+```
+
