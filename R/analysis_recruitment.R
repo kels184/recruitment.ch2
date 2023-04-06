@@ -572,10 +572,17 @@ abnd.resid %>% testUniformity()
 
 ## ----end
 
+## ----recruitment univariate abundance revalidate2
+abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T, rotation = "PCA")
+abnd.resid %>% testDispersion()
+abnd.resid %>% testUniformity()
+
+## ----end
+
     #### Partial plot ===========================================================
 ## ----recruitment univariate abundance partial
-abnd.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot() #not working atm, could be to do with incompatible versions of TMB and glmmTMB
-
+abnd.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot() 
+abnd.glmmTMB.ac %>% ggpredict(terms = "Treatment") %>% plot()
 ## ----end
 
    #### Model investigation =====================================================
@@ -584,6 +591,9 @@ abnd.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot() #not working atm, co
 
 abnd.glmmTMB2 %>% summary()
 r.squaredGLMM(abnd.glmmTMB2)
+
+abnd.glmmTMB.ac %>% summary()
+r.squaredGLMM(abnd.glmmTMB.ac)
 
 ## ----end
 

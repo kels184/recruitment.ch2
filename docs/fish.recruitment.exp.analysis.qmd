@@ -169,7 +169,24 @@ autocorrelation model fit straight away, and is the definite winner by AICc desp
 ```{r recruitment univariate abundance revalidate, results = 'markdown', eval = TRUE}
 
 ```
+The autocorrelation model's residuals didn't meet the assumptions, particularly uniformity.It also still shows autocorrelation
 
+However: (from https://rdrr.io/cran/DHARMa/man/testTemporalAutocorrelation.html)
+
+Note
+Standard DHARMa simulations from models with (temporal / spatial / phylogenetic) conditional autoregressive terms will still have the respective temporal / spatial / phylogenetic correlation in the DHARMa residuals, unless the package you are using is modelling the autoregressive terms as explicit REs and is able to simulate conditional on the fitted REs. This has two consequences
+
+If you check the residuals for such a model, they will still show significant autocorrelation, even if the model fully accounts for this structure.
+
+Because the DHARMa residuals for such a model are not statistically independent any more, other tests (e.g. dispersion, uniformity) may have inflated type I error, i.e. you will have a higher likelihood of spurious residual problems.
+
+There are three (non-exclusive) routes to address these issues when working with spatial / temporal / other autoregressive models:
+
+Simulate conditional on the fitted CAR structures (see conditional simulations in the help of simulateResiduals)
+
+Rotate simulations prior to residual calculations (see parameter rotation in simulateResiduals)
+
+Use custom tests / plots that explicitly compare the correlation structure in the simulated data to the correlation structure in the observed data.
 
 ### Partial Plot
 ```{r recruitment univariate abundance partial, results='markdown', eval = TRUE}
@@ -187,8 +204,8 @@ Clear differences among treatments.
 Estimate of BH mean abundance: `r exp(2.1)`. Estimate for W is `r exp(.56)` x higher (`r exp(2.1+.56)`)
 R-square estimates indicate the model without the random component of PlotID explains approximately 50% of the variance. With the random effect it explains 62% (using the trigamma method as this model has a log link, package authors recommend this)
 
-Planned contrasts: In frequentist analyses you can make nlevels - 1 contrasts without p adjustment - as long as they're independent.
-```{r recruitment univariate abundance planned contrasts}
+Planned contrasts: from Murray Logan Course notes "In frequentist analyses you can make nlevels - 1 contrasts without p adjustment - as long as they're independent." - however I've read one other source suggesting one should still apply a correction even then. I'll leave this for now. If running Bayesian, I can make as many contrasts as I want
+#```{r recruitment univariate abundance planned contrasts}
 
-```
+#```
 
