@@ -498,17 +498,101 @@ fish.sp.abnd <-fishalgaedata %>%
                                   true = length(unique(Species)), 
                                   false = 0), #calculate sp. richness
             plot.weight = plot.weight # include the biomass of each plot in the output
-  ) %>% distinct() #remove duplicate rows
+  ) %>% distinct() %>% #remove duplicate rows
+  mutate(plotID = factor(paste0(Treatment, Replicate)),
+         Density = recode_factor(Treatment, "W" = 9, "BH" = 9, "BQ" = 9,
+                                 "DM" = 5, "DL" = 3)) %>% 
+  as.data.frame() #make into a data frame instead of tbl (prevented ggpredict[]
+
 fish.sp.abnd %>% glimpse()
+fish.sp.abnd$Density %>% levels()
 ## ----end
 
    #### Fit =====================================================================
-## ---- recruitment univariate fit abundance
+
+## ---- recruitment univariate abundance initial models
+
+abnd.glmmTMB1 <- glmmTMB(abundance ~ 1 + (1|plotID), #Random intercept model
+                       data = fish.sp.abnd,
+                       family = poisson(link = "log"), #Poisson model
+                       REML = TRUE) 
+
+abnd.glmmTMB2 <- update(abnd.glmmTMB1, .~. + Treatment) #add Treatment as fixed
+
+abnd.glmmTMB3 <- update(abnd.glmmTMB1, .~. + plot.weight) #plot.weight fixed
+
+abnd.glmmTMB4 <- update(abnd.glmmTMB1, .~. + Density)#Density fixed
+
+abnd.glmmTMB5 <- update(abnd.glmmTMB3, .~. + Density)#plot.weight + Density
+
+abnd.glmmTMB6 <- update(abnd.glmmTMB3, .~. * Density) #plot.weight*Density
+
+abnd.glmmTMB7 <- update(abnd.glmmTMB2, ~. + plot.weight) #Treatment + plot.weight
+
+abnd.glmmTMB8 <- update(abnd.glmmTMB2, ~. * plot.weight) #Treatment * plot.weight
+
+MuMIn::AICc(abnd.glmmTMB1,abnd.glmmTMB2, abnd.glmmTMB3, abnd.glmmTMB4,
+     abnd.glmmTMB5, abnd.glmmTMB6,abnd.glmmTMB7, abnd.glmmTMB8) #compare models
 
 ## ----end
-   #### Validate/ ReFit =========================================================
+
+   #### Validate/ Refit =========================================================
+## ----recruitment univariate abundance validate
+abnd.resid <- abnd.glmmTMB2 %>% DHARMa::simulateResiduals(plot = T)
+abnd.resid %>% testDispersion()
+
+#are the observations of the same plot temporally autocorrelated? DHARMA won't 
+#like that there are multiple observations at the same time, but maybe if I 
+#give each plot their own set of Time
+fish.sp.abnd <- fish.sp.abnd %>% 
+  mutate(TIME = as.numeric(plotID) + as.numeric(Date)*10^-5)
+fish.sp.abnd %>% head
+fish.sp.abnd %>% tail
+
+abnd.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+abnd.resid %>% testZeroInflation()
+## ----end
+
+## ---- recruitment univariate abundance refit autocorrelation
+
+abnd.glmmTMB.ac <- update(abnd.glmmTMB2, .~. + 
+                            ar1(0 + factor(Date)| plotID) #ac part.No intercept(0), 
+ #Date must be a factor, with evenly spaced time steps. autocorrelation separate 
+ #for each plot 
+                          )
+
+AICc(abnd.glmmTMB.ac, abnd.glmmTMB2)
+
+## ----end
+
+## ----recruitment univariate abundance revalidate
+abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
+abnd.resid %>% testDispersion()
+abnd.resid %>% testUniformity()
+
+## ----end
+
+    #### Partial plot ===========================================================
+## ----recruitment univariate abundance partial
+abnd.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot() #not working atm, could be to do with incompatible versions of TMB and glmmTMB
+
+## ----end
 
    #### Model investigation =====================================================
+
+## ---- recruitment univariate abundance summary
+
+abnd.glmmTMB2 %>% summary()
+r.squaredGLMM(abnd.glmmTMB2)
+
+## ----end
+
+## ---- recruitment univariate abundance planned contrasts
+
+
+
+## ----end
+
 
    #### Summary figures =========================================================
 
@@ -517,7 +601,7 @@ fish.sp.abnd %>% glimpse()
   ### Species Richness ==========================================================
    #### Fit =====================================================================
 
-   #### Validate/ ReFit =========================================================
+   #### Validate/ Refit =========================================================
 
    #### Model investigation =====================================================
 

@@ -146,11 +146,49 @@ Unlikely to be worth exploring L. atkinsoni and S. fuscescens, but the rest show
 
 ## Total abundance
 ```{r recruitment univariate setup data, results = 'markdown', eval = TRUE}
-
 ```
 
 
 ### Fit model
-```{r recruitment univariate fit abundance}
+```{r recruitment univariate abundance initial models, results = 'markdown', eval = TRUE}
+```
+The 'Treatment' model with performed best. Plot weight model and all models with density included performed poorly. Note it wouldn't make sense to include density and treatment, but plot weight did vary within treatments. However the models including Treatment and plot.weight performed poorly 
+
+### Validate/Refit
+```{r recruitment univariate abundance validate, results = 'markdown', eval = TRUE}
+```
+residuals look quite  good.
+However, there appears to be definite autocorrelation
+No zero inflation
+
+
+```{r recruitment univariate abundance refit autocorrelation, results = 'markdown', eval = TRUE}
+```
+autocorrelation model fit straight away, and is the definite winner by AICc despite higher df
+
+```{r recruitment univariate abundance revalidate, results = 'markdown', eval = TRUE}
 
 ```
+
+
+### Partial Plot
+```{r recruitment univariate abundance partial, results='markdown', eval = TRUE}
+
+```
+
+### Model Investigation
+```{r recruitment univariate abundance summary, results = 'markdown', eval = TRUE}
+
+```
+
+
+Clear differences among treatments. 
+
+Estimate of BH mean abundance: `r exp(2.1)`. Estimate for W is `r exp(.56)` x higher (`r exp(2.1+.56)`)
+R-square estimates indicate the model without the random component of PlotID explains approximately 50% of the variance. With the random effect it explains 62% (using the trigamma method as this model has a log link, package authors recommend this)
+
+Planned contrasts: In frequentist analyses you can make nlevels - 1 contrasts without p adjustment - as long as they're independent.
+```{r recruitment univariate abundance planned contrasts}
+
+```
+
