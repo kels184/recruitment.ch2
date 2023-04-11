@@ -573,7 +573,7 @@ abnd.resid %>% testUniformity()
 ## ----end
 
 ## ----recruitment univariate abundance revalidate2
-abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T, rotation = "PCA")
+abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
 abnd.resid %>% testDispersion()
 abnd.resid %>% testUniformity()
 
@@ -587,7 +587,7 @@ abnd.glmmTMB.ac %>% ggpredict(terms = "Treatment") %>% plot()
 
    #### Model investigation =====================================================
 
-## ---- recruitment univariate abundance summary
+## ---- recruitment univariate abundance summary, error = "TRUE", cache = "FALSE", warning = "FALSE"
 
 abnd.glmmTMB2 %>% summary()
 r.squaredGLMM(abnd.glmmTMB2)

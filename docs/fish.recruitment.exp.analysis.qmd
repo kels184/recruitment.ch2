@@ -194,7 +194,7 @@ Use custom tests / plots that explicitly compare the correlation structure in th
 ```
 
 ### Model Investigation
-```{r recruitment univariate abundance summary, results = 'markdown', eval = TRUE}
+```{r recruitment univariate abundance summary, results = 'markdown', eval = TRUE, error =TRUE}
 
 ```
 
