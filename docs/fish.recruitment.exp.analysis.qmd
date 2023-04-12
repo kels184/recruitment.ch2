@@ -193,12 +193,41 @@ Use custom tests / plots that explicitly compare the correlation structure in th
 
 ```
 
+
+### Bayesian Model
+
+```{r recruitment univariate abundance priors1, results = 'markdown', eval = TRUE}
+
+```
+The default priors were mostly flat for the effects and student_t for the sds. A prior I haven't used before appeared - class 'ar' - flat, with an upper bound of 1 and a lower bound of -1.
+From the plots and eda, above, an appropriate estimate of the abundance in group BH (the default first) would be 8. On the log scale, log 8 `r log(8)` ~ 2.1 (the same as brms would give for the median of the student_t for the Intercept). However the dispersion of 2.5 is likely too wide
+In addition to an sd overall, an sd for the intercept and an sd by group = plotID, an additional 'sderr' term exists. Something to do with autocorrelation (it did not appear in a formula without the ar term)
+
+for the intercept, a more appropriate prior might be N(2,1)
+
+For the slope, sd(RESPONSE/sd(PREDICTOR) – gives a very crude approximation of the sd of the slope of that relationship. IN this case our predictor is Catergorical, so we have to use dummy code (0s and 1s)
+```{r recruitment univariate abundance priors2, results = 'markdown', eval = TRUE}
+
+```
+
+the sds are the same for each treatment because the study was balanced
+for the variance argument for the slope prior, a bit more than 4, say 4.5 or 5 (to allow a bit more width) would probably be appropriate
+i.e. N(0, 5)
+
+
+```{r recruitment univariate abundance fit brm, results = 'markdown', eval = TRUE}
+
+```
+
+
 ### Model Investigation
 ```{r recruitment univariate abundance summary, results = 'markdown', eval = TRUE, error =TRUE}
 
 ```
 
+```{r recruitment univariate abundance brm summary, results = 'markdown', eval = TRUE, error =TRUE}
 
+```
 Clear differences among treatments. 
 
 Estimate of BH mean abundance: `r exp(2.1)`. Estimate for W is `r exp(.56)` x higher (`r exp(2.1+.56)`)

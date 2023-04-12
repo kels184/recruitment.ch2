@@ -566,7 +566,7 @@ AICc(abnd.glmmTMB.ac, abnd.glmmTMB2)
 ## ----end
 
 ## ----recruitment univariate abundance revalidate
-abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
+abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T, re.form = NULL)
 abnd.resid %>% testDispersion()
 abnd.resid %>% testUniformity()
 
@@ -585,6 +585,67 @@ abnd.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot()
 abnd.glmmTMB.ac %>% ggpredict(terms = "Treatment") %>% plot()
 ## ----end
 
+   #### Bayesian Model ==========================================================
+
+## ---- recruitment univariate abundance priors1
+
+abnd.form <- bf(abundance ~ Treatment,
+                   # + (1|plotID),
+                 #   autocor = ~ ar(time = Date, gr = plotID, 
+                    #             p = 1), #order of the autoregressive (1st order)
+                           family = poisson(link = "log"))
+
+abnd.form %>%  get_prior(data = fish.sp.abnd)
+
+## priors for Intercept
+fish.sp.abnd %>% group_by(Treatment) %>%  summarise(log(median(abundance)), log(mad(abundance)))
+## ----end
+
+## ---- recruitment univariate abundance priors2
+##priors for Effects
+log(sd(fish.sp.abnd$abundance)) #1.61
+model.matrix(~Treatment, data = fish.sp.abnd) %>% head
+apply(model.matrix(~Treatment, data = fish.sp.abnd), 2, sd)
+log(sd(fish.sp.abnd$abundance))/apply(model.matrix(~Treatment, data = fish.sp.abnd), 2, sd)
+
+
+standist::visualize("gamma(2,1)", "cauchy(0,2)","student_t(3, 0, 2.5)", xlim = c(0,10))
+
+## ----end
+
+
+## ----recruitment univariate abundance fit brm
+
+
+
+## ----end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## ---- recruitment univariate abundance brm summary
+
+
+## ----end
    #### Model investigation =====================================================
 
 ## ---- recruitment univariate abundance summary, error = "TRUE", cache = "FALSE", warning = "FALSE"
