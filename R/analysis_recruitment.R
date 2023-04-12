@@ -589,10 +589,10 @@ abnd.glmmTMB.ac %>% ggpredict(terms = "Treatment") %>% plot()
 
 ## ---- recruitment univariate abundance priors1
 
-abnd.form <- bf(abundance ~ Treatment,
-                   # + (1|plotID),
-                 #   autocor = ~ ar(time = Date, gr = plotID, 
-                    #             p = 1), #order of the autoregressive (1st order)
+abnd.form <- bf(abundance ~ Treatment
+                    + (1|plotID),
+                   autocor = ~ ar(time = Date, gr = plotID, 
+                                 p = 1), #order of the autoregressive (1st order)
                            family = poisson(link = "log"))
 
 abnd.form %>%  get_prior(data = fish.sp.abnd)
@@ -614,22 +614,46 @@ standist::visualize("gamma(2,1)", "cauchy(0,2)","student_t(3, 0, 2.5)", xlim = c
 ## ----end
 
 
-## ----recruitment univariate abundance fit brm
+## ----recruitment univariate abundance fit brm1
+priors <- prior(normal(2,1), class = "Intercept") +
+  prior(normal(0,5), class = "b") + 
+  prior(cauchy(0,2), class = "sd")
 
+abnd.brm1 <- brm(abnd.form,
+                 data = fish.sp.abnd,
+                 prior = priors,
+                 sample_prior = "only", #just to start
+                 iter = 5000, warmup = 1000,
+                 chains = 3, cores = 3, 
+                 thin = 5)
 
+abnd.brm1 %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
+## ----end
 
+## ----recruitment univariate abundance fit brm2
+priors <- prior(normal(2,1), class = "Intercept") +
+  prior(normal(0,5), class = "b") + 
+  prior(cauchy(0,2), class = "sd") +
+  prior(uniform(-1,1), class = "ar") +
+  prior(cauchy(0,2), class = "sderr")
+        
+abnd.brm1 <- brm(abnd.form,
+                         data = fish.sp.abnd,
+                         prior = priors,
+                         sample_prior = "only", #just to start
+                         iter = 5000, warmup = 1000,
+                         chains = 3, cores = 3, 
+                         thin = 5)
+save(abnd.brm1, file = paste0(DATA_PATH, "modelled/owls.brmprior1.RData"))  
+abnd.brm1 %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
 ## ----end
 
 
 
-
-
-
-
-
-
-
-
+abnd.brm1$prior
+abnd.brm1$data$Date %>% class()
+abnd.brm1$data$Date <- factor(abnd.brm1$data$Date)
+##this did not change that ggpredict didn't work
 
 
 

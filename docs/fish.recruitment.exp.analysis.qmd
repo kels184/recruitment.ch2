@@ -214,10 +214,16 @@ the sds are the same for each treatment because the study was balanced
 for the variance argument for the slope prior, a bit more than 4, say 4.5 or 5 (to allow a bit more width) would probably be appropriate
 i.e. N(0, 5)
 
-
-```{r recruitment univariate abundance fit brm, results = 'markdown', eval = TRUE}
+For sd, a cauchy (0.2) will be used to begin with. I'll leave "sderr" with its default
+```{r recruitment univariate abundance fit brm1, results = 'markdown', eval = TRUE, error = TRUE, cache = TRUE}
 
 ```
+a prior must be set for ar
+
+```{r recruitment univariate abundance fit brm2, results = 'markdown', eval = TRUE, error = TRUE, cache = TRUE}
+
+```
+The model fit, however I can't seem to retrieve the ggpredict() estimates
 
 
 ### Model Investigation
