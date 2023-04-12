@@ -655,16 +655,82 @@ abnd.brm1$data$Date %>% class()
 abnd.brm1$data$Date <- factor(abnd.brm1$data$Date)
 ##this did not change that ggpredict didn't work
 
+fish.sp.abnd$Date %>% class()
+fish.sp.abnd <- fish.sp.abnd %>% 
+  mutate(Date = factor(Date))
+##this, then rerunning the model, did not change that ggpredict didn't work either
+##ggpredict still works for murray's examples (e.g. bglmm_example5, owls.brm2)
+##so probably not an update of ggpredict() issue
+## more likely something to do with the ar() term
 
 
+## the following (i.e. the model without the ar term) ran
+abnd.form <- bf(abundance ~ Treatment + (1|plotID),
+                family = poisson(link = "log"))
+
+priors <- prior(normal(2,1), class = "Intercept") +
+  prior(normal(0,5), class = "b") + 
+  prior(cauchy(0,2), class = "sd")
+
+abnd.brm2.prior <- brm(abnd.form,
+                 data = fish.sp.abnd,
+                 prior = priors,
+                 sample_prior = "only", #just to start
+                 iter = 5000, warmup = 1000,
+                 chains = 3, cores = 3, 
+                 thin = 5)
+
+abnd.brm2.prior %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
 
 
+##althought the priors for the effects were massive (several orders of magnitude
+#higher than the data)
+standist::visualize("normal(0,2)")
+exp(c(2,3,5,10))
+#a normal(0,2) is probably more appropriate
+
+#however the fact that it ran adds evidence for there being a problem with the ar()
+#term in the formula, or its priors
 
 
+##removing prior for sderr only did not work
+## when the prior for ar was not included the model did not run: 
+
+#"Error: Sampling from priors is not possible as some parameters have no proper
+#priors. Error occurred for parameter 'ar'.
+
+##but [https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations] seems
+#to suggest a uniform(-1,1) prior is sensible
+
+##therefore there may be a problem with how the ar term is specified, or at least
+#an incompatability with that specification and ggpredict
 
 
+#without any idea how to fix this, lets see if the model will run including the
+#data and posteriors
 
+## ---- recruitment univariate abundance fit brm3
 
+abnd.form <- bf(abundance ~ Treatment
+                + (1|plotID),
+                autocor = ~ ar(time = Date, gr = plotID, p = 1), 
+                family = poisson(link = "log"))
+
+priors <- prior(normal(2,1), class = "Intercept") +
+  prior(normal(0,2), class = "b") + 
+  prior(cauchy(0,2), class = "sd") +
+  prior(uniform(-1,1), class = "ar") +
+  prior(cauchy(0,2), class = "sderr")
+
+abnd.brm1a <- update(abnd.brm1, sample_prior = "yes")
+save(abnd.brm1a, file = paste0(DATA_PATH, "modelled/owls.brm1.RData"))
+##this worked
+
+abnd.brm1a %>% ggpredict(~Treatment)
+#this didn't 
+
+abnd.brm1a %>% get_variables()
+## ----end
 
 ## ---- recruitment univariate abundance brm summary
 

@@ -226,6 +226,11 @@ a prior must be set for ar
 The model fit, however I can't seem to retrieve the ggpredict() estimates
 
 
+```{r recruitment univariate abundance fit brm3, results = 'markdown', eval = TRUE, error = TRUE, cache = TRUE}
+
+```
+
+
 ### Model Investigation
 ```{r recruitment univariate abundance summary, results = 'markdown', eval = TRUE, error =TRUE}
 
