@@ -195,40 +195,71 @@ Use custom tests / plots that explicitly compare the correlation structure in th
 
 
 ### Bayesian Model
-
+1. Assess priors
 ```{r recruitment univariate abundance priors1, results = 'markdown', eval = TRUE}
 
 ```
 The default priors were mostly flat for the effects and student_t for the sds. A prior I haven't used before appeared - class 'ar' - flat, with an upper bound of 1 and a lower bound of -1.
-From the plots and eda, above, an appropriate estimate of the abundance in group BH (the default first) would be 8. On the log scale, log 8 `r log(8)` ~ 2.1 (the same as brms would give for the median of the student_t for the Intercept). However the dispersion of 2.5 is likely too wide
+From the plots and eda, above, an appropriate estimate of the abundance in group BH (the default first) would be 8. On the log scale, log 8 = `r log(8)` ~ 2.1 (the same as brms would give for the median of the student_t for the Intercept). However the dispersion of 2.5 is likely too wide.
 In addition to an sd overall, an sd for the intercept and an sd by group = plotID, an additional 'sderr' term exists. Something to do with autocorrelation (it did not appear in a formula without the ar term)
 
 for the intercept, a more appropriate prior might be N(2,1)
 
-For the slope, sd(RESPONSE/sd(PREDICTOR) – gives a very crude approximation of the sd of the slope of that relationship. IN this case our predictor is Catergorical, so we have to use dummy code (0s and 1s)
+For the slope, sd(RESPONSE/sd(PREDICTOR) – gives a very crude approximation of the sd of the slope of that relationship. In this case our predictor is Categorical, so we have to use dummy code (0s and 1s)
 ```{r recruitment univariate abundance priors2, results = 'markdown', eval = TRUE}
 
 ```
 
-the sds are the same for each treatment because the study was balanced
-for the variance argument for the slope prior, a bit more than 4, say 4.5 or 5 (to allow a bit more width) would probably be appropriate
+The sds are the same for each treatment because the study was balanced.
+
+For the variance argument for the slope prior, a bit more than 4, say 4.5 or 5 (to allow a bit more width) would probably be appropriate
 i.e. N(0, 5)
 
-For sd, a cauchy (0.2) will be used to begin with. I'll leave "sderr" with its default
-```{r recruitment univariate abundance fit brm1, results = 'markdown', eval = TRUE, error = TRUE, cache = TRUE}
+For the sd prior, a cauchy (0.2) will be used to begin with. I'll do the same with "sderr"
+
+2. Fit with priors only
+```{r recruitment univariate abundance fit brm1.prior, results = 'markdown', eval = FALSE}
 
 ```
-a prior must be set for ar
+The above code model did fit, but I had trouble with using ggpredict on it (see below) 
 
-```{r recruitment univariate abundance fit brm2, results = 'markdown', eval = TRUE, error = TRUE, cache = TRUE}
-
-```
-The model fit, however I can't seem to retrieve the ggpredict() estimates
-
-
-```{r recruitment univariate abundance fit brm3, results = 'markdown', eval = TRUE, error = TRUE, cache = TRUE}
+```{r recruitment univariate abundance brm1 error and fix attempt, results = 'markdown', error = TRUE}
 
 ```
+Changing the class of 'Date' and refitting the model did not fix the issue
+
+2.1 Fit alternative model (no ar term)
+```{r recruitment univariate abundance fit brm2, results = 'markdown', eval = FALSE}
+
+```
+
+The model fit, however and ggpredict worked for this model and allowed refinement of the priors for the b's
+```{r recruitment univariate abundance brm2 ggpredict, results = 'markdown', eval = TRUE}
+```
+a normal(0,2) was deemed probably more appropriate for b
+
+
+3.1 Fit model, sampling from data and from priors
+```{r recruitment univariate abundance fit brm1a, results = 'markdown', eval = FALSE, error = TRUE, cache = TRUE}
+```
+
+```{r recruitment univariate abundance brm1a vars, results = 'markdown', eval = TRUE, error = TRUE}
+
+```
+
+The model fit, ggpredict had trouble, and there seems to be an error estimate for every data point (err[1]...err[450]). Compare with `r abnd.brm2.prior %>% get_variables()` (the variables of the model without the ar term)
+
+4.Prior Checks
+```{r recruitment univariate abundance brm1a prior checks, results = 'markdown', eval = TRUE}
+
+```
+Prior for the intercept and treatment seem appropriate. ar, sd and sderr especially could shrink if further diagnostics reveal problems
+
+4. Bayesian diagnostics
+```{r recruitment univariate abundance brm1a MCMC diagnostics, results = 'markdown', eval = TRUE}
+```
+
+
 
 
 ### Model Investigation

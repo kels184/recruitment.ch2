@@ -49,6 +49,7 @@ library(emmeans) # post-hoc analysis of statistical models
 library(ggeffects) #post-hoc analysis of statistical models
 library(brms) # Bayesian regression modelling
 library(posterior) # posterior analysis
+library(rstan) # Bayesian inference, MCMC diagnostics
 library(HDInterval) # highest density intervals
 library(tidybayes) #bayesian data analysis
 library(report) #automated reporting

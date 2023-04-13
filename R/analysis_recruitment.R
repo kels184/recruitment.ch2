@@ -614,23 +614,7 @@ standist::visualize("gamma(2,1)", "cauchy(0,2)","student_t(3, 0, 2.5)", xlim = c
 ## ----end
 
 
-## ----recruitment univariate abundance fit brm1
-priors <- prior(normal(2,1), class = "Intercept") +
-  prior(normal(0,5), class = "b") + 
-  prior(cauchy(0,2), class = "sd")
-
-abnd.brm1 <- brm(abnd.form,
-                 data = fish.sp.abnd,
-                 prior = priors,
-                 sample_prior = "only", #just to start
-                 iter = 5000, warmup = 1000,
-                 chains = 3, cores = 3, 
-                 thin = 5)
-
-abnd.brm1 %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
-## ----end
-
-## ----recruitment univariate abundance fit brm2
+## ----recruitment univariate abundance fit brm1.prior
 priors <- prior(normal(2,1), class = "Intercept") +
   prior(normal(0,5), class = "b") + 
   prior(cauchy(0,2), class = "sd") +
@@ -639,20 +623,22 @@ priors <- prior(normal(2,1), class = "Intercept") +
         
 abnd.brm1 <- brm(abnd.form,
                          data = fish.sp.abnd,
-                         prior = priors,
-                         sample_prior = "only", #just to start
+                       prior = priors,
+                        sample_prior = "only", #just to start
                          iter = 5000, warmup = 1000,
                          chains = 3, cores = 3, 
                          thin = 5)
-save(abnd.brm1, file = paste0(DATA_PATH, "modelled/owls.brmprior1.RData"))  
-abnd.brm1 %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
+save(abnd.brm1, file = paste0(DATA_PATH, "modelled/abnd.brmprior1.RData"))  
 ## ----end
 
+## ---- recruitment univariate abundance brm1 error and fix attempt
+load(file = paste0(DATA_PATH, "modelled/abnd.brmprior1.RData"))
 
+abnd.brm1 %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
 
-abnd.brm1$prior
 abnd.brm1$data$Date %>% class()
 abnd.brm1$data$Date <- factor(abnd.brm1$data$Date)
+abnd.brm1$data$Date %>% class()
 ##this did not change that ggpredict didn't work
 
 fish.sp.abnd$Date %>% class()
@@ -663,8 +649,11 @@ fish.sp.abnd <- fish.sp.abnd %>%
 ##so probably not an update of ggpredict() issue
 ## more likely something to do with the ar() term
 
+## ----end
 
-## the following (i.e. the model without the ar term) ran
+## ----recruitment univariate abundance fit brm2
+
+##the following (i.e. the model without the ar term) ran
 abnd.form <- bf(abundance ~ Treatment + (1|plotID),
                 family = poisson(link = "log"))
 
@@ -680,14 +669,22 @@ abnd.brm2.prior <- brm(abnd.form,
                  chains = 3, cores = 3, 
                  thin = 5)
 
+save(abnd.brm2.prior, file = paste0(DATA_PATH, "modelled/abnd.brmprior2.RData")) 
+## ----end
+
+## ----recruitment univariate abundance brm2 ggpredict
+load(file = paste0(DATA_PATH, "modelled/abnd.brmprior2.RData"))
+
 abnd.brm2.prior %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
 
 
-##althought the priors for the effects were massive (several orders of magnitude
+##although the priors for the effects were massively wide (several orders of magnitude
 #higher than the data)
+standist::visualize("normal(0,5)")
 standist::visualize("normal(0,2)")
 exp(c(2,3,5,10))
 #a normal(0,2) is probably more appropriate
+## ----end
 
 #however the fact that it ran adds evidence for there being a problem with the ar()
 #term in the formula, or its priors
@@ -709,7 +706,7 @@ exp(c(2,3,5,10))
 #without any idea how to fix this, lets see if the model will run including the
 #data and posteriors
 
-## ---- recruitment univariate abundance fit brm3
+## ---- recruitment univariate abundance fit brm1a
 
 abnd.form <- bf(abundance ~ Treatment
                 + (1|plotID),
@@ -723,9 +720,12 @@ priors <- prior(normal(2,1), class = "Intercept") +
   prior(cauchy(0,2), class = "sderr")
 
 abnd.brm1a <- update(abnd.brm1, sample_prior = "yes")
-save(abnd.brm1a, file = paste0(DATA_PATH, "modelled/owls.brm1.RData"))
+save(abnd.brm1a, file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
 ##this worked
+## ----end
 
+## ----
+load(file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
 abnd.brm1a %>% ggpredict(~Treatment)
 #this didn't 
 
