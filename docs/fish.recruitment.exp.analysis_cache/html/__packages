@@ -25,3 +25,6 @@ permute
 lattice
 vegan
 ggvegan
+StanHeaders
+rstan
+broom.mixed

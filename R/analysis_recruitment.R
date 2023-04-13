@@ -566,7 +566,7 @@ AICc(abnd.glmmTMB.ac, abnd.glmmTMB2)
 ## ----end
 
 ## ----recruitment univariate abundance revalidate
-abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T, re.form = NULL)
+abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
 abnd.resid %>% testDispersion()
 abnd.resid %>% testUniformity()
 
@@ -672,6 +672,7 @@ abnd.brm2.prior <- brm(abnd.form,
 save(abnd.brm2.prior, file = paste0(DATA_PATH, "modelled/abnd.brmprior2.RData")) 
 ## ----end
 
+
 ## ----recruitment univariate abundance brm2 ggpredict
 load(file = paste0(DATA_PATH, "modelled/abnd.brmprior2.RData"))
 
@@ -724,7 +725,7 @@ save(abnd.brm1a, file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
 ##this worked
 ## ----end
 
-## ----
+## ---- r recruitment univariate abundance brm1a vars
 load(file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
 abnd.brm1a %>% ggpredict(~Treatment)
 #this didn't 
@@ -732,10 +733,94 @@ abnd.brm1a %>% ggpredict(~Treatment)
 abnd.brm1a %>% get_variables()
 ## ----end
 
-## ---- recruitment univariate abundance brm summary
 
+
+
+## ---- r recruitment univariate abundance brm1a prior checks
+load(file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
+
+abnd.brm1a %>%
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '(^b|^prior).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'Intercept' at the end
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains sd ('sderr' will be included)
+           str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
+           str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
+         Par = str_replace(key, 'b_', '')) %>% 
+  
+ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+
+##alternatively
+#abnd.brm1a %>% SUYR_prior_and_posterior()
+#almost gets it
+## ----end
+
+
+## ---- recruitment univariate abundance brm1a MCMC diagnostics
+load(file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
+
+pars <- abnd.brm1a %>% get_variables()
+pars
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^ar.*') %>% #that start with b, sd or ar
+  na.omit # omit the rest, resulting in an object of class 'omit'
+wch
+##Trace Plots
+stan_trace(abnd.brm1a$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(abnd.brm1a$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(abnd.brm1a$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(abnd.brm1a$fit, pars = wch)
+
+##Density plot
+stan_dens(abnd.brm1a$fit, pars = wch, separate_chains = TRUE)
 
 ## ----end
+
+
+## ---- recruitment univariate abundance DHARMA residuals
+
+#step 1. Draw out predictions
+preds <- abnd.brm1a %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                         summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+fert.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                            observedResponse = fish.sp.abnd$abundance, #real response
+                            fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                            integerResponse = "TRUE" #is the response an integer? yes
+                            #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+                            )
+
+#Step 3 - plot!
+plot(fert.resids)
+
+fert.resids %>% testDispersion()
+fert.resids %>% testUniformity()
+#fert.resids %>% testZeroInflation()
+
+## ----end
+
+
+
    #### Model investigation =====================================================
 
 ## ---- recruitment univariate abundance summary, error = "TRUE", cache = "FALSE", warning = "FALSE"
@@ -748,10 +833,18 @@ r.squaredGLMM(abnd.glmmTMB.ac)
 
 ## ----end
 
-## ---- recruitment univariate abundance planned contrasts
+## ---- recruitment univariate abundance brm summary
+abnd.brm1a %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
+abnd.brm1a %>% ggemmeans(~Treatment)
+abnd.brm1a %>% ggemmeans(~Treatment) %>% plot()
 
 
-
+abnd.brm1a$fit %>% tidyMCMC(pars = wch,
+                             estimate.method = "median",
+                             conf.int = TRUE,
+                             conf.method = "HPDinterval",
+                             rhat = TRUE,
+                             ess = TRUE)
 ## ----end
 
 

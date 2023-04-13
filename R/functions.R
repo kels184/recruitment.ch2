@@ -50,6 +50,7 @@ library(ggeffects) #post-hoc analysis of statistical models
 library(brms) # Bayesian regression modelling
 library(posterior) # posterior analysis
 library(rstan) # Bayesian inference, MCMC diagnostics
+library(broom.mixed) #tidying methods for mixed models (e.g. summary tables)
 library(HDInterval) # highest density intervals
 library(tidybayes) #bayesian data analysis
 library(report) #automated reporting

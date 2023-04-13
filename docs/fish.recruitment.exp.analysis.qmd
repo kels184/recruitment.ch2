@@ -169,7 +169,7 @@ autocorrelation model fit straight away, and is the definite winner by AICc desp
 ```{r recruitment univariate abundance revalidate, results = 'markdown', eval = TRUE}
 
 ```
-The autocorrelation model's residuals didn't meet the assumptions, particularly uniformity.It also still shows autocorrelation
+The autocorrelation model's residuals didn't meet the assumptions, particularly uniformity. It also still shows autocorrelation. The result of the Dispersion test indicates UNDER-dispersion - of less concern than overdispersion, as rather than inflating the type I error rate, it shrinks it - more conservative
 
 However: (from https://rdrr.io/cran/DHARMa/man/testTemporalAutocorrelation.html)
 
@@ -240,10 +240,10 @@ a normal(0,2) was deemed probably more appropriate for b
 
 
 3.1 Fit model, sampling from data and from priors
-```{r recruitment univariate abundance fit brm1a, results = 'markdown', eval = FALSE, error = TRUE, cache = TRUE}
+```{r recruitment univariate abundance fit brm1a, results = 'markdown', eval = FALSE}
 ```
 
-```{r recruitment univariate abundance brm1a vars, results = 'markdown', eval = TRUE, error = TRUE}
+```{r recruitment univariate abundance brm1a vars, results = 'markdown', eval = TRUE, error = TRUE, cache = TRUE}
 
 ```
 
@@ -255,19 +255,22 @@ The model fit, ggpredict had trouble, and there seems to be an error estimate fo
 ```
 Prior for the intercept and treatment seem appropriate. ar, sd and sderr especially could shrink if further diagnostics reveal problems
 
-4. Bayesian diagnostics
+4. MCMC diagnostics
 ```{r recruitment univariate abundance brm1a MCMC diagnostics, results = 'markdown', eval = TRUE}
 ```
+Chains are well mixed, autocorrelation factors are low, rhats are around 1 and less than 1.05, effective sample sizes for the posteriors are all close to 1 and well above 0.5 and posterior distributions of the separate chains resemble one another
 
+
+5. DHARMA residuals
+
+```{r recruitment univariate abundance DHARMA residuals, results = 'markdown', eval = TRUE}
+```
+The residuals don't look too good - similarly to the Frequentist approach, both dispersion (UNDERdispersion) and uniformity appear to be violated
 
 
 
 ### Model Investigation
 ```{r recruitment univariate abundance summary, results = 'markdown', eval = TRUE, error =TRUE}
-
-```
-
-```{r recruitment univariate abundance brm summary, results = 'markdown', eval = TRUE, error =TRUE}
 
 ```
 Clear differences among treatments. 
@@ -276,7 +279,14 @@ Estimate of BH mean abundance: `r exp(2.1)`. Estimate for W is `r exp(.56)` x hi
 R-square estimates indicate the model without the random component of PlotID explains approximately 50% of the variance. With the random effect it explains 62% (using the trigamma method as this model has a log link, package authors recommend this)
 
 Planned contrasts: from Murray Logan Course notes "In frequentist analyses you can make nlevels - 1 contrasts without p adjustment - as long as they're independent." - however I've read one other source suggesting one should still apply a correction even then. I'll leave this for now. If running Bayesian, I can make as many contrasts as I want
-#```{r recruitment univariate abundance planned contrasts}
+```{r recruitment univariate abundance brm summary, results = 'markdown', eval = TRUE, error =TRUE}
 
-#```
+```
+although 'ggpredict()' is having some trouble, ggemmeans works well
+
+The summary stat table shows differences amongst treatments, will explore further contrasts (e.g. W vs the rest) next because I can
+
+the estimate of ar(1) seems a little low compared to the Frequentist analysis
+
+
 
