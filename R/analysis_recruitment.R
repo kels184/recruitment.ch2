@@ -861,7 +861,7 @@ priors <- prior(normal(2,1), class = "Intercept") +
   prior(uniform(0,1), class = "ar") + #ar prior only between 0 and 1
   prior(cauchy(0,2), class = "sderr")
 
-abnd.brm1b <- update(abnd.brm1a, prior = priors)
+abnd.brm1b <- update(abnd.brm1a, prior = priors, seed = 123, refresh = 0)
 
 abnd.brm1b$fit %>% tidyMCMC(pars = wch,
                             estimate.method = "median",
@@ -871,6 +871,42 @@ abnd.brm1b$fit %>% tidyMCMC(pars = wch,
                             ess = TRUE)
 #the answer: yes, slightly, though none of the conclusions of the table changed
 save(abnd.brm1b, file = paste0(DATA_PATH, "modelled/abnd.brm1b.RData"))
+
+#just for peace of mind:
+
+##Trace Plot
+stan_trace(abnd.brm1b$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(abnd.brm1b$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(abnd.brm1b$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(abnd.brm1b$fit, pars = wch)
+
+##Density plot
+stan_dens(abnd.brm1b$fit, pars = wch, separate_chains = TRUE)
+
+
+#step 1. Draw out predictions
+preds <- abnd.brm1b %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                          summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+fert.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                            observedResponse = fish.sp.abnd$abundance, #real response
+                            fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                            integerResponse = "TRUE" #is the response an integer? yes
+                            #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(fert.resids)
+
+
 
    #### Summary figures =========================================================
 

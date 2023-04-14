@@ -56,6 +56,7 @@ library(tidybayes) #bayesian data analysis
 library(report) #automated reporting
 library(vegan) #multivariate analysis
 library(ggvegan) #multivariate plotting
+library(butcher) #file size hacking
 ## ----end
 
 ## ---- preparePaths
@@ -218,4 +219,42 @@ SUYR_prior_and_posterior <- function(mod) {
         facet_wrap(~Class,  scales='free')
         )
 }
+## ----end
+
+## ----hack_size functions
+
+##from https://stackoverflow.com/questions/75924112/r-brms-saving-models-to-file-inside-a-function-call-saves-the-entire-local-env 14/04/2023
+hack_size <- function(x, ...) {
+  UseMethod("hack_size")
+}
+
+hack_size.brmsfit <- function(x) {
+  x$formula <- hack_size(x$formula)
+  x$data <- hack_size(x$data)
+  x$fit <- hack_size(x$fit)
+  return(x)
+}
+
+hack_size.brmsformula <- function(x) {
+  environment(x$formula) <- new.env(parent = baseenv())
+  return(x)
+}
+
+hack_size.data.frame <- function(x) {
+  environment(attr(x, "terms")) <- new.env(parent = baseenv())
+  return(x)
+}
+
+hack_size.stanfit <- function(x) {
+  x@.MISC <- new.env(parent = baseenv())
+  return(x)
+}
+
+hack_size.stanreg <- function(x) {
+  x$formula <- hack_size(x$formula)
+  x$data <- hack_size(x$data)
+  x$stanfit <- hack_size(x$stanfit)
+  return(x)
+}
+
 ## ----end
