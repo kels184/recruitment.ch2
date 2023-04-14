@@ -848,6 +848,30 @@ abnd.brm1a$fit %>% tidyMCMC(pars = wch,
 ## ----end
 
 
+##would ar have been different with a positively restricted (uniform(0,1) prior?)
+
+abnd.form <- bf(abundance ~ Treatment
+                + (1|plotID),
+                autocor = ~ ar(time = Date, gr = plotID, p = 1), 
+                family = poisson(link = "log"))
+
+priors <- prior(normal(2,1), class = "Intercept") +
+  prior(normal(0,2), class = "b") + 
+  prior(cauchy(0,2), class = "sd") +
+  prior(uniform(0,1), class = "ar") + #ar prior only between 0 and 1
+  prior(cauchy(0,2), class = "sderr")
+
+abnd.brm1b <- update(abnd.brm1a, prior = priors)
+
+abnd.brm1b$fit %>% tidyMCMC(pars = wch,
+                            estimate.method = "median",
+                            conf.int = TRUE,
+                            conf.method = "HPDinterval",
+                            rhat = TRUE,
+                            ess = TRUE)
+#the answer: yes, slightly, though none of the conclusions of the table changed
+save(abnd.brm1b, file = paste0(DATA_PATH, "modelled/abnd.brm1b.RData"))
+
    #### Summary figures =========================================================
 
 
