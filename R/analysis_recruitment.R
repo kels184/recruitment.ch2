@@ -586,7 +586,7 @@ abnd.glmmTMB.ac %>% ggpredict(terms = "Treatment") %>% plot()
 ## ----end
 
    #### Bayesian Model ==========================================================
-
+   ##### Priors =================================================================
 ## ---- recruitment univariate abundance priors1
 
 abnd.form <- bf(abundance ~ Treatment
@@ -598,7 +598,8 @@ abnd.form <- bf(abundance ~ Treatment
 abnd.form %>%  get_prior(data = fish.sp.abnd)
 
 ## priors for Intercept
-fish.sp.abnd %>% group_by(Treatment) %>%  summarise(log(median(abundance)), log(mad(abundance)))
+fish.sp.abnd %>% group_by(Treatment) %>%  summarise(log(median(abundance)), 
+                                                    log(mad(abundance)))
 ## ----end
 
 ## ---- recruitment univariate abundance priors2
@@ -613,12 +614,15 @@ standist::visualize("gamma(2,1)", "cauchy(0,2)","student_t(3, 0, 2.5)", xlim = c
 
 ## ----end
 
+##### Fitting ===================================================================
 
 ## ----recruitment univariate abundance fit brm1.prior
+
+## eval set to FALSE
 priors <- prior(normal(2,1), class = "Intercept") +
   prior(normal(0,5), class = "b") + 
   prior(cauchy(0,2), class = "sd") +
-  prior(uniform(-1,1), class = "ar") +
+  prior(uniform(-1,1), class = "ar") +# later changed to 0,1
   prior(cauchy(0,2), class = "sderr")
         
 abnd.brm1 <- brm(abnd.form,
@@ -632,6 +636,7 @@ save(abnd.brm1, file = paste0(DATA_PATH, "modelled/abnd.brmprior1.RData"))
 ## ----end
 
 ## ---- recruitment univariate abundance brm1 error and fix attempt
+
 load(file = paste0(DATA_PATH, "modelled/abnd.brmprior1.RData"))
 
 abnd.brm1 %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
@@ -652,6 +657,7 @@ fish.sp.abnd <- fish.sp.abnd %>%
 ## ----end
 
 ## ----recruitment univariate abundance fit brm2
+## eval set to FALSE
 
 ##the following (i.e. the model without the ar term) ran
 abnd.form <- bf(abundance ~ Treatment + (1|plotID),
@@ -707,8 +713,9 @@ exp(c(2,3,5,10))
 #without any idea how to fix this, lets see if the model will run including the
 #data and posteriors
 
-## ---- recruitment univariate abundance fit brm1a
+## ---- recruitment univariate abundance fit brm1a_b
 
+## eval set to FALSE
 abnd.form <- bf(abundance ~ Treatment
                 + (1|plotID),
                 autocor = ~ ar(time = Date, gr = plotID, p = 1), 
@@ -722,24 +729,41 @@ priors <- prior(normal(2,1), class = "Intercept") +
 
 abnd.brm1a <- update(abnd.brm1, sample_prior = "yes")
 save(abnd.brm1a, file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
+
+##priors and model I actually went with:
+priors <- prior(normal(2,1), class = "Intercept") +
+  prior(normal(0,2), class = "b") + 
+  prior(cauchy(0,1), class = "sd") +
+  prior(uniform(0,1), class = "ar",lb = 0, ub = 1) + #ar prior only between 0 and 1
+  prior(cauchy(0,1), class = "sderr")
+
+abnd.brm1b <- update(abnd.brm1a, prior = priors, seed = 123, refresh = 0)
+
+abnd.brm1b %>% prior_summary()
+
+abnd.brm1b %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
+
+
 ##this worked
 ## ----end
 
-## ---- r recruitment univariate abundance brm1a vars
+## ---- r recruitment univariate abundance vars
 load(file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
 abnd.brm1a %>% ggpredict(~Treatment)
 #this didn't 
 
-abnd.brm1a %>% get_variables()
+abnd.brm1a %>% get_variables() %>% head(n = 50)
 ## ----end
 
 
+##### Prior Checks ==============================================================
 
 
-## ---- r recruitment univariate abundance brm1a prior checks
-load(file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
+## ---- r recruitment univariate abundance brm1b prior checks
 
-abnd.brm1a %>%
+abnd.brm1b <- readRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
+
+abnd.brm1b %>%
   as_draws_df() %>% #get all the draws for everything estimated
   
   dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
@@ -756,54 +780,54 @@ abnd.brm1a %>%
            str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
          Par = str_replace(key, 'b_', '')) %>% 
   
-ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
   stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
   facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
 
-
-##alternatively
-#abnd.brm1a %>% SUYR_prior_and_posterior()
-#almost gets it
+abnd.brm1b %>% SUYR_prior_and_posterior()
 ## ----end
 
 
-## ---- recruitment univariate abundance brm1a MCMC diagnostics
-load(file = paste0(DATA_PATH, "modelled/abnd.brm1.RData"))
+##### MCMC diagnostics ==========================================================
 
-pars <- abnd.brm1a %>% get_variables()
-pars
+## ---- recruitment univariate abundance brm1b MCMC diagnostics
+pars <- abnd.brm1b %>% get_variables()
 
 wch <- str_extract(pars, #get the names of the variables
                    '^b_.*|^sd.*|^ar.*') %>% #that start with b, sd or ar
   na.omit # omit the rest, resulting in an object of class 'omit'
 wch
 ##Trace Plots
-stan_trace(abnd.brm1a$fit, pars = wch)
+stan_trace(abnd.brm1b$fit, pars = wch)
 
 ##Autocorrelation factor
-stan_ac(abnd.brm1a$fit, pars = wch)
+stan_ac(abnd.brm1b$fit, pars = wch)
 
 ##rhat - Scale reduction factor
-stan_rhat(abnd.brm1a$fit, pars = wch)
+stan_rhat(abnd.brm1b$fit, pars = wch)
 
 ##ESS (effective sample size)
-stan_ess(abnd.brm1a$fit, pars = wch)
+stan_ess(abnd.brm1b$fit, pars = wch)
 
 ##Density plot
-stan_dens(abnd.brm1a$fit, pars = wch, separate_chains = TRUE)
+stan_dens(abnd.brm1b$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+abnd.brm1b%>% pp_check(type = 'dens_overlay', ndraws = 100)
 
 ## ----end
 
+##### DHARMA Residuals ==========================================================
 
 ## ---- recruitment univariate abundance DHARMA residuals
 
 #step 1. Draw out predictions
-preds <- abnd.brm1a %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+preds <- abnd.brm1b %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
                                          summary = FALSE) #don't summarise - we want the whole distribution of them
 
 
 #Step 2 create DHARMA resids
-fert.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+abnd.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
                             observedResponse = fish.sp.abnd$abundance, #real response
                             fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
                             integerResponse = "TRUE" #is the response an integer? yes
@@ -811,10 +835,10 @@ fert.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulate
                             )
 
 #Step 3 - plot!
-plot(fert.resids)
+plot(abnd.resids)
 
-fert.resids %>% testDispersion()
-fert.resids %>% testUniformity()
+abnd.resids %>% testDispersion()
+abnd.resids %>% testUniformity()
 #fert.resids %>% testZeroInflation()
 
 ## ----end
@@ -834,12 +858,12 @@ r.squaredGLMM(abnd.glmmTMB.ac)
 ## ----end
 
 ## ---- recruitment univariate abundance brm summary
-abnd.brm1a %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
-abnd.brm1a %>% ggemmeans(~Treatment)
-abnd.brm1a %>% ggemmeans(~Treatment) %>% plot()
+#abnd.brm1b %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
+abnd.brm1b %>% ggemmeans(~Treatment)
+abnd.brm1b %>% ggemmeans(~Treatment) %>% plot()
 
 
-abnd.brm1a$fit %>% tidyMCMC(pars = wch,
+abnd.brm1b$fit %>% tidyMCMC(pars = wch,
                              estimate.method = "median",
                              conf.int = TRUE,
                              conf.method = "HPDinterval",
@@ -847,65 +871,7 @@ abnd.brm1a$fit %>% tidyMCMC(pars = wch,
                              ess = TRUE)
 ## ----end
 
-
-##would ar have been different with a positively restricted (uniform(0,1) prior?)
-
-abnd.form <- bf(abundance ~ Treatment
-                + (1|plotID),
-                autocor = ~ ar(time = Date, gr = plotID, p = 1), 
-                family = poisson(link = "log"))
-
-priors <- prior(normal(2,1), class = "Intercept") +
-  prior(normal(0,2), class = "b") + 
-  prior(cauchy(0,2), class = "sd") +
-  prior(uniform(0,1), class = "ar") + #ar prior only between 0 and 1
-  prior(cauchy(0,2), class = "sderr")
-
-abnd.brm1b <- update(abnd.brm1a, prior = priors, seed = 123, refresh = 0)
-
-abnd.brm1b$fit %>% tidyMCMC(pars = wch,
-                            estimate.method = "median",
-                            conf.int = TRUE,
-                            conf.method = "HPDinterval",
-                            rhat = TRUE,
-                            ess = TRUE)
-#the answer: yes, slightly, though none of the conclusions of the table changed
-save(abnd.brm1b, file = paste0(DATA_PATH, "modelled/abnd.brm1b.RData"))
-
-#just for peace of mind:
-
-##Trace Plot
-stan_trace(abnd.brm1b$fit, pars = wch)
-
-##Autocorrelation factor
-stan_ac(abnd.brm1b$fit, pars = wch)
-
-##rhat - Scale reduction factor
-stan_rhat(abnd.brm1b$fit, pars = wch)
-
-##ESS (effective sample size)
-stan_ess(abnd.brm1b$fit, pars = wch)
-
-##Density plot
-stan_dens(abnd.brm1b$fit, pars = wch, separate_chains = TRUE)
-
-
-#step 1. Draw out predictions
-preds <- abnd.brm1b %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
-                                          summary = FALSE) #don't summarise - we want the whole distribution of them
-
-
-#Step 2 create DHARMA resids
-fert.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
-                            observedResponse = fish.sp.abnd$abundance, #real response
-                            fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
-                            integerResponse = "TRUE" #is the response an integer? yes
-                            #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
-)
-
-#Step 3 - plot!
-plot(fert.resids)
-
+##
 
 
    #### Summary figures =========================================================

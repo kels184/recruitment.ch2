@@ -57,6 +57,7 @@ library(report) #automated reporting
 library(vegan) #multivariate analysis
 library(ggvegan) #multivariate plotting
 library(butcher) #file size hacking
+library(bayesplot) #for bayesian diagnostics
 ## ----end
 
 ## ---- preparePaths

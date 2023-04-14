@@ -83,7 +83,7 @@ Weights per plot: BQ < DL <= BH <= DM < W
 
 ## Fish EDA
 
-### 1.0 Total abundance
+### 1 Total abundance
 ```{r fish EDA total abundance, results = 'markdown', eval = TRUE}
 ```
 Total abundance seems to follow a similar pattern to the biomass of macroalgae. It’s also very nice that the variance doesn’t seem to differ among treatments
@@ -100,7 +100,7 @@ Yes (Abundance) – W treatment seems to continuously increase, while other trea
 ```
 Could the plot biomass be used as a predictor of total abundance?- yeah seems so
 
-### 2.0 Species Richness
+### 2 Species Richness
 
 ```{r fish EDA Species richness, results = 'markdown', eval = TRUE}
 ```
@@ -125,7 +125,7 @@ Could the plot biomass be used as a predictor of diversity ?- yeah seems so
 ```
 The top 6 (Halichoeres miniatus to Siganus fuscescens) collectively accounted for 90% of total abundance, each individually accounted for more than 2% of total abundance and appeared every day. Only Steothjulis strigiventer also appeared every day (but why analyse it if not something else more abundant?) Using just the top 6 or less makes sense
 
-### 4.0 Common species patterns
+### 4 Common species patterns
 ```{r fish EDA common species1, results = 'markdown', eval = TRUE}
 ```
 
@@ -195,7 +195,7 @@ Use custom tests / plots that explicitly compare the correlation structure in th
 
 
 ### Bayesian Model
-1. Assess priors
+#### 1 Initial priors
 ```{r recruitment univariate abundance priors1, results = 'markdown', eval = TRUE}
 
 ```
@@ -217,7 +217,8 @@ i.e. N(0, 5)
 
 For the sd prior, a cauchy (0.2) will be used to begin with. I'll do the same with "sderr"
 
-2. Fit with priors only
+#### 2 Fitting
+2.1 Priors only
 ```{r recruitment univariate abundance fit brm1.prior, results = 'markdown', eval = FALSE}
 
 ```
@@ -228,7 +229,7 @@ The above code model did fit, but I had trouble with using ggpredict on it (see 
 ```
 Changing the class of 'Date' and refitting the model did not fix the issue
 
-2.1 Fit alternative model (no ar term)
+2.2 Fit alternative model (no ar term)
 ```{r recruitment univariate abundance fit brm2, results = 'markdown', eval = FALSE}
 
 ```
@@ -239,37 +240,50 @@ The model fit, however and ggpredict worked for this model and allowed refinemen
 a normal(0,2) was deemed probably more appropriate for b
 
 
-3.1 Fit model, sampling from data and from priors
-```{r recruitment univariate abundance fit brm1a, results = 'markdown', eval = FALSE}
+2.3 Fit model, sampling from data and from priors
+```{r recruitment univariate abundance fit brm1a_b, results = 'markdown', eval = FALSE}
+```
+The eventual priors and model "abnd.brm1b" was chosen because: 
+ar: there was no reason to expect a negative autocorrelation could occur, and reducing the prior slightly improved std.errors and ess's
+sd and sderr: reducing the priors reduced the magnitude of difference between the posterior and prior. minimal effect on results, possibly more ess and smaller CI
+
+
+
+```{r recruitment univariate abundance vars, results = 'markdown', eval = TRUE, error = TRUE, cache = TRUE}
+
 ```
 
-```{r recruitment univariate abundance brm1a vars, results = 'markdown', eval = TRUE, error = TRUE, cache = TRUE}
+The model fit, ggpredict had trouble, and there seems to be an error estimate for every data point (err[1]...err[450]). Compare with:
+
+`r abnd.brm2.prior %>% get_variables()` 
+
+(the variables of the model without the ar term)
+
+#### 3 Prior Checks
+
+```{r recruitment univariate abundance brm1b prior checks, results = 'markdown', eval = TRUE, cache = TRUE}
 
 ```
+Prior for the intercept and treatment seem appropriate. sd and sderr could potentially shrink if further diagnostics reveal problems
 
-The model fit, ggpredict had trouble, and there seems to be an error estimate for every data point (err[1]...err[450]). Compare with `r abnd.brm2.prior %>% get_variables()` (the variables of the model without the ar term)
-
-4.Prior Checks
-```{r recruitment univariate abundance brm1a prior checks, results = 'markdown', eval = TRUE}
-
-```
-Prior for the intercept and treatment seem appropriate. ar, sd and sderr especially could shrink if further diagnostics reveal problems
-
-4. MCMC diagnostics
-```{r recruitment univariate abundance brm1a MCMC diagnostics, results = 'markdown', eval = TRUE}
+#### 4 MCMC diagnostics
+```{r recruitment univariate abundance brm1b MCMC diagnostics, results = 'markdown', eval = TRUE}
 ```
 Chains are well mixed, autocorrelation factors are low, rhats are around 1 and less than 1.05, effective sample sizes for the posteriors are all close to 1 and well above 0.5 and posterior distributions of the separate chains resemble one another
 
+"All chains were well mixed and converged (all Rhat values <1.05)"
 
-5. DHARMA residuals
+#### 5 DHARMA residuals
 
 ```{r recruitment univariate abundance DHARMA residuals, results = 'markdown', eval = TRUE}
 ```
 The residuals don't look too good - similarly to the Frequentist approach, both dispersion (UNDERdispersion) and uniformity appear to be violated
 
+However, this again is likely caused by not simulating Conditional residuals
 
 
 ### Model Investigation
+Univariate models
 ```{r recruitment univariate abundance summary, results = 'markdown', eval = TRUE, error =TRUE}
 
 ```
@@ -279,6 +293,8 @@ Estimate of BH mean abundance: `r exp(2.1)`. Estimate for W is `r exp(.56)` x hi
 R-square estimates indicate the model without the random component of PlotID explains approximately 50% of the variance. With the random effect it explains 62% (using the trigamma method as this model has a log link, package authors recommend this)
 
 Planned contrasts: from Murray Logan Course notes "In frequentist analyses you can make nlevels - 1 contrasts without p adjustment - as long as they're independent." - however I've read one other source suggesting one should still apply a correction even then. I'll leave this for now. If running Bayesian, I can make as many contrasts as I want
+
+Bayesian Model
 ```{r recruitment univariate abundance brm summary, results = 'markdown', eval = TRUE, error =TRUE}
 
 ```
@@ -288,5 +304,6 @@ The summary stat table shows differences amongst treatments, will explore furthe
 
 the estimate of ar(1) seems a little low compared to the Frequentist analysis
 
+Bayesian Contrasts:
 
 
