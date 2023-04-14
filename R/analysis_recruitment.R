@@ -791,6 +791,8 @@ abnd.brm1b %>% SUYR_prior_and_posterior()
 ##### MCMC diagnostics ==========================================================
 
 ## ---- recruitment univariate abundance brm1b MCMC diagnostics
+
+abnd.brm1b <- readRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
 pars <- abnd.brm1b %>% get_variables()
 
 wch <- str_extract(pars, #get the names of the variables
@@ -821,6 +823,8 @@ abnd.brm1b%>% pp_check(type = 'dens_overlay', ndraws = 100)
 
 ## ---- recruitment univariate abundance DHARMA residuals
 
+abnd.brm1b <- readRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
+
 #step 1. Draw out predictions
 preds <- abnd.brm1b %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
                                          summary = FALSE) #don't summarise - we want the whole distribution of them
@@ -846,7 +850,7 @@ abnd.resids %>% testUniformity()
 
 
    #### Model investigation =====================================================
-
+   ##### Frequentist ============================================================
 ## ---- recruitment univariate abundance summary, error = "TRUE", cache = "FALSE", warning = "FALSE"
 
 abnd.glmmTMB2 %>% summary()
@@ -857,7 +861,10 @@ r.squaredGLMM(abnd.glmmTMB.ac)
 
 ## ----end
 
+   ##### Bayesian ===============================================================
 ## ---- recruitment univariate abundance brm summary
+abnd.brm1b <- readRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
+
 #abnd.brm1b %>% ggpredict(~Treatment) %>% plot(add.data = TRUE)
 abnd.brm1b %>% ggemmeans(~Treatment)
 abnd.brm1b %>% ggemmeans(~Treatment) %>% plot()
@@ -869,14 +876,122 @@ abnd.brm1b$fit %>% tidyMCMC(pars = wch,
                              conf.method = "HPDinterval",
                              rhat = TRUE,
                              ess = TRUE)
+#Conditional
+abnd.brm1b %>% bayes_R2(re.form = ~(1|plotID),
+                        summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
 ## ----end
 
-##
+## ---- recruitment univariate abundance brm r square
+abnd.brm1b <- readRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
+#'Marginal'
+abnd.brm1b %>% brms::bayes_R2(re.form = NA, #or ~Treatment
+                        summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
 
+
+#'Conditional'
+abnd.brm1b %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
+                        summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+## ----end
+
+
+
+## ---- recruitment univariate abundance all contrasts
+abnd.brm1b <- readRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
+
+##all (Tukey style) contrasts (exceedance)
+abnd.brm1b%>%
+  emmeans(~Treatment, type = 'response') %>%  #response scale
+  pairs
+
+
+abnd.brm1b%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  ) 
+
+## ----end
+
+
+
+
+## ---- recruitment univariate abundance planned contrasts
+
+##Hi vs Low density, Hi vs Low Biomass
+
+cmat<- cbind("Biomass.NatvsLess" = c(-1/2,-1/2,1/3,1/3,1/3),
+             "Biomass.All.Vs.Low" = c(1/4, -1, 1/4, 1/4 ,1/4),
+             "Density.9vsLess" = c(1/3,1/3,-1/2,-1/2,1/3),
+             "Density.All.Vs.Low" = c(1/4, 1/4, -1,1/4,1/4))
+cmat %>% rowSums()
+
+abnd.brm1b %>% emmeans(~Treatment, type = 'link') %>%
+  contrast(method = list(Treatment = cmat)) %>%
+  gather_emmeans_draws()%>% 
+  summarise("P>" = sum(.value>0)/n(),
+            "P<" = sum(.value<0)/n())
+
+## ----end
 
    #### Summary figures =========================================================
+## ---- recruitment univariate abundance summary figure
+abnd.brm1b <- readRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
 
+newdata <- abnd.brm1b %>% emmeans(~Treatment, type = "link") %>% 
+  gather_emmeans_draws() %>% 
+  mutate(Fit = exp(.value)) %>% 
+  as.data.frame
+head(newdata)
 
+g1 <- newdata %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = Fit,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab("Total Abundance") +
+  theme_classic()
+
+abnd.em <- abnd.brm1b %>%
+  emmeans(~Treatment, type = "link") %>%
+  pairs() %>%
+  gather_emmeans_draws() %>%
+  mutate(Fit = exp(.value)) %>% as.data.frame()
+head(abnd.em)
+
+g2<- abnd.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.5, 1, 1.1, 1.5, 2, 4)
+  ) +
+
+  theme_classic()
+g1 + g2
+
+  
+## ----end
 
   ### Species Richness ==========================================================
    #### Fit =====================================================================

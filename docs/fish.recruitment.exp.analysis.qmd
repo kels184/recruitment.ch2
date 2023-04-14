@@ -283,7 +283,7 @@ However, this again is likely caused by not simulating Conditional residuals
 
 
 ### Model Investigation
-Univariate models
+#### 1 Univariate models
 ```{r recruitment univariate abundance summary, results = 'markdown', eval = TRUE, error =TRUE}
 
 ```
@@ -294,7 +294,8 @@ R-square estimates indicate the model without the random component of PlotID exp
 
 Planned contrasts: from Murray Logan Course notes "In frequentist analyses you can make nlevels - 1 contrasts without p adjustment - as long as they're independent." - however I've read one other source suggesting one should still apply a correction even then. I'll leave this for now. If running Bayesian, I can make as many contrasts as I want
 
-Bayesian Model
+#### 2 Bayesian Model
+2.1 Summary
 ```{r recruitment univariate abundance brm summary, results = 'markdown', eval = TRUE, error =TRUE}
 
 ```
@@ -302,8 +303,36 @@ although 'ggpredict()' is having some trouble, ggemmeans works well
 
 The summary stat table shows differences amongst treatments, will explore further contrasts (e.g. W vs the rest) next because I can
 
-the estimate of ar(1) seems a little low compared to the Frequentist analysis
+the estimate of ar(1) is slightly lower compared to the Frequentist analysis
 
-Bayesian Contrasts:
+```{r recruitment univariate abundance brm r square, results = 'markdown', eval = TRUE}
+
+```
 
 
+R-squared - 95% confidence the amount of variance explained falls between 58.6 and 68.6% (median 63%)
+with the random effects set to 0, the model explains about 56% (conditioned on an 'average' random effects model, i.e. conditioned on 0, or marginal in a linear model)
+
+2.2 Hypothesis testing
+
+```{r recruitment univariate abundance all contrasts, results = 'markdown', eval = TRUE, warning=TRUE}
+
+```
+There is very strong evidence (>99%) that treatment BH had higher fish recruitment than BQ and DL, that W had higher recruitment than BH, BQ and DL, and that DM had higher recruitment than BQ and DL. There was strong evidence (>95%) that W had higher recruitment than DM.There was evidence (>90%) that DM had higher recruitment than BH. There was no evidence (<90%) for a difference between BQ and DL
+
+Compare:
+Natural vs Reduced Biomass: Mean of DL, DM and W vs Mean of BH and BQ
+High vs Reduced Density: Mean of BH, BQ and W vs Mean of DL and DM
+All vs Low Density: DL vs the rest
+```{r recruitment univariate abundance planned contrasts, results = 'markdown', eval = TRUE, warning=TRUE}
+
+```
+There was strong evidence that reducing Sargassum biomass, regardless of Sargassum density, resulted in fewer fish recruits. There was no evidence that reducing density, below 9 per plot, regardless of thallus biomass, reduced fish recruitment.
+
+However there was strong evidence that total recruitment was reduced at the low extremes of both biomas and density compared to the average recruitment of the other treatments. (perhaps not the most sensible contrast)
+
+```{r recruitment univariate abundance summary figure, results = 'markdown', eval = TRUE}
+
+```
+
+See bglm_example5.html for fancy figure code. Need to fix X axis labels in g2 and perhaps make the 'stat_slab' object end at the 95% intervals in g1
