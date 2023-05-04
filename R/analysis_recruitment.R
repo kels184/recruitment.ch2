@@ -521,16 +521,22 @@ dat <- fishalgaedata %>%
 
 
 #size hist by treatment (all fish) (mean frequency of each length per day)
-dat %>% ggplot(aes(x = Length)) +
+g <- dat %>% ggplot(aes(x = Length)) +
   geom_col(aes(y = mean.count), #Hist with frequency on y axis
                  colour ="black", fill = "white")+
   facet_wrap(~Treatment) +
-  theme_bw()
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90))
 
-
+g
 
 ## ----end
 
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.size.trt.png"),
+       g,
+       width = 10,
+       height = 5,
+       dpi = 100)
 
 #size hist by treatment (all fish) (dens overlay) #(not run)#
 fishalgaedata %>% ggplot(aes(x = Length)) +
@@ -562,54 +568,100 @@ dat <- commondata %>%
             mean.count = mean(count.per.day))
 #dat %>% view()
 
-dat %>% filter(Species == "Halichoeres miniatus") %>% 
+g.hm <- dat %>% filter(Species == "Halichoeres miniatus") %>% 
   ggplot(aes(x = Length)) +
   geom_col(aes(y = mean.count), #Hist with frequency on y axis
            colour ="black", fill = "white")+
   facet_wrap(~Treatment) +
   theme_bw() +
-  labs(title = "Halichoeres miniatus")
+  labs(title = "Halichoeres miniatus") +
+  theme(axis.text.x = element_text(angle = 90))
 
-dat %>% filter(Species == "Petroscirtes sp.") %>% 
+g.ps <- dat %>% filter(Species == "Petroscirtes sp.") %>% 
   ggplot(aes(x = Length)) +
   geom_col(aes(y = mean.count), #Hist with frequency on y axis
            colour ="black", fill = "white")+
   facet_wrap(~Treatment) +
   theme_bw() +
-  labs(title = "Petroscirtes sp.")
+  labs(title = "Petroscirtes sp.") +
+  theme(axis.text.x = element_text(angle = 90))
 
-dat %>% filter(Species == "Siganus doliatus") %>% 
+g.sd <- dat %>% filter(Species == "Siganus doliatus") %>% 
   ggplot(aes(x = Length)) +
   geom_col(aes(y = mean.count), #Hist with frequency on y axis
            colour ="black", fill = "white")+
   facet_wrap(~Treatment) +
   theme_bw() +
-  labs(title = "Siganus doliatus")
+  labs(title = "Siganus doliatus") +
+  theme(axis.text.x = element_text(angle = 90))
 
-dat %>% filter(Species == "Pomacentrus tripunctatus") %>% 
+g.pt <- dat %>% filter(Species == "Pomacentrus tripunctatus") %>% 
   ggplot(aes(x = Length)) +
   geom_col(aes(y = mean.count), #Hist with frequency on y axis
            colour ="black", fill = "white")+
   facet_wrap(~Treatment) +
   theme_bw() +
-  labs(title = "Pomacentrus tripunctatus")
+  labs(title = "Pomacentrus tripunctatus") +
+  theme(axis.text.x = element_text(angle = 90))
 
-dat %>% filter(Species == "Lethrinus atkinsoni") %>% 
+g.la <- dat %>% filter(Species == "Lethrinus atkinsoni") %>% 
   ggplot(aes(x = Length)) +
   geom_col(aes(y = mean.count), #Hist with frequency on y axis
            colour ="black", fill = "white")+
   facet_wrap(~Treatment) +
   theme_bw() +
-  labs(title = "Lethrinus atkinsoni")
+  labs(title = "Lethrinus atkinsoni") +
+  theme(axis.text.x = element_text(angle = 90))
 
-dat %>% filter(Species == "Siganus fuscescens") %>% 
+g.sf<- dat %>% filter(Species == "Siganus fuscescens") %>% 
   ggplot(aes(x = Length)) +
   geom_col(aes(y = mean.count), #Hist with frequency on y axis
            colour ="black", fill = "white")+
   facet_wrap(~Treatment) +
   theme_bw() +
-  labs(title = "Siganus fuscescens")
+  labs(title = "Siganus fuscescens") +
+  theme(axis.text.x = element_text(angle = 90))
+
+g.hm
+g.ps
+g.sd
+g.pt
+g.la
+g.sf
+
 ## ---end
+
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.hm.size.trt.png"),
+       g.hm,
+       width = 10,
+       height = 5,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.ps.size.trt.png"),
+       g.ps,
+       width = 10,
+       height = 5,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sd.size.trt.png"),
+       g.sd,
+       width = 10,
+       height = 5,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.pt.size.trt.png"),
+       g.pt,
+       width = 10,
+       height = 5,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.la.size.trt.png"),
+       g.la,
+       width = 10,
+       height = 5,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sf.size.trt.png"),
+       g.sf,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
 
 ## ----fish EDA sizes2 over time
 
