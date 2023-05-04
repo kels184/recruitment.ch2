@@ -507,7 +507,7 @@ fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv"
 
 dat <- fishalgaedata %>%
   filter(!Family == "empty" ) %>% #remove rows with no fish
-           group_by(Length, Date, Treatment) %>% 
+           group_by(Length, Date, Treatment,Replicate) %>% 
   summarise(count.per.day = sum(count)) %>% 
   group_by(Treatment, 
            Length = cut(Length, breaks = seq(0,max(Length),1), #create bins for Length
@@ -551,7 +551,7 @@ glimpse(commondata)
 
 dat <- commondata %>%
   filter(!Family == "empty" ) %>% #remove rows with no fish
-  group_by(Species,Length, Date, Treatment) %>% 
+  group_by(Species,Length, Date, Treatment, Replicate) %>% 
   summarise(count.per.day = sum(count)) %>% 
   group_by(Species, Treatment,
            Length = cut(Length, breaks = seq(0,max(Length),0.5), #create bins for Length
@@ -615,7 +615,7 @@ dat %>% filter(Species == "Siganus fuscescens") %>%
 
 dat <- fishalgaedata %>%
   filter(!Family == "empty" ) %>% #remove rows with no fish
-  group_by(Length, Date, Treatment) %>% 
+  group_by(Length, Date, Treatment,Replicate) %>% 
   summarise(count.per.day = sum(count)) %>% 
   group_by(Treatment, Date,
            Length = cut(Length, breaks = seq(0,max(Length),1), #create bins for Length
@@ -633,7 +633,7 @@ all.length.date <- dat %>% ggplot(aes(x = Length)) +
 
  dat <- fishalgaedata %>%
   filter(Species == "Petroscirtes sp." ) %>% #remove rows with no fish
-  group_by(Length, Date, Treatment) %>% 
+  group_by(Length, Date, Treatment, Replicate) %>% 
   summarise(count.per.day = sum(count)) %>% 
   group_by(Treatment, Date,
            Length = cut(Length, breaks = seq(0,max(Length),0.5), #create bins for Length
@@ -653,7 +653,7 @@ all.length.date <- dat %>% ggplot(aes(x = Length)) +
 
 dat <- fishalgaedata %>%
   filter(Species == "Siganus doliatus" ) %>% #remove rows with no fish
-  group_by(Length, Date, Treatment) %>% 
+  group_by(Length, Date, Treatment, Replicate) %>% 
   summarise(count.per.day = sum(count)) %>% 
   group_by(Treatment, Date,
            Length = cut(Length, breaks = seq(0,max(Length),0.5), #create bins for Length
