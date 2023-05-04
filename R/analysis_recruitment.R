@@ -219,6 +219,21 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
        height = 5,
        dpi = 100)
 
+fishdata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(abundance = sum(count)) %>% 
+  ggplot() + aes(y = abundance, x = Date ) +
+  #geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
+  geom_line() +
+  facet_wrap(~interaction(Treatment,Replicate) )+
+  ylab(expression("Fish Abundance") ) +
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw()
+
 
    #### Total Abundance vs algal biomass ========================================
 
@@ -481,6 +496,204 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.alg.png"),
        dpi = 100)
 
 ## ----end
+
+
+ ####Size distributions =========================================================
+
+## ----fish EDA sizes1
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+  mutate_at(c(2:5), factor)
+#glimpse(fishalgaedata)
+
+dat <- fishalgaedata %>%
+  filter(!Family == "empty" ) %>% #remove rows with no fish
+           group_by(Length, Date, Treatment) %>% 
+  summarise(count.per.day = sum(count)) %>% 
+  group_by(Treatment, 
+           Length = cut(Length, breaks = seq(0,max(Length),1), #create bins for Length
+                        right = FALSE,#bin intervals closed on the left
+                        include.lowest = TRUE) #include all bins (no NA bin)
+           )%>%
+  summarise(mean.count = mean(count.per.day),
+            med.count = median(count.per.day))
+
+#dat %>% view()
+
+
+#size hist by treatment (all fish) (mean frequency of each length per day)
+dat %>% ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+                 colour ="black", fill = "white")+
+  facet_wrap(~Treatment) +
+  theme_bw()
+
+
+
+## ----end
+
+
+#size hist by treatment (all fish) (dens overlay) #(not run)#
+fishalgaedata %>% ggplot(aes(x = Length)) +
+  geom_histogram(aes(y = ..density..), #Hist with density on y axis
+                 binwidth = 1,
+colour ="black", fill = "white") +
+  geom_density(alpha = .2, fill = "#FF6666") +#Overlay with transparent density plot
+  facet_wrap(~Treatment) + 
+  theme_bw()
+
+## ----fish EDA sizes2 common species
+sp.abnd <- read_csv(paste0(DATA_PATH, "summarised/species.abundance.csv"))
+
+commondata <- fishalgaedata %>% 
+  filter(Species %in% paste0(sp.abnd$Species[1:6]) ) %>% #include only the commonest 6 sp
+  droplevels #remove the levels with no data
+glimpse(commondata)
+
+dat <- commondata %>%
+  filter(!Family == "empty" ) %>% #remove rows with no fish
+  group_by(Species,Length, Date, Treatment) %>% 
+  summarise(count.per.day = sum(count)) %>% 
+  group_by(Species, Treatment,
+           Length = cut(Length, breaks = seq(0,max(Length),0.5), #create bins for Length
+                        right = FALSE,#bin intervals closed on the left
+                        include.lowest = TRUE) #include all bins (no NA bin)
+  )%>%
+  summarise(med.count = median(count.per.day),
+            mean.count = mean(count.per.day))
+#dat %>% view()
+
+dat %>% filter(Species == "Halichoeres miniatus") %>% 
+  ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+           colour ="black", fill = "white")+
+  facet_wrap(~Treatment) +
+  theme_bw() +
+  labs(title = "Halichoeres miniatus")
+
+dat %>% filter(Species == "Petroscirtes sp.") %>% 
+  ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+           colour ="black", fill = "white")+
+  facet_wrap(~Treatment) +
+  theme_bw() +
+  labs(title = "Petroscirtes sp.")
+
+dat %>% filter(Species == "Siganus doliatus") %>% 
+  ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+           colour ="black", fill = "white")+
+  facet_wrap(~Treatment) +
+  theme_bw() +
+  labs(title = "Siganus doliatus")
+
+dat %>% filter(Species == "Pomacentrus tripunctatus") %>% 
+  ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+           colour ="black", fill = "white")+
+  facet_wrap(~Treatment) +
+  theme_bw() +
+  labs(title = "Pomacentrus tripunctatus")
+
+dat %>% filter(Species == "Lethrinus atkinsoni") %>% 
+  ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+           colour ="black", fill = "white")+
+  facet_wrap(~Treatment) +
+  theme_bw() +
+  labs(title = "Lethrinus atkinsoni")
+
+dat %>% filter(Species == "Siganus fuscescens") %>% 
+  ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+           colour ="black", fill = "white")+
+  facet_wrap(~Treatment) +
+  theme_bw() +
+  labs(title = "Siganus fuscescens")
+## ---end
+
+## ----fish EDA sizes2 over time
+
+dat <- fishalgaedata %>%
+  filter(!Family == "empty" ) %>% #remove rows with no fish
+  group_by(Length, Date, Treatment) %>% 
+  summarise(count.per.day = sum(count)) %>% 
+  group_by(Treatment, Date,
+           Length = cut(Length, breaks = seq(0,max(Length),1), #create bins for Length
+                        right = FALSE,#bin intervals closed on the left
+                        include.lowest = TRUE) #include all bins (no NA bin)
+  )%>%
+  summarise(mean.count = mean(count.per.day),
+            med.count = median(count.per.day))
+
+all.length.date <- dat %>% ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+           colour ="black", fill = "white")+
+  facet_grid(rows = vars(Date), cols = vars(Treatment)) +
+  theme_bw()
+
+ dat <- fishalgaedata %>%
+  filter(Species == "Petroscirtes sp." ) %>% #remove rows with no fish
+  group_by(Length, Date, Treatment) %>% 
+  summarise(count.per.day = sum(count)) %>% 
+  group_by(Treatment, Date,
+           Length = cut(Length, breaks = seq(0,max(Length),0.5), #create bins for Length
+                        right = FALSE,#bin intervals closed on the left
+                        include.lowest = TRUE) #include all bins (no NA bin)
+  )%>%
+  summarise(mean.count = mean(count.per.day),
+            med.count = median(count.per.day))
+
+ petro.length.date <- dat %>% 
+  ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+           colour ="black", fill = "white")+
+  facet_grid(rows = vars(Date), cols = vars(Treatment)) +
+  labs(title = "Petroscirtes sp.") +
+ theme_bw()
+
+dat <- fishalgaedata %>%
+  filter(Species == "Siganus doliatus" ) %>% #remove rows with no fish
+  group_by(Length, Date, Treatment) %>% 
+  summarise(count.per.day = sum(count)) %>% 
+  group_by(Treatment, Date,
+           Length = cut(Length, breaks = seq(0,max(Length),0.5), #create bins for Length
+                        right = FALSE,#bin intervals closed on the left
+                        include.lowest = TRUE) #include all bins (no NA bin)
+  )%>%
+  summarise(mean.count = mean(count.per.day),
+            med.count = median(count.per.day))
+doli.length.date <- dat %>% 
+  ggplot(aes(x = Length)) +
+  geom_col(aes(y = mean.count), #Hist with frequency on y axis
+           colour ="black", fill = "white")+
+  facet_grid(rows = vars(Date), cols = vars(Treatment)) +
+  labs(title = "Siganus doliatus") +
+  theme_bw()
+
+all.length.date
+petro.length.date
+doli.length.date
+
+## ---end
+
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.all.length.date.png"),
+       all.length.date,
+       width = 40,
+       height = 25,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.petro.length.date.png"),
+       petro.length.date,
+       width = 40,
+       height = 25,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/EDAfish.doli.length.date.png"),
+       doli.length.date,
+       width = 40,
+       height = 25,
+       dpi = 100)
+
+
 
  ## Univariate modelling ========================================================
 

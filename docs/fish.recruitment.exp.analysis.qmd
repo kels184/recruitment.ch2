@@ -142,6 +142,27 @@ H. miniatus, Petroscirtes sp. and tripunctatus accumulated over time, particular
 ```
 Unlikely to be worth exploring L. atkinsoni and S. fuscescens, but the rest show a bit of a positive relationship (including H. miniatus kind of). Petroscirtes sp. the strongest relationship
 
+### 5 Size distributions
+
+```{r fish EDA sizes1, results = 'markdown', eval = TRUE}
+```
+This plot shows the mean number of fish of each length category (bin width 1) per day for each treatment, all fish combined.
+While the overall centre of mass is similar among treatments (around 2-5), the height of the peaks appear to increase with increasing plot biomass (treatments BQ=DL<BH<DM<W)
+
+```{r fish EDA sizes2 common species, results = 'markdown', eval = TRUE}
+```
+These plots shows the mean number of fish of each length category (bin width 1) averaged by day and treatment, separated by species for the 6 most common.
+Halichoeres miniatus shows a relatively similar distribution across treatments. However, Petroscirtes sp., Siganus doliatus and Pomacentrus tripunctatus show similar patterns to the overall size distributions - greater mass around ~2.5cm as plot biomass of sargassum increases (treatments BQ=DL<BH<DM<W)
+
+It probably isn't worth exploring S.fuscescens and L. atkinsoni further (too many 1s and not much else)
+
+
+```{r fish EDA sizes2 over time, results = "markdown", eval = TRUE, quiet = TRUE}
+```
+These plots show the mean number of fish of each length category averaged by Treatment and plotted for each day separately
+Not much of a pattern really to see - no obvious shift in size distributions over time for all fish combined, Petroscrites sp. or for Siganus doliatus
+
+
 # Univariate modelling
 
 ## Total abundance
