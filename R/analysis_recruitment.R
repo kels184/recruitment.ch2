@@ -1258,6 +1258,22 @@ g1 + g2
   
 ## ----end
 
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.png"),
+       g1,
+       height = 5,
+       width = 10,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.contr.png"),
+       g2,
+       height = 5,
+       width = 10,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 5,
+       width = 15,
+       dpi = 100)
+
   ### Species Richness ==========================================================
    #### Fit =====================================================================
 
