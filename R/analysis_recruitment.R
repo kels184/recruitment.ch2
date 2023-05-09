@@ -1275,11 +1275,93 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.png"),
        dpi = 100)
 
   ### Species Richness ==========================================================
+
    #### Fit =====================================================================
 
+## ---- recruitment univariate sp fit
+sp.glmmTMB1 <- glmmTMB(sp.richness ~ 1 + (1|plotID), #Random intercept model
+                         data = fish.sp.abnd,
+                         family = poisson(link = "log"), #Poisson model
+                         REML = TRUE) 
+sp.glmmTMB2 <- update(sp.glmmTMB1, .~. + Treatment) #add Treatment as fixed
+
+sp.glmmTMB3 <- update(sp.glmmTMB1, .~. + plot.weight) #plot.weight fixed
+
+sp.glmmTMB4 <- update(sp.glmmTMB1, .~. + Density)#Density fixed
+
+sp.glmmTMB5 <- update(sp.glmmTMB3, .~. + Density)#plot.weight + Density
+
+sp.glmmTMB6 <- update(sp.glmmTMB3, .~. * Density) #plot.weight*Density
+
+sp.glmmTMB7 <- update(sp.glmmTMB2, ~. + plot.weight) #Treatment + plot.weight
+
+sp.glmmTMB8 <- update(sp.glmmTMB2, ~. * plot.weight) #Treatment * plot.weight
+
+MuMIn::AICc(sp.glmmTMB1,sp.glmmTMB2, sp.glmmTMB3, sp.glmmTMB4,
+            sp.glmmTMB5, sp.glmmTMB6,sp.glmmTMB7, sp.glmmTMB8) #compare models
+
+## ----end
    #### Validate/ Refit =========================================================
 
-   #### Model investigation =====================================================
+## ---- recruitment univariate sp validate
+sp.resid <- sp.glmmTMB2 %>% simulateResiduals(plot = TRUE)
+sp.resid %>% testDispersion()
+sp.resid %>% testUniformity()
+#showing problems (underdispersion)
+fish.sp.abnd <- fish.sp.abnd %>% 
+  mutate(TIME = as.numeric(plotID) + as.numeric(Date)*10^-5)
+
+sp.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+#definitely autocorrelation
+## ----end
+
+## recruitment univariate sp refit autocor
+
+sp.glmmTMB.ac <- update(sp.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID))
+AICc(sp.glmmTMB.ac,sp.glmmTMB2)
+## ----end
+
+## ---- recruitment univariate sp revalidate
+sp.ac.resid <- sp.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
+sp.ac.resid %>% testDispersion()
+## ----end
+
+   #### Partial Plot ============================================================
+## ---- recruitment univariate abundance partial
+sp.glmmTMB.ac %>% ggpredict(Terms = "Treatment") %>%  plot()
+## ---- end
+
+   #### Bayesian Model ==========================================================
+   ##### Priors =================================================================
+
+## ---- recruitment univariate sp priors1
+
+sp.form <- bf(sp.richness ~ Treatment
+                + (1|plotID),
+                autocor = ~ ar(time = Date, gr = plotID, 
+                               p = 1), #order of the autoregressive (1st order)
+                family = poisson(link = "log"))
+
+sp.form %>%  get_prior(data = fish.sp.abnd)
+
+## priors for Intercept
+fish.sp.abnd %>% group_by(Treatment) %>%  summarise(log(median(sp.richness)), 
+                                                    log(mad(sp.richness)))
+## ----end
+
+## ---- recruitment univariate sp priors2
+
+##priors for Effects
+log(sd(fish.sp.abnd$sp.richness)) #1.61
+model.matrix(~Treatment, data = fish.sp.abnd) %>% head
+apply(model.matrix(~Treatment, data = fish.sp.abnd), 2, sd)
+log(sd(fish.sp.abnd$abundance))/apply(model.matrix(~Treatment, data = fish.sp.abnd), 2, sd)
+
+
+standist::visualize("gamma(2,1)", "cauchy(0,2)","student_t(3, 0, 2.5)", xlim = c(0,10))
+
+## ----end
+
 
    #### Summary figures =========================================================
 

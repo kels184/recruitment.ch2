@@ -8,7 +8,7 @@ format:
     toc: true
     toc-float: true
     number-sections: true
-    number-depth: 4
+    number-depth: 5
     embed-resources: true
     code-fold: false
     code-tools: true
@@ -357,3 +357,45 @@ However there was strong evidence that total recruitment was reduced at the low 
 ```
 
 See bglm_example5.html for fancy figure code. Need to fix X axis labels in g2 and perhaps make the 'stat_slab' object end at the 95% intervals in g1
+
+
+## Species Richness
+
+### Fit model
+```{r recruitment univariate sp fit, results = 'markdown', eval = TRUE}
+```
+As with abundance, the Treatment + RE of plot model performed best, despite consumingn more df
+
+###Validate/Refit
+```{r recruitment univariate sp validate, results = 'markdown', eval = TRUE}
+
+```
+The residuals are showing signs of underdispersion (i.e. results more conservative). The Levene test is also warning that the homogeneity of variance assumption is violated. However the box plots look ok to me
+
+
+```{r recruitment univariate sp refit autocor, results = 'markdown', eval = TRUE}
+
+```
+Despite there being evidence of autocorrelation, the ac model performed about the same (within 2 AICc) as the previous model. However I think the autocorrelation is important enough to need dealing with
+
+```{r recruitment univariate sp revalidate, results = 'markdown', eval = TRUE}
+
+```
+Similar problems evident (undispersion), but without the red flag for the Levene test
+
+
+### Partial Plot
+```{r recruitment univariate sp partial, results='markdown', eval = TRUE}
+
+```
+
+### Bayesian Model
+####1 Initial priors
+
+
+####2 Fitting
+####3 Prior Checks
+####4 MCMC Diagnostics
+####5 DHARMA residuals
+
+### Model investigation
