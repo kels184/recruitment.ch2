@@ -1342,7 +1342,7 @@ sp.form <- bf(sp.richness ~ Treatment
                                p = 1), #order of the autoregressive (1st order)
                 family = poisson(link = "log"))
 
-sp.form %>%  get_prior(data = fish.sp.abnd)
+#sp.form %>%  get_prior(data = fish.sp.abnd)
 
 ## priors for Intercept
 fish.sp.abnd %>% group_by(Treatment) %>%  summarise(log(median(sp.richness)), 
@@ -1352,16 +1352,49 @@ fish.sp.abnd %>% group_by(Treatment) %>%  summarise(log(median(sp.richness)),
 ## ---- recruitment univariate sp priors2
 
 ##priors for Effects
-log(sd(fish.sp.abnd$sp.richness)) #1.61
-model.matrix(~Treatment, data = fish.sp.abnd) %>% head
+log(sd(fish.sp.abnd$sp.richness)) #.73
+#model.matrix(~Treatment, data = fish.sp.abnd) %>% head
 apply(model.matrix(~Treatment, data = fish.sp.abnd), 2, sd)
-log(sd(fish.sp.abnd$abundance))/apply(model.matrix(~Treatment, data = fish.sp.abnd), 2, sd)
+log(sd(fish.sp.abnd$sp.richness))/apply(model.matrix(~Treatment, data = fish.sp.abnd), 2, sd)
 
-
-standist::visualize("gamma(2,1)", "cauchy(0,2)","student_t(3, 0, 2.5)", xlim = c(0,10))
+##prior for sds
+standist::visualize("cauchy(0,2)", xlim = c(0,10))
 
 ## ----end
 
+## ----recruitment univariate sp prior fit
+## eval set to 'false'
+
+## without data (priors only) and without ar term to start (ggpredict won't work
+##otherwise)
+sp.form <- bf(sp.richness ~ Treatment
+              + (1|plotID),
+              # autocor = ~ ar(time = Date, gr = plotID, 
+              #               p = 1), 
+              family = poisson(link = "log"))
+
+priors <- prior(normal(1,0.4), class = "Intercept") +
+  prior(normal(0,2), class = "b") + 
+  prior(cauchy(0,2), class = "sd") #+
+  #prior(cauchy(0,2), class = "sderr") #+
+  #prior(uniform(0,1), class = "ar")# ar prior as for abundance
+
+sp.brm1 <- brm(sp.form,
+                 data = fish.sp.abnd,
+                 prior = priors,
+                 sample_prior = "only", #just to start
+                 iter = 5000, warmup = 1000,
+                 chains = 3, cores = 3, 
+                 thin = 5)
+save(sp.brm1, file = paste0(DATA_PATH, "modelled/sp.brmprior1.RData"))  
+## ----end
+
+## ----recruitment univariate sp brm1.prior check
+sp.brm1 %>% ggpredict(~Treatment) %>% plot (add.data = TRUE)
+## ----end
+
+     ##### Fitting ==============================================================
+ 
 
    #### Summary figures =========================================================
 

@@ -236,7 +236,7 @@ The sds are the same for each treatment because the study was balanced.
 For the variance argument for the slope prior, a bit more than 4, say 4.5 or 5 (to allow a bit more width) would probably be appropriate
 i.e. N(0, 5)
 
-For the sd prior, a cauchy (0.2) will be used to begin with. I'll do the same with "sderr"
+For the sd prior, a cauchy (0,2) will be used to begin with. I'll do the same with "sderr"
 
 #### 2 Fitting
 2.1 Priors only
@@ -391,9 +391,33 @@ Similar problems evident (undispersion), but without the red flag for the Levene
 
 ### Bayesian Model
 ####1 Initial priors
+```{r recruitment univariate sp priors1, results = 'markdown', eval = TRUE}
 
+```
+As the model formula is so similar to that of the abundance model, the same priors will need specification.
+
+For the Intercept, an appropriate prior might be 1, 0.4
+
+Again, the standard deviation of the response divided by the standard deviation of the predictor will be used to estimate an appropriate prior for the slopes:
+```{r recruitment univariate sp priors2, results = 'markdown', eval = TRUE}
+
+```
+N(0,2) might be appropriate for the slopes
+
+Again, I'll try a cauchy(0,2 for sd and sderr
+
+
+```{r recruitment univariate sp prior fit, results = 'markdown', eval = FALSE}
+```
+
+```{r recruitment univariate sp brm1.prior check, results = 'markdown', eval = FALSE}
+```
+
+Priors quite wide compared with data. Remember this is not in itself a problem, unless we find evidence later
 
 ####2 Fitting
+
+
 ####3 Prior Checks
 ####4 MCMC Diagnostics
 ####5 DHARMA residuals
