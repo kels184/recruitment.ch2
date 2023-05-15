@@ -1386,7 +1386,7 @@ sp.brm1 <- brm(sp.form,
                  iter = 5000, warmup = 1000,
                  chains = 3, cores = 3, 
                  thin = 5)
-save(sp.brm1, file = paste0(DATA_PATH, "modelled/sp.brmprior1.RData"))  
+#save(sp.brm1, file = paste0(DATA_PATH, "modelled/sp.brmprior1.RData"))  
 ## ----end
 
 ## ----recruitment univariate sp brm1.prior check
@@ -1395,6 +1395,115 @@ sp.brm1 %>% ggpredict(~Treatment) %>% plot (add.data = TRUE)
 
      ##### Fitting ==============================================================
  
+## ----recruitment univariate sp brmsfit
+sp.form <- bf(sp.richness ~ Treatment
+              + (1|plotID),
+               autocor = ~ ar(time = Date, gr = plotID, 
+                             p = 1), 
+              family = poisson(link = "log"))
+
+priors <- prior(normal(1,0.4), class = "Intercept") +
+  prior(normal(0,2), class = "b") + 
+  prior(cauchy(0,2), class = "sd") +
+prior(cauchy(0,2), class = "sderr") +
+prior(uniform(0,1), class = "ar")# ar prior as for abundance
+
+sp.brm1a <- brm(sp.form,
+               data = fish.sp.abnd,
+               prior = priors,
+               sample_prior = "yes", #sample priors and posteriors
+               iter = 5000, warmup = 1000,
+               chains = 3, cores = 3, 
+               thin = 5)
+
+sp.brm1a %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1.rds"))
+## ----end
+
+##### Prior Checks ==============================================================
+
+## ----recruitment univariate sp brm1a prior checks
+
+sp.brm1a <- readRDS(file = paste0(DATA_PATH, "modelled/sp.brm1.rds"))
+
+sp.brm1a %>%
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '(^b|^prior).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'Intercept' at the end
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains sd ('sderr' will be included)
+           str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
+           str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
+         Par = str_replace(key, 'b_', '')) %>% 
+  
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+sp.brm1a %>% SUYR_prior_and_posterior()
+
+## ----end
+
+   ##### MCMC Diagnostics ======================================================
+## ----recruitment univariate sp MCMC
+sp.brm1a <- readRDS(file = paste0(DATA_PATH, "modelled/sp.brm1.rds"))
+pars <- sp.brm1a %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^ar.*') %>% #that start with b, sd or ar
+  na.omit # omit the rest, resulting in an object of class 'omit'
+wch
+##Trace Plots
+stan_trace(sp.brm1a$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(sp.brm1a$fit, pars = wch)
+
+##Density overlay
+sp.brm1a%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+
+## ----recruitment univariate sp MCMC2
+
+##problem MCMCs
+##Autocorrelation factor
+stan_ac(sp.brm1a$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(sp.brm1a$fit, pars = wch)
+
+##Density plot
+stan_dens(sp.brm1a$fit, pars = wch, separate_chains = TRUE)
+
+## ----end
+
+
+##### Refitting =================================================================
+
+## ----recruitment univariate sp brms refit
+
+#sp.brm1b <- update(sp.brm1a,
+#                   control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
+#                seed = 123)
+
+priors <- 
+
+## ----end
+
+   #### Model Investigation - Sp richness =======================================
+
+## ----recruitment univariate sp frequentist summary
+sp.glmmTMB.ac %>% summary()
+sp.glmmTMB.ac %>% r.squaredGLMM() # will return error
+sp.glmmTMB2 %>% r.squaredGLMM()
+## ----end
+
 
    #### Summary figures =========================================================
 
