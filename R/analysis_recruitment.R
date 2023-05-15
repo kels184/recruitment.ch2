@@ -1491,10 +1491,130 @@ stan_dens(sp.brm1a$fit, pars = wch, separate_chains = TRUE)
 #sp.brm1b <- update(sp.brm1a,
 #                   control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
 #                seed = 123)
+#1999 divergent transitions
+#ess and ac still poor
+#sp.brm1b %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1b.rds") )
 
-priors <- 
+standist::visualize("cauchy(0,2)","cauchy(0,1)","cauchy(0,0.5)", xlim = c(0,10))
+priors <- prior(normal(1,0.5), class = "Intercept") +
+  prior(normal(0,2), class = "b") + 
+  prior(cauchy(0,.5), class = "sd") +
+  prior(cauchy(0,.5), class = "sderr") +
+  prior(uniform(0,1), class = "ar")# ar prior as for abundance
+#sp.brm1c <- update(sp.brm1a,
+              #     seed = 123,
+            #      prior = priors)
+#1786 divergent transitions. Still ac and ess problems
+#sp.brm1c %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1c.rds"))
+
+#doubling iter, warmup, and thinning factor and with new priors
+sp.brm1d <- brm(sp.form,
+                data = fish.sp.abnd,
+                prior = priors,
+                sample_prior = "yes", #sample priors and posteriors
+                iter = 10000, warmup = 2000,
+                chains = 3, cores = 3, 
+                thin = 10)
+#2121 divergent transitions but ac and ess now acceptable
+sp.brm1d %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1d.rds"))
 
 ## ----end
+
+## ----recruitment univariate sp recheck priors and mcmc
+
+sp.brm1d <- readRDS(file = paste0(DATA_PATH, "modelled/sp.brm1d.rds"))
+
+
+sp.brm1f %>%
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '(^b|^prior).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'Intercept' at the end
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains sd ('sderr' will be included)
+           str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
+           str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
+         Par = str_replace(key, 'b_', '')) %>% 
+  
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+##Autocorrelation factor
+stan_ac(sp.brm1d$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(sp.brm1d$fit, pars = wch)
+
+## ----end
+
+## ----recruitment univariate sp recheck recheck mcmc2
+##Trace Plots
+stan_trace(sp.brm1d$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(sp.brm1d$fit, pars = wch)
+
+##Density overlay
+sp.brm1d%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+##Density plot
+sp.brm1d$fit %>% stan_dens( pars = wch, separate_chains = TRUE)
+## ----end
+
+## ----recruitment univariate sp refit again
+
+#priors <- prior(normal(1,0.5), class = "Intercept") +
+#  prior(normal(0,2), class = "b") + 
+#  prior(cauchy(0,.5), class = "sd") +
+#  prior(cauchy(0,.5), class = "sderr") #
+#  prior(uniform(.75,1), class = "ar")
+
+#sp.brm1e <- update(sp.brm1d, prior = priors)
+#many warnings - largest r-hat 1.81, bulk and tail ess too low, 2280 divergent transitions, 1 chain where estimated BF of missing information was low
+#sp.brm1e %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1e.rds"))
+
+priors <- prior(normal(1,0.5), class = "Intercept") +
+  prior(normal(0,2), class = "b") + 
+  prior(cauchy(0,1), class = "sd") + #wider
+  prior(cauchy(0,1), class = "sderr") #+ wider
+#no ar prior (default)
+
+sp.brm1f <- update(sp.brm1d, prior = priors)
+#2027 divergent transitions
+#sp.brm1f %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1e.rds"))
+## ----end
+
+    ##### DHARMA Residuals ======================================================
+
+## ----recruitment univariate sp DHARMA residuals
+
+
+#step 1. Draw out predictions
+preds <- sp.brm1d %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                          summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+abnd.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                            observedResponse = fish.sp.abnd$sp.richness, #real response
+                            fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                            integerResponse = "TRUE" #is the response an integer? yes
+                            #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(abnd.resids)
+
+
+## ----end
+
 
    #### Model Investigation - Sp richness =======================================
 
@@ -1504,7 +1624,16 @@ sp.glmmTMB.ac %>% r.squaredGLMM() # will return error
 sp.glmmTMB2 %>% r.squaredGLMM()
 ## ----end
 
+## ----recruitment univariate sp bayesian summary
+sp.brm1d$fit %>% tidyMCMC(pars = wch,
+                            estimate.method = "median",
+                            conf.int = TRUE,
+                            conf.method = "HPDinterval",
+                            rhat = TRUE,
+                            ess = TRUE)
 
+
+## ----end
    #### Summary figures =========================================================
 
 

@@ -222,7 +222,7 @@ Use custom tests / plots that explicitly compare the correlation structure in th
 ```
 The default priors were mostly flat for the effects and student_t for the sds. A prior I haven't used before appeared - class 'ar' - flat, with an upper bound of 1 and a lower bound of -1.
 From the plots and eda, above, an appropriate estimate of the abundance in group BH (the default first) would be 8. On the log scale, log 8 = `r log(8)` ~ 2.1 (the same as brms would give for the median of the student_t for the Intercept). However the dispersion of 2.5 is likely too wide.
-In addition to an sd overall, an sd for the intercept and an sd by group = plotID, an additional 'sderr' term exists. Something to do with autocorrelation (it did not appear in a formula without the ar term)
+In addition to an sd overall, an sd for the intercept and an sd by group = plotID, an additional 'sderr' term exists. This is the "standard deviation of latent residuals in latent ARMA models".
 
 for the intercept, a more appropriate prior might be N(2,1)
 
@@ -446,7 +446,7 @@ Density overlay looks pretty good
 
 AC - all have values of >0.2 at first lag - increase thinning?
 ESS - most values below 0.5, none over 0.6 - priors too wide? adapt delta adjustment?
-
+Density plot shows no real mode for ar
 
 Options:
 adapt_delta to 0.99
@@ -454,10 +454,28 @@ Shrink priors for sd and sderr
 ar prior??
 adjust thinning factor
 
-####4.1 Refitting
+####4.1 Refitting, rechecking
+```{r recruitment univariate sp brms refit, results = 'markdown', eval = FALSE}
 
+```
+2121 divergent transitions
+
+```{r recruitment univariate sp recheck priors and mcmc, results = 'markdown', eval = TRUE, cache = TRUE}
+
+```
+ess and ac now acceptable
+
+```{r recruitment univariate sp recheck recheck mcmc2, results = 'markdown', eval = TRUE}
+
+```
+all other mcmc diagnostics now acceptable, but the posteriors for ac are worrying - no consistent mode (particularly not near the frequentist derived estimate of 0.98)
 
 ####5 DHARMA residuals
+
+```{r recruitment univariate sp DHARMA residuals, results = 'markdown', eval = TRUE}
+
+```
+Showing underdispersion again, but this can be explained as for abundance
 
 ### Model investigation
 ####1 Frequentist
@@ -470,4 +488,7 @@ Significant differences between intercept (BH) and DL, W.
 
 The model without the ar term is explaining 36% of the variance in species richness with the RE, 26% without
 
-Bayesian
+####2 Bayesian
+```{r recruitment univariate sp bayesian summary, results = 'markdown', eval = TRUE, error = TRUE}
+```
+I'm concerned about the estite for ar - it's basically 0.5, wit very wide confidence intervals (almost to the width of the prior uniform(0,1) dist), not anywhere close to the frequentist estimate
