@@ -1319,15 +1319,20 @@ sp.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
 
 sp.glmmTMB.ac <- update(sp.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID))
 AICc(sp.glmmTMB.ac,sp.glmmTMB2)
+
+saveRDS(sp.glmmTMB.ac, file = paste0(DATA_PATH, "modelled/sp.glmmTMB.ac.rds") )
+
 ## ----end
 
 ## ---- recruitment univariate sp revalidate
+sp.glmmTMB.ac <- readRDS(file = paste0(DATA_PATH, "modelled/sp.glmmTMB.ac.rds"))
+
 sp.ac.resid <- sp.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
 sp.ac.resid %>% testDispersion()
 ## ----end
 
    #### Partial Plot ============================================================
-## ---- recruitment univariate abundance partial
+## ---- recruitment univariate sp partial
 sp.glmmTMB.ac %>% ggpredict(Terms = "Treatment") %>%  plot()
 ## ---- end
 
@@ -1390,6 +1395,8 @@ sp.brm1 <- brm(sp.form,
 ## ----end
 
 ## ----recruitment univariate sp brm1.prior check
+load(file = paste0(DATA_PATH, "modelled/sp.brmprior1.RData"))
+
 sp.brm1 %>% ggpredict(~Treatment) %>% plot (add.data = TRUE)
 ## ----end
 
@@ -1446,7 +1453,6 @@ sp.brm1a %>%
   stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
   facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
 
-sp.brm1a %>% SUYR_prior_and_posterior()
 
 ## ----end
 
@@ -1465,9 +1471,6 @@ stan_trace(sp.brm1a$fit, pars = wch)
 ##rhat - Scale reduction factor
 stan_rhat(sp.brm1a$fit, pars = wch)
 
-##Density overlay
-sp.brm1a%>% pp_check(type = 'dens_overlay', ndraws = 100)
-
 
 ## ----recruitment univariate sp MCMC2
 
@@ -1480,6 +1483,9 @@ stan_ess(sp.brm1a$fit, pars = wch)
 
 ##Density plot
 stan_dens(sp.brm1a$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+sp.brm1a%>% pp_check(type = 'dens_overlay', ndraws = 100)
 
 ## ----end
 
@@ -1562,7 +1568,7 @@ stan_trace(sp.brm1d$fit, pars = wch)
 stan_rhat(sp.brm1d$fit, pars = wch)
 
 ##Density overlay
-sp.brm1d%>% pp_check(type = 'dens_overlay', ndraws = 100)
+sp.brm1d %>% pp_check(type = 'dens_overlay', ndraws = 100)
 
 ##Density plot
 sp.brm1d$fit %>% stan_dens( pars = wch, separate_chains = TRUE)
@@ -1588,7 +1594,11 @@ priors <- prior(normal(1,0.5), class = "Intercept") +
 
 sp.brm1f <- update(sp.brm1d, prior = priors)
 #no divergent transitions. prior_summary still has uniform(0,1) ar prior (source = user)
-#sp.brm1f %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1f.rds"))
+sp.brm1f %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1f.rds"))
+## ----end
+
+## ----recruitment univariate sp priors mcmc sp.brm1f
+sp.brm1f <- readRDS(file = paste0(DATA_PATH, "modelled/sp.brm1f.rds"))
 
 sp.brm1f %>%
   as_draws_df() %>% #get all the draws for everything estimated
@@ -1611,14 +1621,25 @@ sp.brm1f %>%
   stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
   facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
 
-#something is the matter here. why is 
-sp.brm1f$fit %>% tidyMCMC(pars = wch,
-                          estimate.method = "median",
-                          conf.int = TRUE,
-                          conf.method = "HPDinterval",
-                          rhat = TRUE,
-                          ess = TRUE)
-#not giving a positive ar estimate???
+
+##Autocorrelation factor
+stan_ac(sp.brm1f$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(sp.brm1f$fit, pars = wch)
+
+##Density plot
+sp.brm1f$fit %>% stan_dens( pars = wch, separate_chains = TRUE)
+
+##Trace Plots
+stan_trace(sp.brm1f$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(sp.brm1f$fit, pars = wch)
+
+##Density overlay
+sp.brm1f %>% pp_check(type = 'dens_overlay', ndraws = 100)
+
 ## ----end
 
     ##### DHARMA Residuals ======================================================
@@ -1627,7 +1648,7 @@ sp.brm1f$fit %>% tidyMCMC(pars = wch,
 
 
 #step 1. Draw out predictions
-preds <- sp.brm1d %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+preds <- sp.brm1f %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
                                           summary = FALSE) #don't summarise - we want the whole distribution of them
 
 
@@ -1655,17 +1676,49 @@ sp.glmmTMB2 %>% r.squaredGLMM()
 ## ----end
 
 ## ----recruitment univariate sp bayesian summary
-sp.brm1d$fit %>% tidyMCMC(pars = wch,
-                            estimate.method = "median",
-                            conf.int = TRUE,
-                            conf.method = "HPDinterval",
-                            rhat = TRUE,
-                            ess = TRUE)
+
+#something is the matter here. why is 
+sp.brm1f$fit %>% tidyMCMC(pars = wch,
+                          estimate.method = "median",
+                          conf.int = TRUE,
+                          conf.method = "HPDinterval",
+                          rhat = TRUE,
+                          ess = TRUE)
+#not giving a positive ar estimate???
+
+sp.brm1f %>% brms::bayes_R2(re.form = NA, #or ~Treatment
+                              summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+
+#'Conditional'
+sp.brm1f %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
+                              summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
 
 
 ## ----end
+
+## ---- recruitment univariate sp all contrasts
+
+##all (Tukey style) contrasts (exceedance)
+
+sp.brm1f%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  ) 
+
+## ----end
+
    #### Summary figures =========================================================
 
+## ---- recruitment univariate sp figures
+sp.brm1f %>% ggemmeans(~Treatment) %>% plot
+## ----end
 
  ## Multivariate ================================================================
 

@@ -23,7 +23,7 @@ bibliography: resources/references.bib
 output_dir: "docs"
 ---
 
-```{r chunks, results='markdown', eval=TRUE, echo = FALSE}
+```{r chunks, results='markdown', eval=TRUE, echo = FALSE, cache = TRUE}
 knitr::read_chunk('../R/functions.R')
 knitr::read_chunk('../R/analysis_recruitment.R')
 
@@ -365,7 +365,7 @@ See bglm_example5.html for fancy figure code. Need to fix X axis labels in g2 an
 ### Fit model
 ```{r recruitment univariate sp fit, results = 'markdown', eval = TRUE}
 ```
-As with abundance, the Treatment + RE of plot model performed best, despite consumingn more df
+As with abundance, the Treatment + RE of plot model performed best, despite consuming more df
 
 ###Validate/Refit
 ```{r recruitment univariate sp validate, results = 'markdown', eval = TRUE}
@@ -379,10 +379,10 @@ The residuals are showing signs of underdispersion (i.e. results more conservati
 ```
 Despite there being evidence of autocorrelation, the ac model performed about the same (within 2 AICc) as the previous model. However I think the autocorrelation is important enough to need dealing with
 
-```{r recruitment univariate sp revalidate, results = 'markdown', eval = TRUE}
+```{r recruitment univariate sp revalidate, results = 'markdown', eval = TRUE, cache = TRUE}
 
 ```
-Similar problems evident (undispersion), but without the red flag for the Levene test
+Similar problems evident (underdispersion), but without the red flag for the Levene test
 
 
 ### Partial Plot
@@ -405,7 +405,7 @@ Again, the standard deviation of the response divided by the standard deviation 
 ```
 N(0,2) might be appropriate for the slopes
 
-Again, I'll try a cauchy(0,2 for sd and sderr
+Again, I'll try a cauchy(0,2) for sd and sderr
 
 
 ```{r recruitment univariate sp prior fit, results = 'markdown', eval = FALSE}
@@ -420,11 +420,11 @@ Priors quite wide compared with data. Remember this is not in itself a problem, 
 
 ```{r recruitment univariate sp brmsfit, results = 'markdown', eval = FALSE}
 ```
-2048 divergent transitions occurred, out of a possible `r 4000/5 * 3`. Also note that the size of of both brmsfits (sp.brm1 and sp.brm1a) are apparently of size 0B in the environment ( though their saved file sizes seem similar to those of the abnd models)
+2048 divergent transitions occurred, out of a possible `r 4000/5 * 3`. Also note that the size of of both brmsfits (sp.brm1 and sp.brm1a) are apparently of size 0B in the environment (though their saved file sizes seem similar to those of the abnd models)
 
 
 ####3 Prior Checks
-```{r recruitment univariate sp brm1a prior checks, results = 'markdown', eval = TRUE}
+```{r recruitment univariate sp brm1a prior checks, results = 'markdown', eval = TRUE, cache = TRUE}
 
 ```
 Prior seems appropriate for effects, and for the intercept they could maybe go slightly wider. sd and sderr priors are very wide, so could come in a bit (but see prior checks for abundance - very similar). Prior for ar however looks identical to the posterior, despite autocorrelation being similar or greater (0.98 according to  summary(sp.glmmTMB.ac), Durbin-Watson test p < 2.2e-16) than for abundance
@@ -447,6 +447,7 @@ Density overlay looks pretty good
 AC - all have values of >0.2 at first lag - increase thinning?
 ESS - most values below 0.5, none over 0.6 - priors too wide? adapt delta adjustment?
 Density plot shows no real mode for ar
+The density overlay shows the very low values of sp.richness and the most common values of sp.richness aren't being that well captured by the model (which is predicting more and fewer of these values, respectively)
 
 Options:
 adapt_delta to 0.99
@@ -470,12 +471,22 @@ ess and ac now acceptable
 ```
 all other mcmc diagnostics now acceptable, but the posteriors for ac are worrying - no consistent mode (particularly not near the frequentist derived estimate of 0.98)
 
+```{r recruitment univariate sp refit again, results = 'markdown', eval = FALSE}
+```
+This model had no divergent transitions
+
+```{r recruitment univariate sp priors mcmc sp.brm1f, results = 'markdown', eval = TRUE, cache = TRUE}
+
+```
+
+
+
 ####5 DHARMA residuals
 
 ```{r recruitment univariate sp DHARMA residuals, results = 'markdown', eval = TRUE}
 
 ```
-Showing underdispersion again, but this can be explained as for abundance
+Showing underdispersion again, but this can be explained as for abundance (the routines for residual checking brms models don't incorporate autocorrelation)
 
 ### Model investigation
 ####1 Frequentist
@@ -489,6 +500,13 @@ Significant differences between intercept (BH) and DL, W.
 The model without the ar term is explaining 36% of the variance in species richness with the RE, 26% without
 
 ####2 Bayesian
-```{r recruitment univariate sp bayesian summary, results = 'markdown', eval = TRUE, error = TRUE}
+```{r recruitment univariate sp bayesian summary, results = 'markdown', eval = TRUE}
 ```
-I'm concerned about the estite for ar - it's basically 0.5, wit very wide confidence intervals (almost to the width of the prior uniform(0,1) dist), not anywhere close to the frequentist estimate
+I'm concerned about the estimate for ar - low estimate and very wide confidence intervals overlapping zero, not anywhere close to the frequentist estimate
+
+Interestingly the model appears to explain more of the variance compared with the frequentist approach - 95% confidence that amount falls between between 47 and 60%.
+
+```{r recruitment univariate sp all contrasts, results = 'markdown', eval = TRUE }
+
+```
+Similarly to the abundance model, there is high (>95%) confidence in differences in all contrasts EXCEPT BQ-DL
