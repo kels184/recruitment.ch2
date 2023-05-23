@@ -1928,6 +1928,22 @@ sp.brm1f %>% ggemmeans(~Treatment) %>% plot
 
 ## ----end
 
+  ### Halichoeres miniatus ======================================================
+
+## ----recruitment univariate hm data
+
+#remember when doing this, I need to include all zeros
+common.abnd <- fishalgaedata %>% 
+  mutate(plotID = factor(paste0(Treatment, Replicate)),
+         Density = recode_factor(Treatment, "W" = 9, "BH" = 9, "BQ" = 9,
+                                 "DM" = 5, "DL" = 3)) %>% 
+  group_by(plotID, Date) %>% 
+  summarise(hal.min = sum(count[Species == "Halichoeres miniatus"]),
+            )
+
+glimpse(hm.abnd)
+## ----end
+
  ## Multivariate ================================================================
 
 ## ---- Recruitment Multivariate
