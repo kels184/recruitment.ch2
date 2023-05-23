@@ -538,7 +538,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.size.trt.png"),
        height = 5,
        dpi = 100)
 
-#size hist by treatment (all fish) (dens overlay) #(not run)#
+#size hist by treatment (all fish) (dens overlay) #(not rendered)#
 fishalgaedata %>% ggplot(aes(x = Length)) +
   geom_histogram(aes(y = ..density..), #Hist with density on y axis
                  binwidth = 1,
@@ -832,17 +832,18 @@ AICc(abnd.glmmTMB.ac, abnd.glmmTMB2)
 
 ## ----recruitment univariate abundance revalidate
 abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
-abnd.resid %>% testDispersion()
-abnd.resid %>% testUniformity()
+abnd.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+
 
 ## ----end
 
 ## ----recruitment univariate abundance revalidate2
-abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
+
 abnd.resid %>% testDispersion()
 abnd.resid %>% testUniformity()
 
 ## ----end
+
 
     #### Partial plot ===========================================================
 ## ----recruitment univariate abundance partial
@@ -896,7 +897,8 @@ abnd.brm1 <- brm(abnd.form,
                         sample_prior = "only", #just to start
                          iter = 5000, warmup = 1000,
                          chains = 3, cores = 3, 
-                         thin = 5)
+                         thin = 5,
+                 seed = 123)
 save(abnd.brm1, file = paste0(DATA_PATH, "modelled/abnd.brmprior1.RData"))  
 ## ----end
 
@@ -938,7 +940,8 @@ abnd.brm2.prior <- brm(abnd.form,
                  sample_prior = "only", #just to start
                  iter = 5000, warmup = 1000,
                  chains = 3, cores = 3, 
-                 thin = 5)
+                 thin = 5,
+                 seed = 123)
 
 save(abnd.brm2.prior, file = paste0(DATA_PATH, "modelled/abnd.brmprior2.RData")) 
 ## ----end
@@ -1206,6 +1209,32 @@ abnd.brm1b %>% emmeans(~Treatment, type = 'link') %>%
 
 ## ----end
 
+##### Temporal Subset of data ================================================
+#I might not use this but while I waited for Murray re fixing the autocorrelation 
+#I thought I should see if I could get any results without it
+
+## ----recruitment univariate abundance end
+end <- fish.sp.abnd %>% filter(Date == "2022-12-12")
+abnd.end.glmmTMB <- glmmTMB(abundance ~ Treatment + (1|plotID), #Random intercept model
+                            data = end,
+                            family = poisson(link = "log"), #Poisson model
+                            REML = TRUE)
+abnd.end.glmmTMB.fixed <- update(abnd.end.glmmTMB, .~. - (1|plotID))
+AICc(abnd.end.glmmTMB,abnd.end.glmmTMB.fixed)
+
+abnd.end.resid <- simulateResiduals(abnd.end.glmmTMB.fixed, plot = TRUE)
+#no problems detected
+
+abnd.end.glmmTMB.fixed %>% summary()
+abnd.end.glmmTMB.fixed %>% r.squaredGLMM()
+
+abnd.end.glmmTMB.fixed %>% ggpredict(Terms = "Treatment") %>%  plot()
+
+
+## ----end
+
+
+
    #### Summary figures =========================================================
 ## ---- recruitment univariate abundance summary figure
 abnd.brm1b <- readRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
@@ -1328,8 +1357,48 @@ saveRDS(sp.glmmTMB.ac, file = paste0(DATA_PATH, "modelled/sp.glmmTMB.ac.rds") )
 sp.glmmTMB.ac <- readRDS(file = paste0(DATA_PATH, "modelled/sp.glmmTMB.ac.rds"))
 
 sp.ac.resid <- sp.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
+sp.ac.resid %>% testTemporalAutocorrelation((time = fish.sp.abnd$TIME))
 sp.ac.resid %>% testDispersion()
+
 ## ----end
+
+## ---- recruitment univariate sp ac residuals v date
+g1 <- ggplot(fish.sp.abnd) + aes(y = sp.ac.resid$fittedResiduals, x = Date) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~plotID)
+
+
+g2 <- ggplot(fish.sp.abnd) + aes(y = sp.ac.resid$scaledResiduals, x = Date) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~plotID)
+
+#before the ac term:
+g3 <- ggplot(fish.sp.abnd) + aes(y = sp.resid$scaledResiduals, x = Date)+
+  geom_point() +
+  geom_line() +
+  facet_wrap(~plotID)
+
+ggsave(filename = paste0(FIGS_PATH, "/spAC.fit.residuals.date.png"),
+       g1,
+       width = 40,
+       height = 25,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/spAC.sc.residuals.date.png"),
+       g2,
+       width = 40,
+       height = 25,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/spNOAC.sc.residuals.date.png"),
+       g3,
+       width = 40,
+       height = 25,
+       dpi = 100)
+## ----end
+
 
    #### Partial Plot ============================================================
 ## ---- recruitment univariate sp partial
@@ -1340,6 +1409,9 @@ sp.glmmTMB.ac %>% ggpredict(Terms = "Treatment") %>%  plot()
    ##### Priors =================================================================
 
 ## ---- recruitment univariate sp priors1
+#convert Date to factor first! (otherwise the large number could cause problems)
+fish.sp.abnd <- fish.sp.abnd %>% mutate(Date = factor(Date))
+
 
 sp.form <- bf(sp.richness ~ Treatment
                 + (1|plotID),
@@ -1390,7 +1462,8 @@ sp.brm1 <- brm(sp.form,
                  sample_prior = "only", #just to start
                  iter = 5000, warmup = 1000,
                  chains = 3, cores = 3, 
-                 thin = 5)
+                 thin = 5,
+               seed = 123)
 #save(sp.brm1, file = paste0(DATA_PATH, "modelled/sp.brmprior1.RData"))  
 ## ----end
 
@@ -1405,7 +1478,8 @@ sp.brm1 %>% ggpredict(~Treatment) %>% plot (add.data = TRUE)
 ## ----recruitment univariate sp brmsfit
 sp.form <- bf(sp.richness ~ Treatment
               + (1|plotID),
-               autocor = ~ ar(time = Date, gr = plotID, 
+               autocor = ~ ar(time = Date, #as a factor
+                              gr = plotID, 
                              p = 1), 
               family = poisson(link = "log"))
 
@@ -1421,8 +1495,9 @@ sp.brm1a <- brm(sp.form,
                sample_prior = "yes", #sample priors and posteriors
                iter = 5000, warmup = 1000,
                chains = 3, cores = 3, 
-               thin = 5)
-
+               thin = 5,
+               seed = 123)
+#2026 divergent transitions
 sp.brm1a %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1.rds"))
 ## ----end
 
@@ -1457,7 +1532,7 @@ sp.brm1a %>%
 ## ----end
 
    ##### MCMC Diagnostics ======================================================
-## ----recruitment univariate sp MCMC
+## ----recruitment univariate sp MCMC1
 sp.brm1a <- readRDS(file = paste0(DATA_PATH, "modelled/sp.brm1.rds"))
 pars <- sp.brm1a %>% get_variables()
 
@@ -1520,7 +1595,8 @@ sp.brm1d <- brm(sp.form,
                 sample_prior = "yes", #sample priors and posteriors
                 iter = 10000, warmup = 2000,
                 chains = 3, cores = 3, 
-                thin = 10)
+                thin = 10,
+                seed = 123)
 #2121 divergent transitions but ac and ess now acceptable
 sp.brm1d %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1d.rds"))
 
@@ -1592,7 +1668,7 @@ priors <- prior(normal(1,0.5), class = "Intercept") +
   prior(cauchy(0,1), class = "sderr") +# wider
   prior(uniform(-1,1), class = "ar") #wider
 
-sp.brm1f <- update(sp.brm1d, prior = priors)
+sp.brm1f <- update(sp.brm1d, prior = priors, seed = 123)
 #no divergent transitions. prior_summary still has uniform(0,1) ar prior (source = user)
 sp.brm1f %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sp.brm1f.rds"))
 ## ----end
@@ -1653,7 +1729,7 @@ preds <- sp.brm1f %>% posterior_predict(ndraws = 250, #extract 250 posterior dra
 
 
 #Step 2 create DHARMA resids
-abnd.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+sp.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
                             observedResponse = fish.sp.abnd$sp.richness, #real response
                             fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
                             integerResponse = "TRUE" #is the response an integer? yes
@@ -1661,20 +1737,22 @@ abnd.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulate
 )
 
 #Step 3 - plot!
-plot(abnd.resids)
+plot(sp.resids)
 
 
 ## ----end
 
 
    #### Model Investigation - Sp richness =======================================
-
+   ##### Frequentist ============================================================
 ## ----recruitment univariate sp frequentist summary
 sp.glmmTMB.ac %>% summary()
 sp.glmmTMB.ac %>% r.squaredGLMM() # will return error
 sp.glmmTMB2 %>% r.squaredGLMM()
 ## ----end
+   
 
+    ##### Bayesian ==============================================================
 ## ----recruitment univariate sp bayesian summary
 
 #something is the matter here. why is 
@@ -1714,10 +1792,140 @@ sp.brm1f%>%
 
 ## ----end
 
+   ##### Temporal Subset of data ================================================
+
+## ----recruitment univariate sp end
+end <- fish.sp.abnd %>% filter(Date == "2022-12-12")
+sp.end.glmmTMB <- glmmTMB(sp.richness ~ Treatment + (1|plotID), #Random intercept model
+                          data = end,
+                          family = poisson(link = "log"), #Poisson model
+                          REML = TRUE)
+sp.end.glmmTMB.fixed <- update(sp.end.glmmTMB, .~. - (1|plotID))
+AICc(sp.end.glmmTMB,sp.end.glmmTMB.fixed)
+sp.end.resid <- simulateResiduals(sp.end.glmmTMB.fixed, plot = TRUE)
+#no dramas
+
+sp.end.glmmTMB.fixed %>% summary()
+#only the BH-W contrast was significant
+sp.end.glmmTMB.fixed %>% r.squaredGLMM()
+
+sp.end.glmmTMB.fixed %>% ggpredict(Terms = "Treatment") %>%  plot()
+## ----end
+
+## ----recruitment univariate sp end bayes fit
+sp.end.form <- bf(sp.richness ~ Treatment,
+              family = poisson(link = "log"))
+priors <- prior(normal(1,0.4), class = "Intercept") +
+  prior(normal(0,2), class = "b")
+
+sp.end.brm1 <- brm(sp.end.form,
+                      data = end,
+                      prior = priors,
+                      sample_prior = "yes", #sample priors and posteriors
+                      iter = 5000, warmup = 1000,
+                      chains = 3, cores = 3, 
+                      thin = 5,
+                   seed = 123)
+## ----end
+
+## ----recruitment univariate sp end bayes checks
+sp.end.brm1 %>% SUYR_prior_and_posterior()
+
+pars <- sp.end.brm1 %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*') %>% #that start with b_
+  na.omit # omit the rest, resulting in an object of class 'omit'
+wch
+
+##Trace Plots
+stan_trace(sp.end.brm1$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(sp.end.brm1$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(sp.end.brm1$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(sp.end.brm1$fit, pars = wch)
+
+##Density plot
+stan_dens(sp.end.brm1$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+sp.end.brm1%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+#DHARMA residuals
+
+preds <- sp.end.brm1 %>% posterior_predict(ndraws = 250, 
+                                        summary = FALSE) 
+
+
+#Step 2 create DHARMA resids
+sp.end.resids <- createDHARMa(simulatedResponse = t(preds), 
+                          observedResponse = end$sp.richness, 
+                          fittedPredictedResponse = apply(preds, 2, median),
+                          integerResponse = "TRUE" 
+)
+
+#Step 3 - plot!
+plot(sp.end.resids)
+
+
+## ---end
+
+## ----recruitment univariate sp end bayes summary
+
+sp.end.brm1$fit %>% tidyMCMC(pars = wch,
+                          estimate.method = "median",
+                          conf.int = TRUE,
+                          conf.method = "HPDinterval",
+                          rhat = TRUE,
+                          ess = TRUE)
+
+#'Conditional'
+sp.end.brm1 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
+                            summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+
+
+## ----end
+
+## ---- recruitment univariate sp all contrasts
+
+##all (Tukey style) contrasts (exceedance)
+
+sp.end.brm1f%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  ) 
+
+sp.end.brm1%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  ) 
+
+#still seeing most of the same contrasts with high evidence, with the addition 
+#of BH-DL and BH-DM not having evidence (below 90%)
+## ---end
+
+
    #### Summary figures =========================================================
 
 ## ---- recruitment univariate sp figures
 sp.brm1f %>% ggemmeans(~Treatment) %>% plot
+
+
 ## ----end
 
  ## Multivariate ================================================================

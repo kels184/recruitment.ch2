@@ -1,0 +1,164 @@
+---
+title: "Fish Recruitment Exploratory Data Analysis"
+author: "Kelsey Webber"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format: 
+  html:
+    css: ../docs/resources/AIMS-style.css
+    toc: true
+    toc-float: true
+    number-sections: true
+    number-depth: 5
+    embed-resources: true
+    code-fold: false
+    code-tools: true
+    code-summary: "Show the code"
+crossref:
+  fig-title: '**Figure**'
+  fig-labels: arabic
+  tbl-title: '**Table**'
+  tbl-labels: arabic
+engine: knitr
+output_dir: ../docs
+---
+
+```{r chunks, results='markdown', eval=TRUE, echo = FALSE, cache = TRUE}
+knitr::read_chunk('../R/functions.R')
+knitr::read_chunk('../R/analysis_recruitment.R')
+
+```
+
+# Preparations
+
+- Load any helper functions (functions.R)
+
+```{r loadFunctions, results='markdown', eval=FALSE}
+```
+
+```{r setup, include=FALSE, warnings=FALSE, message=FALSE}
+```
+
+
+- Load required packages (functions.R)
+
+```{r loadPackages, results='markdown', eval = TRUE, warnings = FALSE, message = FALSE}
+```
+
+- Prepare paths (functions.R)
+
+```{r preparePaths, results='markdown', eval = TRUE}
+
+```
+
+# Load Fish Recruitment data
+
+1. Load the data
+```{r FishRecruitment readData, results = 'markdown', eval = TRUE}
+```
+
+2. Glimpse the data
+```{r recruitment glimpse, results='markdown', eval=TRUE}
+```
+
+```{r recruitment report table, results='markdown', eval=TRUE}
+```
+
+3. Factorise and clean
+```{r factorise and clean, results = 'markdown', eval = TRUE}
+```
+
+# EDA
+
+## Algae EDA
+
+```{r recruitment algae summary table, results = 'markdown', eval = TRUE}
+```
+
+```{r recruitment algae summary figures, results = 'markdown', eval = TRUE}
+```
+A bit of an outlier in Length - One plot (W5) had an extra long 52cm thallus. I checked in the video and this was not a typo. However its weight was not super high (70g). Lengths otherwise fairly similar, around 30cm
+
+Weights per plot: BQ < DL <= BH <= DM < W
+
+## Fish EDA
+
+### 1 Total abundance
+```{r fish EDA total abundance, results = 'markdown', eval = TRUE}
+```
+Total abundance seems to follow a similar pattern to the biomass of macroalgae. It’s also very nice that the variance doesn’t seem to differ among treatments
+
+1.1 Total abundance over time
+```{r fish EDA abundance time, results = 'markdown', eval = TRUE}
+```
+Does abundance/diversity/biomass (size) change differently over time among treatments?
+
+Yes (Abundance) – W treatment seems to continuously increase, while other treatments (esp DL and BQ) flatten early. Carrying capacity being reached earlier? DM shows a hump in abundance
+
+1.2 Abundance vs Algal biomass
+```{r fish EDA abundance vs biomass, results = 'markdown', eval = TRUE}
+```
+Could the plot biomass be used as a predictor of total abundance?- yeah seems so
+
+### 2 Species Richness
+
+```{r fish EDA Species richness, results = 'markdown', eval = TRUE}
+```
+Similarly to abundance, richness seems to follow a similar pattern to the biomass of macroalgae.
+
+
+2.1 Species richness over time
+```{r fish EDA richness vs time, results = 'markdown', eval = TRUE}
+```
+Does abundance/diversity/biomass (size) change differently over time among treatments?
+
+For diversity,  W again seems to continuously increase, while other treatments (esp DL and BQ) flatten early. DM shows an even more prominent hump in abundance around day 8.
+
+2.2 Species Richness vs Algal biomass
+```{r fish EDA richness vs biomass, results = 'markdown', eval = TRUE}
+```
+
+Could the plot biomass be used as a predictor of diversity ?- yeah seems so
+
+### 3 Find Common Species
+```{r fish EDA commonness, results = 'markdown', eval = TRUE}
+```
+The top 6 (Halichoeres miniatus to Siganus fuscescens) collectively accounted for 90% of total abundance, each individually accounted for more than 2% of total abundance and appeared every day. Only Steothjulis strigiventer also appeared every day (but why analyse it if not something else more abundant?) Using just the top 6 or less makes sense
+
+### 4 Common species patterns
+```{r fish EDA common species1, results = 'markdown', eval = TRUE}
+```
+
+Petroscirtes and Siganus doliatus and maybe Pomacentrus tripunctatus show a somewhat similar patttern to that of plot biomass, but lots of skew. Halichoeres miniatus shows a fairly similar abundance among treatments (although I wonder if the size distributions may vary?) Maybe not enough data for Lethrinus atkinsoni and Siganus fuscescens
+
+4.1 Common species over time
+```{r fish EDA common species2, results = 'markdown', eval = TRUE}
+```
+
+H. miniatus, Petroscirtes sp. and tripunctatus accumulated over time, particularly in treatments W, BH and DM (H. miniatus), W (Petroscirtes) and all except BQ in P. tripunctatus. S doliatus declined in abundance over time to making W, BH and DM, which started off with more, approximately similar to the other treatments after ~6 days. L atkinsoni and S. fuscescens show no clear pattern (not enough data)
+
+4.2 Common sp vs algal biomass
+```{r fish EDA common species3, results = 'markdown', eval = TRUE}
+```
+Unlikely to be worth exploring L. atkinsoni and S. fuscescens, but the rest show a bit of a positive relationship (including H. miniatus kind of). Petroscirtes sp. the strongest relationship
+
+### 5 Size distributions
+
+```{r fish EDA sizes1, results = 'markdown', eval = TRUE}
+```
+This plot shows the mean number of fish of each length category (bin width 1) per day for each treatment, all fish combined.
+While the overall centre of mass is similar among treatments (around 2-5), the height of the peaks appear to increase with increasing plot biomass (treatments BQ=DL<BH<DM<W)
+
+```{r fish EDA sizes2 common species, results = 'markdown', eval = TRUE}
+```
+These plots shows the mean number of fish of each length category (bin width 1) averaged by day and treatment, separated by species for the 6 most common.
+Halichoeres miniatus shows a relatively similar distribution across treatments. However, Petroscirtes sp., Siganus doliatus and Pomacentrus tripunctatus show similar patterns to the overall size distributions - greater mass around ~2.5cm as plot biomass of sargassum increases (treatments BQ=DL<BH<DM<W)
+
+It probably isn't worth exploring S.fuscescens and L. atkinsoni further (too many 1s and not much else)
+
+
+```{r fish EDA sizes2 over time, results = "markdown", eval = TRUE, quiet = TRUE}
+```
+These plots show the mean number of fish of each length category averaged by Treatment and plotted for each day separately
+Not much of a pattern really to see - no obvious shift in size distributions over time for all fish combined, Petroscrites sp. or for Siganus doliatus
+
+
