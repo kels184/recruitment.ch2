@@ -1930,18 +1930,25 @@ sp.brm1f %>% ggemmeans(~Treatment) %>% plot
 
   ### Halichoeres miniatus ======================================================
 
-## ----recruitment univariate hm data
+## ----recruitment univariate common data
 
 #remember when doing this, I need to include all zeros
-common.abnd <- fishalgaedata %>% 
+dat <- fishalgaedata %>% 
   mutate(plotID = factor(paste0(Treatment, Replicate)),
          Density = recode_factor(Treatment, "W" = 9, "BH" = 9, "BQ" = 9,
-                                 "DM" = 5, "DL" = 3)) %>% 
+                                 "DM" = 5, "DL" = 3)) 
+
+common.abnd <- dat %>% 
   group_by(plotID, Date) %>% 
   summarise(hal.min = sum(count[Species == "Halichoeres miniatus"]),
-            )
+            petro = sum(count[Species == "Petroscirtes sp."]),
+            sig.dol = sum(count[Species == "Siganus doliatus"]),
+            pom.tri = sum(count[Species == "Pomacentrus tripunctatus"]),
+            let.atk = sum(count[Species == "Lethrinus atkinsoni"]),
+            sig.fus = sum(count[Species == "Siganus fuscescens"])) %>% 
+  inner_join(.,dat, by = c(plotID, Date)) #still working on getting correct # rows and cols
 
-glimpse(hm.abnd)
+glimpse(common.abnd)
 ## ----end
 
  ## Multivariate ================================================================
