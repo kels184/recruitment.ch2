@@ -387,4 +387,11 @@ Interestingly the model appears to explain more of the variance compared with th
 ```
 Similarly to the abundance model, there is high (>95%) confidence in differences in all contrasts EXCEPT BQ-DL
 
+# HALICHOERES MINIATUS Abundance
+
+```{r recruitment univariate hm fit, results = 'markdown', eval = TRUE}
+
+```
+The best model for halichoeres miniatus was in fact the 'plot.weight' model
+
 

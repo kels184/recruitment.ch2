@@ -59,7 +59,10 @@ glimpse(algaedata)
 fishalgaedata <- algaedata %>% 
   group_by(Treatment,Replicate) %>% 
   summarise(plot.weight = sum(Weight)) %>% 
-  left_join(fishdata, .) # add plot.weight column to fishdata
+  left_join(fishdata, .) %>% 
+  mutate(plotID = factor(paste0(Treatment, Replicate)),
+         Density = recode_factor(Treatment, "W" = 9, "BH" = 9, "BQ" = 9,
+                                 "DM" = 5, "DL" = 3)) # add plot.weight column to fishdata
 fishalgaedata %>% glimpse()
 
 #write_csv(fishalgaedata, file = paste0(DATA_PATH, "processed/fishalgaedata.csv"))
@@ -369,8 +372,8 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.sp.png"),
  #### Abundance/Commonness ======================================================
 ## ---- fish EDA commonness
 
-#fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
-#mutate_at(c(2:5), factor)
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+mutate_at(c(2:5,9), factor)
 #glimpse(fishalgaedata)
 
 
@@ -411,11 +414,21 @@ commondata <- fishalgaedata %>%
 glimpse(commondata)
 commondata$Species %>% levels
 
+common.abnd <- commondata %>% 
+  count(Treatment, Replicate ,Date, Species, #count occurences of these combinations
+        name = "abundance") %>% #call it abundance
+  complete(Treatment, Replicate ,Date, Species, #complete according to these
+           fill = list(abundance = 0)) %>% #by adding a 0 where incomplete 
+  left_join(.,commondata %>% #join back together with commondata
+              select(-c(Length, count, Family, Species)), #(a version without these cols)
+            multiple = "first") %>%  #if there are repeat combinations, use the first value
+  left_join(.,fishalgaedata %>% select(Species,Family),
+            multiple = "first")
+
+write_csv(common.abnd, paste0(DATA_PATH, "summarised/common.abnd.csv") )
+
 ## plot abundance
-commondata %>% 
-  group_by(Treatment, Replicate, Date, Species) %>% 
-  summarise(abundance = sum(count) )%>%
- #ungroup() %>% ## 
+common.abnd%>%
   ggplot() + aes(y = abundance, x = Treatment) + ## 
   geom_count(alpha = 0.1)  +
   geom_violin(fill = NA) +
@@ -441,10 +454,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.png"),
 ## ---- fish EDA common species2
 ## plot abundance over time
 
-commondata %>% 
-  group_by(Treatment, Replicate, Date, Species) %>% 
-  summarise(abundance = sum(count) )%>%
-  #ungroup() %>% ## 
+common.abnd %>% 
   ggplot() + aes(y = abundance, x = Date, colour = Treatment) + ## 
   geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
   geom_smooth() +
@@ -468,11 +478,8 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.time.png"),
 
 ## ----fish EDA common species3
 ## plot abundance vs algal biomass
-commondata %>% 
-  group_by(Treatment, Replicate, Date, Species) %>% 
-  summarise(abundance = sum(count), 
-           x = mean(plot.weight) )%>% ## mean won't change anything, but will ensure plot.weight is kept in the output
-  ggplot() + aes(y = abundance, x = x) + ## set overall aesthetic
+common.abnd %>% 
+  ggplot() + aes(y = abundance, x = plot.weight) + ## set overall aesthetic
   geom_count(aes(colour = Treatment),  ## make colour vary by treatment in the points
              alpha = 0.2)  + 
   geom_smooth(method = "lm") + ##smoother on x and y (not separate for groups). Linear model method instead of gam
@@ -1928,27 +1935,43 @@ sp.brm1f %>% ggemmeans(~Treatment) %>% plot
 
 ## ----end
 
-  ### Halichoeres miniatus ======================================================
+  ### Halichoeres miniatus abundance=============================================
 
-## ----recruitment univariate common data
+   #### Fit =====================================================================
+## ----recruitment univariate hm fit
 
-#remember when doing this, I need to include all zeros
-dat <- fishalgaedata %>% 
-  mutate(plotID = factor(paste0(Treatment, Replicate)),
-         Density = recode_factor(Treatment, "W" = 9, "BH" = 9, "BQ" = 9,
-                                 "DM" = 5, "DL" = 3)) 
+common.abnd <- read_csv( paste0(DATA_PATH, "summarised/common.abnd.csv") ) %>% 
+  mutate_at(c(1:4,7,9), factor)
 
-common.abnd <- dat %>% 
-  group_by(plotID, Date) %>% 
-  summarise(hal.min = sum(count[Species == "Halichoeres miniatus"]),
-            petro = sum(count[Species == "Petroscirtes sp."]),
-            sig.dol = sum(count[Species == "Siganus doliatus"]),
-            pom.tri = sum(count[Species == "Pomacentrus tripunctatus"]),
-            let.atk = sum(count[Species == "Lethrinus atkinsoni"]),
-            sig.fus = sum(count[Species == "Siganus fuscescens"])) %>% 
-  inner_join(.,dat, by = c(plotID, Date)) #still working on getting correct # rows and cols
+hm.glmmTMB0 <- glmmTMB(abundance ~ 1, #null model
+                       data = common.abnd %>% 
+                         filter(Species == "Halichoeres miniatus"),
+                       family = poisson(link = "log"),
+                       REML = TRUE)
 
-glimpse(common.abnd)
+hm.glmmTMB1 <- update(hm.glmmTMB0, .~., + (1|plotID)) #random intercept model 
+
+hm.glmmTMB1B <- update(hm.glmmTMB0, .~. + Treatment) #add Treatment as fixed
+
+hm.glmmTMB2 <- update(hm.glmmTMB1, .~. + Treatment) #Treatment fixed, Random int
+
+hm.glmmTMB3 <- update(hm.glmmTMB1, .~. + plot.weight) #plot.weight fixed
+
+hm.glmmTMB4 <- update(hm.glmmTMB1, .~. + Density)#Density fixed
+
+hm.glmmTMB5 <- update(hm.glmmTMB3, .~. + Density)#plot.weight + Density
+
+hm.glmmTMB6 <- update(hm.glmmTMB3, .~. * Density) #plot.weight*Density
+
+hm.glmmTMB7 <- update(hm.glmmTMB2, ~. + plot.weight) #Treatment + plot.weight
+
+hm.glmmTMB8 <- update(hm.glmmTMB2, ~. * plot.weight) #Treatment * plot.weight
+
+
+MuMIn::AICc(hm.glmmTMB1, hm.glmmTMB1B, hm.glmmTMB2, hm.glmmTMB3, hm.glmmTMB4,
+            hm.glmmTMB5, hm.glmmTMB6,hm.glmmTMB7, hm.glmmTMB8)
+
+AICc(hm.glmmTMB3, update(hm.glmmTMB3, .~. - (1|plotID)))
 ## ----end
 
  ## Multivariate ================================================================
