@@ -1941,7 +1941,8 @@ sp.brm1f %>% ggemmeans(~Treatment) %>% plot
 ## ----recruitment univariate hm fit
 
 common.abnd <- read_csv( paste0(DATA_PATH, "summarised/common.abnd.csv") ) %>% 
-  mutate_at(c(1:4,7,9), factor)
+  mutate_at(c(1:4,7,9), factor) %>% 
+  data.frame()
 
 hm.glmmTMB0 <- glmmTMB(abundance ~ 1, #null model
                        data = common.abnd %>% 
@@ -1973,6 +1974,38 @@ MuMIn::AICc(hm.glmmTMB1, hm.glmmTMB1B, hm.glmmTMB2, hm.glmmTMB3, hm.glmmTMB4,
 
 AICc(hm.glmmTMB3, update(hm.glmmTMB3, .~. - (1|plotID)))
 ## ----end
+
+ #### Validate ==================================================================
+
+## ---- recruitment univariate hm validate
+hm.resid <- hm.glmmTMB3 %>% simulateResiduals(plot = TRUE)
+hm.resid
+
+##check autocorrelation
+common.abnd <- common.abnd %>% 
+  mutate(TIME = as.numeric(plotID) + as.numeric(Date)*10^-5)
+
+hm.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+                                           filter(Species == "Halichoeres miniatus") %>% 
+                                           select(TIME))
+
+## ----end
+
+#### Partial ====================================================================
+
+## ----recruitment univariate hm partial
+hm.glmmTMB3 %>% ggpredict(terms = "plot.weight") %>% plot()
+
+## ----end
+
+ #### Bayesian ==================================================================
+ ##### Priors ===================================================================
+
+## ----recruitment univariate hm priors1
+hm.form <- bf(abundance ~ plot.weight )
+
+##
+
 
  ## Multivariate ================================================================
 
