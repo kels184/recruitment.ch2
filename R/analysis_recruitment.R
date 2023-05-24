@@ -419,9 +419,9 @@ common.abnd <- commondata %>%
         name = "abundance") %>% #call it abundance
   complete(Treatment, Replicate ,Date, Species, #complete according to these
            fill = list(abundance = 0)) %>% #by adding a 0 where incomplete 
-  left_join(.,commondata %>% #join back together with commondata
+  left_join(.,fishalgaedata %>% #join back together with commondata
               select(-c(Length, count, Family, Species)), #(a version without these cols)
-            multiple = "first") %>%  #if there are repeat combinations, use the first value
+            multiple = "first") %>%  #if there are repeat combinations, use the first value #######this is giving me NA values for plot.weight, plotID and Density where there were none of the common species
   left_join(.,fishalgaedata %>% select(Species,Family),
             multiple = "first")
 
@@ -1950,7 +1950,7 @@ hm.glmmTMB0 <- glmmTMB(abundance ~ 1, #null model
                        family = poisson(link = "log"),
                        REML = TRUE)
 
-hm.glmmTMB1 <- update(hm.glmmTMB0, .~., + (1|plotID)) #random intercept model 
+hm.glmmTMB1 <- update(hm.glmmTMB0, .~. + (1|plotID)) #random intercept model 
 
 hm.glmmTMB1B <- update(hm.glmmTMB0, .~. + Treatment) #add Treatment as fixed
 
@@ -1969,7 +1969,7 @@ hm.glmmTMB7 <- update(hm.glmmTMB2, ~. + plot.weight) #Treatment + plot.weight
 hm.glmmTMB8 <- update(hm.glmmTMB2, ~. * plot.weight) #Treatment * plot.weight
 
 
-MuMIn::AICc(hm.glmmTMB1, hm.glmmTMB1B, hm.glmmTMB2, hm.glmmTMB3, hm.glmmTMB4,
+MuMIn::AICc(hm.glmmTMB0, hm.glmmTMB1, hm.glmmTMB1B, hm.glmmTMB2, hm.glmmTMB3, hm.glmmTMB4,
             hm.glmmTMB5, hm.glmmTMB6,hm.glmmTMB7, hm.glmmTMB8)
 
 AICc(hm.glmmTMB3, update(hm.glmmTMB3, .~. - (1|plotID)))
