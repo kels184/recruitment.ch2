@@ -1944,57 +1944,57 @@ common.abnd <- read_csv( paste0(DATA_PATH, "summarised/common.abnd.csv") ) %>%
   mutate_at(c(1:4,7,9), factor) %>% 
   data.frame()
 
-hm.glmmTMB0 <- glmmTMB(abundance ~ 1, #null model
-                       data = common.abnd %>% 
-                         filter(Species == "Halichoeres miniatus"),
-                       family = poisson(link = "log"),
-                       REML = TRUE)
-
-hm.glmmTMB1 <- update(hm.glmmTMB0, .~. + (1|plotID)) #random intercept model 
-
-hm.glmmTMB1B <- update(hm.glmmTMB0, .~. + Treatment) #add Treatment as fixed
+#Fewer candidate models (ones that make theoretical sense, instead of dredging)
+hm.glmmTMB1 <- glmmTMB(abundance ~ 1 + (1|plotID), #random intercept mode
+                      data = common.abnd %>% 
+                        filter(Species == "Halichoeres miniatus"),
+                      family = poisson(link = "log"),
+                      REML = TRUE)
 
 hm.glmmTMB2 <- update(hm.glmmTMB1, .~. + Treatment) #Treatment fixed, Random int
 
-hm.glmmTMB3 <- update(hm.glmmTMB1, .~. + plot.weight) #plot.weight fixed
-
-hm.glmmTMB4 <- update(hm.glmmTMB1, .~. + Density)#Density fixed
-
-hm.glmmTMB5 <- update(hm.glmmTMB3, .~. + Density)#plot.weight + Density
-
-hm.glmmTMB6 <- update(hm.glmmTMB3, .~. * Density) #plot.weight*Density
-
-hm.glmmTMB7 <- update(hm.glmmTMB2, ~. + plot.weight) #Treatment + plot.weight
-
-hm.glmmTMB8 <- update(hm.glmmTMB2, ~. * plot.weight) #Treatment * plot.weight
+hm.glmmTMB3 <- update(hm.glmmTMB1, .~. + plot.weight) #plot.weight fixed, rand int
 
 
-MuMIn::AICc(hm.glmmTMB0, hm.glmmTMB1, hm.glmmTMB1B, hm.glmmTMB2, hm.glmmTMB3, hm.glmmTMB4,
-            hm.glmmTMB5, hm.glmmTMB6,hm.glmmTMB7, hm.glmmTMB8)
 
-AICc(hm.glmmTMB3, update(hm.glmmTMB3, .~. - (1|plotID)))
+MuMIn::AICc(hm.glmmTMB1,hm.glmmTMB2, hm.glmmTMB3)
+
+
 ## ----end
 
  #### Validate ==================================================================
 
 ## ---- recruitment univariate hm validate
-hm.resid <- hm.glmmTMB3 %>% simulateResiduals(plot = TRUE)
+hm.resid <- hm.glmmTMB2 %>% simulateResiduals(plot = TRUE)
 hm.resid
 
 ##check autocorrelation
 common.abnd <- common.abnd %>% 
-  mutate(TIME = as.numeric(plotID) + as.numeric(Date)*10^-5)
+  mutate(TIME = as.numeric(plotID) + as.numeric(Date)*10^-2)
 
 hm.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
                                            filter(Species == "Halichoeres miniatus") %>% 
-                                           select(TIME))
+                                           pull(TIME) ) #extract just the Time column as a vector
+
 
 ## ----end
+
+## ----recruitment univariate hm refit revalidate
+
+hm.glmmTMB.ac <- update(hm.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
+
+hm.ac.resid <- hm.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
+hm.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+                                           filter(Species == "Halichoeres miniatus") %>% 
+                                           pull(TIME) )
+
+hm.ac.resid %>% testDispersion()
+#stil evidence of autocorrelation, underdispersed
 
 #### Partial ====================================================================
 
 ## ----recruitment univariate hm partial
-hm.glmmTMB3 %>% ggpredict(terms = "plot.weight") %>% plot()
+hm.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot()
 
 ## ----end
 
