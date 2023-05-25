@@ -388,10 +388,66 @@ Interestingly the model appears to explain more of the variance compared with th
 Similarly to the abundance model, there is high (>95%) confidence in differences in all contrasts EXCEPT BQ-DL
 
 # HALICHOERES MINIATUS Abundance
-
+## Fit
 ```{r recruitment univariate hm fit, results = 'markdown', eval = TRUE}
 
 ```
 The best model for halichoeres miniatus was the Treatment model (with random intercept)
+## Validate
+```{r recruitment univariate hm validate, results = 'markdown', eval = TRUE}
+
+```
+autocorrelation the only problem
 
 
+```{r recruitment univariate hm refit revalidate, results = 'markdown', eval = TRUE}
+
+```
+even though the model was refit with autocorrelation, it still doesn't look like it's being accounted for.
+
+##Partial Plot
+
+```{r recruitment univariate hm partial, results = 'markdown', eval = TRUE}
+
+```
+
+##Bayesian Model
+
+###Initial priors
+```{r recruitment univariate hm priors1, results = 'markdown', eval = TRUE}
+
+```
+
+1.6,0.5 seem sensible for the Intercept
+
+0, 2 seem sensible for the effects
+
+### Fitting
+```{r recruitment univariate hm brmsfit, results = 'markdown', eval = FALSE}
+```
+There were 17 divergent transitions
+
+### Prior checks
+```{r recruitment univariate hm brm1 prior check, results = 'markdown', eval = TRUE}
+```
+
+priors look quite ok. Maybe ar could come in a bit
+
+### MCMC
+```{r recruitment univariate hm brm1 MCMC, results = 'markdown', eval = TRUE, cache = TRUE}
+```
+sderr slightly autocorrelated at lag 1. One of the posteriors had a low sample size (~0.6). my guess is it will be ar. Or based on the stan_dens plot maybe sderr. density overlay plot a funky shape
+
+
+### DHARMA residuals
+```{r recruitment univariate hm brm1 DHARMA, results = 'markdown', eval = TRUE}
+
+```
+
+## Model Investigation
+```{r recruitment univariate hm brm1 summary, results = 'markdown', eval = TRUE}
+
+```
+The low ess var was sderr. ar estimate 0.5
+
+Low proportion of variance explained (14 - 18 with the random intercept)

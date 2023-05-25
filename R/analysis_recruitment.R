@@ -58,11 +58,13 @@ glimpse(algaedata)
 
 fishalgaedata <- algaedata %>% 
   group_by(Treatment,Replicate) %>% 
-  summarise(plot.weight = sum(Weight)) %>% 
+  summarise(plot.weight = sum(Weight)) %>% # add plot.weight column to fishdata
   left_join(fishdata, .) %>% 
   mutate(plotID = factor(paste0(Treatment, Replicate)),
          Density = recode_factor(Treatment, "W" = 9, "BH" = 9, "BQ" = 9,
-                                 "DM" = 5, "DL" = 3)) # add plot.weight column to fishdata
+                                 "DM" = 5, "DL" = 3),
+         Day = Date %>% factor %>% as.numeric() %>% 
+           factor) #create day, a factor of numbers 1-18
 fishalgaedata %>% glimpse()
 
 #write_csv(fishalgaedata, file = paste0(DATA_PATH, "processed/fishalgaedata.csv"))
@@ -415,14 +417,14 @@ glimpse(commondata)
 commondata$Species %>% levels
 
 common.abnd <- commondata %>% 
-  count(Treatment, Replicate ,Date, Species, #count occurences of these combinations
+  count(Treatment, Replicate ,Date, Species, #count occurrences of these combinations
         name = "abundance") %>% #call it abundance
   complete(Treatment, Replicate ,Date, Species, #complete according to these
            fill = list(abundance = 0)) %>% #by adding a 0 where incomplete 
-  left_join(.,fishalgaedata %>% #join back together with commondata
+  left_join(.,fishalgaedata %>% #join back together with fishalgaedata
               select(-c(Length, count, Family, Species)), #(a version without these cols)
-            multiple = "first") %>%  #if there are repeat combinations, use the first value #######this is giving me NA values for plot.weight, plotID and Density where there were none of the common species
-  left_join(.,fishalgaedata %>% select(Species,Family),
+            multiple = "first") %>%  #if there are repeat combinations, use the first value 
+  left_join(.,fishalgaedata %>% select(Species,Family), #join Family back on
             multiple = "first")
 
 write_csv(common.abnd, paste0(DATA_PATH, "summarised/common.abnd.csv") )
@@ -759,7 +761,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.doli.length.date.png"),
   ### Abundance =================================================================
 ## ----recruitment univariate setup data
 fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
-  mutate_at(c(2:5), factor)
+  mutate_at(c(2:5,9,11), factor)
 glimpse(fishalgaedata)
 
 
@@ -770,11 +772,13 @@ fish.sp.abnd <-fishalgaedata %>%
                                   true = length(unique(Species)), 
                                   false = 0), #calculate sp. richness
             plot.weight = plot.weight # include the biomass of each plot in the output
-  ) %>% distinct() %>% #remove duplicate rows
-  mutate(plotID = factor(paste0(Treatment, Replicate)),
-         Density = recode_factor(Treatment, "W" = 9, "BH" = 9, "BQ" = 9,
-                                 "DM" = 5, "DL" = 3)) %>% 
+  ) %>% 
+  left_join(.,fishalgaedata %>% #join back together with fishalgaedata
+              select(-c(Length, count, Family, Species)) ) %>% #a version without these
+  distinct() %>% 
   as.data.frame() #make into a data frame instead of tbl (prevented ggpredict[]
+
+
 
 fish.sp.abnd %>% glimpse()
 fish.sp.abnd$Density %>% levels()
@@ -817,7 +821,7 @@ abnd.resid %>% testDispersion()
 #like that there are multiple observations at the same time, but maybe if I 
 #give each plot their own set of Time
 fish.sp.abnd <- fish.sp.abnd %>% 
-  mutate(TIME = as.numeric(plotID) + as.numeric(Date)*10^-5)
+  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
 fish.sp.abnd %>% head
 fish.sp.abnd %>% tail
 
@@ -828,7 +832,7 @@ abnd.resid %>% testZeroInflation()
 ## ---- recruitment univariate abundance refit autocorrelation
 
 abnd.glmmTMB.ac <- update(abnd.glmmTMB2, .~. + 
-                            ar1(0 + factor(Date)| plotID) #ac part.No intercept(0), 
+                            ar1(0 + Day| plotID) #ac part.No intercept(0), 
  #Date must be a factor, with evenly spaced time steps. autocorrelation separate 
  #for each plot 
                           )
@@ -838,8 +842,8 @@ AICc(abnd.glmmTMB.ac, abnd.glmmTMB2)
 ## ----end
 
 ## ----recruitment univariate abundance revalidate
-abnd.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
-abnd.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+abnd.ac.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
+abnd.ac.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
 
 
 ## ----end
@@ -864,7 +868,7 @@ abnd.glmmTMB.ac %>% ggpredict(terms = "Treatment") %>% plot()
 
 abnd.form <- bf(abundance ~ Treatment
                     + (1|plotID),
-                   autocor = ~ ar(time = Date, gr = plotID, 
+                   autocor = ~ ar(time = Day, gr = plotID, 
                                  p = 1), #order of the autoregressive (1st order)
                            family = poisson(link = "log"))
 
@@ -993,7 +997,7 @@ exp(c(2,3,5,10))
 ## eval set to FALSE
 abnd.form <- bf(abundance ~ Treatment
                 + (1|plotID),
-                autocor = ~ ar(time = Date, gr = plotID, p = 1), 
+                autocor = ~ ar(time = Day, gr = plotID, p = 1), 
                 family = poisson(link = "log"))
 
 priors <- prior(normal(2,1), class = "Intercept") +
@@ -1345,7 +1349,7 @@ sp.resid %>% testDispersion()
 sp.resid %>% testUniformity()
 #showing problems (underdispersion)
 fish.sp.abnd <- fish.sp.abnd %>% 
-  mutate(TIME = as.numeric(plotID) + as.numeric(Date)*10^-5)
+  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
 
 sp.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
 #definitely autocorrelation
@@ -1353,7 +1357,7 @@ sp.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
 
 ## recruitment univariate sp refit autocor
 
-sp.glmmTMB.ac <- update(sp.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID))
+sp.glmmTMB.ac <- update(sp.glmmTMB2, .~. + ar1(0 + Day|plotID))
 AICc(sp.glmmTMB.ac,sp.glmmTMB2)
 
 saveRDS(sp.glmmTMB.ac, file = paste0(DATA_PATH, "modelled/sp.glmmTMB.ac.rds") )
@@ -1370,19 +1374,19 @@ sp.ac.resid %>% testDispersion()
 ## ----end
 
 ## ---- recruitment univariate sp ac residuals v date
-g1 <- ggplot(fish.sp.abnd) + aes(y = sp.ac.resid$fittedResiduals, x = Date) +
+g1 <- ggplot(fish.sp.abnd) + aes(y = sp.ac.resid$fittedResiduals, x = Day) +
   geom_point() +
   geom_line() +
   facet_wrap(~plotID)
 
 
-g2 <- ggplot(fish.sp.abnd) + aes(y = sp.ac.resid$scaledResiduals, x = Date) +
+g2 <- ggplot(fish.sp.abnd) + aes(y = sp.ac.resid$scaledResiduals, x = Day) +
   geom_point() +
   geom_line() +
   facet_wrap(~plotID)
 
 #before the ac term:
-g3 <- ggplot(fish.sp.abnd) + aes(y = sp.resid$scaledResiduals, x = Date)+
+g3 <- ggplot(fish.sp.abnd) + aes(y = sp.resid$scaledResiduals, x = Day)+
   geom_point() +
   geom_line() +
   facet_wrap(~plotID)
@@ -1416,13 +1420,12 @@ sp.glmmTMB.ac %>% ggpredict(Terms = "Treatment") %>%  plot()
    ##### Priors =================================================================
 
 ## ---- recruitment univariate sp priors1
-#convert Date to factor first! (otherwise the large number could cause problems)
-fish.sp.abnd <- fish.sp.abnd %>% mutate(Date = factor(Date))
+glimpse(fish.sp.abnd)
 
 
 sp.form <- bf(sp.richness ~ Treatment
                 + (1|plotID),
-                autocor = ~ ar(time = Date, gr = plotID, 
+                autocor = ~ ar(time = Day, gr = plotID, 
                                p = 1), #order of the autoregressive (1st order)
                 family = poisson(link = "log"))
 
@@ -1453,7 +1456,7 @@ standist::visualize("cauchy(0,2)", xlim = c(0,10))
 ##otherwise)
 sp.form <- bf(sp.richness ~ Treatment
               + (1|plotID),
-              # autocor = ~ ar(time = Date, gr = plotID, 
+              # autocor = ~ ar(time = Day, gr = plotID, 
               #               p = 1), 
               family = poisson(link = "log"))
 
@@ -1485,7 +1488,7 @@ sp.brm1 %>% ggpredict(~Treatment) %>% plot (add.data = TRUE)
 ## ----recruitment univariate sp brmsfit
 sp.form <- bf(sp.richness ~ Treatment
               + (1|plotID),
-               autocor = ~ ar(time = Date, #as a factor
+               autocor = ~ ar(time = Day, #as a factor
                               gr = plotID, 
                              p = 1), 
               family = poisson(link = "log"))
@@ -1941,7 +1944,7 @@ sp.brm1f %>% ggemmeans(~Treatment) %>% plot
 ## ----recruitment univariate hm fit
 
 common.abnd <- read_csv( paste0(DATA_PATH, "summarised/common.abnd.csv") ) %>% 
-  mutate_at(c(1:4,7,9), factor) %>% 
+  mutate_at(c(1:4,7,9, 10), factor) %>% 
   data.frame()
 
 #Fewer candidate models (ones that make theoretical sense, instead of dredging)
@@ -1970,7 +1973,7 @@ hm.resid
 
 ##check autocorrelation
 common.abnd <- common.abnd %>% 
-  mutate(TIME = as.numeric(plotID) + as.numeric(Date)*10^-2)
+  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
 
 hm.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
                                            filter(Species == "Halichoeres miniatus") %>% 
@@ -2002,11 +2005,173 @@ hm.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot()
  ##### Priors ===================================================================
 
 ## ----recruitment univariate hm priors1
-hm.form <- bf(abundance ~ plot.weight )
+common.abnd %>% filter(Species == "Halichoeres miniatus") %>% 
+  group_by(Treatment) %>%  summarise(log(median(abundance)), 
+                                       log(mad(abundance)))
+
+##priors for Effects
+common.abnd %>% filter(Species == "Halichoeres miniatus") %>% 
+pull(abundance) %>% sd() %>% 
+  log()/apply(model.matrix(~Treatment, data = common.abnd), 2, sd)
 
 ##
 
+    ##### Fitting ===============================================================
 
+## ----recruitment univariate hm brmsfit
+hm.form <- bf(abundance ~ Treatment
+              + (1|plotID),
+              autocor = ~ ar(time = Day, gr = plotID, 
+                             p = 1),
+              family = poisson(link = "log") )
+priors <- prior(normal(1.6,0.5), class = "Intercept") +
+  prior(normal(0,2), class = "b") + 
+  prior(cauchy(0,1), class = "sd") + #wider
+  prior(cauchy(0,1), class = "sderr") +# wider
+  prior(uniform(-1,1), class = "ar") #wider
+
+hm.brm1 <- brm(hm.form,
+                data = common.abnd %>% 
+                 filter(Species == "Halichoeres miniatus"),
+                prior = priors,
+                sample_prior = "yes", #sample priors and posteriors
+                iter = 5000, warmup = 1000,
+             #  control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
+                chains = 3, cores = 3, 
+                thin = 5,
+                seed = 123)
+
+hm.brm1 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
+
+
+common.abnd.num.day <- common.abnd %>% 
+  mutate(Day = as.numeric(Day))
+
+
+hm.day.num.brm <- brm(hm.form,
+                      data = common.abnd.num.day %>% 
+                        filter(Species == "Halichoeres miniatus"),
+                      prior = priors,
+                      sample_prior = "yes", #sample priors and posteriors
+                      iter = 5000, warmup = 1000,
+                      chains = 3, cores = 3, 
+                      thin = 5,
+                      seed = 123)
+#identical prior check
+# MCMC
+# Dharma residuals
+# summary
+## ----end
+
+ ##### Prior Checks =============================================================
+## ----recruitment univariate hm brm1 prior check
+hm.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
+
+hm.day.num.brm %>% 
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '(^b|^prior).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'Intercept' at the end
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains sd ('sderr' will be included)
+           str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
+           str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
+         Par = str_replace(key, 'b_', '')) %>% 
+  
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+
+## ----end
+
+  #####MCMC =====================================================================
+
+## ----recruitment univariate hm brm1 MCMC
+hm.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
+
+pars <- hm.brm1 %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^ar.*') %>% #that start with b, sd or ar
+  na.omit # omit the rest, resulting in an object of class 'omit'
+wch
+##Trace Plots
+stan_trace(hm.brm1$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(hm.brm1$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(hm.brm1$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(hm.brm1$fit, pars = wch)
+
+##Density plot
+stan_dens(hm.brm1$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+hm.brm1%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+## ----end
+
+##### DHARMA Residuals ==========================================================
+
+## ---- recruitment univariate hm brm1 DHARMA
+
+#step 1. Draw out predictions
+preds <- hm.brm1 %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                        summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                          observedResponse = common.abnd %>% 
+                         filter(Species == "Halichoeres miniatus") %>% 
+                         pull(abundance), #real response
+                          fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                          integerResponse = "TRUE" #is the response an integer? yes
+                          #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(resids)
+
+## ----end
+
+#### Model Investigation ========================================================
+#Frequentist
+
+
+#Bayesian
+
+## ---- recruitment univariate hm brm1 summary
+hm.brm1$fit %>% tidyMCMC(pars = wch,
+                     estimate.method = "median",
+                     conf.int = TRUE,
+                     conf.method = "HPDinterval",
+                     rhat = TRUE,
+                     ess = TRUE)
+
+#"Marginal"
+hm.brm1 %>% brms::bayes_R2(re.form = NA, #or ~Treatment
+                            summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+# "Conditional"
+hm.brm1 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
+                            summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+
+## ----end
  ## Multivariate ================================================================
 
 ## ---- Recruitment Multivariate
