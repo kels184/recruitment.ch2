@@ -2026,48 +2026,45 @@ hm.form <- bf(abundance ~ Treatment
               family = poisson(link = "log") )
 priors <- prior(normal(1.6,0.5), class = "Intercept") +
   prior(normal(0,2), class = "b") + 
-  prior(cauchy(0,1), class = "sd") + #wider
-  prior(cauchy(0,1), class = "sderr") +# wider
-  prior(uniform(-1,1), class = "ar") #wider
+  prior(cauchy(0,0.5), class = "sd") + # narrower, initially 0,1
+  prior(cauchy(0,0.5), class = "sderr") +# narrower, initially 0,1
+  prior(uniform(-1,1), class = "ar") #initially -1,1
 
 hm.brm1 <- brm(hm.form,
                 data = common.abnd %>% 
                  filter(Species == "Halichoeres miniatus"),
                 prior = priors,
                 sample_prior = "yes", #sample priors and posteriors
-                iter = 5000, warmup = 1000,
-             #  control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
+                iter = 10000, warmup = 2000,
+               control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
                 chains = 3, cores = 3, 
-                thin = 5,
+                thin = 10,
                 seed = 123)
 
 hm.brm1 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
 
 
-common.abnd.num.day <- common.abnd %>% 
-  mutate(Day = as.numeric(Day))
+#common.abnd.num.day <- common.abnd %>% 
+#  mutate(Day = as.numeric(Day))
 
 
-hm.day.num.brm <- brm(hm.form,
-                      data = common.abnd.num.day %>% 
-                        filter(Species == "Halichoeres miniatus"),
-                      prior = priors,
-                      sample_prior = "yes", #sample priors and posteriors
-                      iter = 5000, warmup = 1000,
-                      chains = 3, cores = 3, 
-                      thin = 5,
-                      seed = 123)
-#identical prior check
-# MCMC
-# Dharma residuals
-# summary
+#hm.day.num.brm <- brm(hm.form,
+#                      data = common.abnd.num.day %>% 
+#                        filter(Species == "Halichoeres miniatus"),
+#                      prior = priors,
+#                      sample_prior = "yes", #sample priors and posteriors
+#                      iter = 5000, warmup = 1000,
+#                      chains = 3, cores = 3, 
+#                      thin = 5,
+#                      seed = 123)
+#identical prior check,MCMC,Dharma residuals and summary
 ## ----end
 
  ##### Prior Checks =============================================================
 ## ----recruitment univariate hm brm1 prior check
 hm.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
 
-hm.day.num.brm %>% 
+hm.brm1 %>% 
   as_draws_df() %>% #get all the draws for everything estimated
   
   dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
@@ -2148,7 +2145,11 @@ plot(resids)
 
 #### Model Investigation ========================================================
 #Frequentist
+## ----recruitment univariate hm frequentist summary
+hm.glmmTMB.ac %>% summary()
 
+hm.glmmTMB2 %>% r.squaredGLMM()
+## ----end
 
 #Bayesian
 

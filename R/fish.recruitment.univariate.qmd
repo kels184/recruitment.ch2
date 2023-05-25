@@ -200,7 +200,7 @@ although 'ggpredict()' is having some trouble, ggemmeans works well
 
 The summary stat table shows differences amongst treatments, will explore further contrasts (e.g. W vs the rest) next because I can  
 
-the estimate of ar(1) is slightly lower compared to the Frequentist analysis  
+the estimate of ar(1) is slightly lower compared to the Frequentist analysis (0.8 vs 0.9)
  - 2.2 R-squared
 ```{r recruitment univariate abundance brm r square, results = 'markdown', eval = TRUE}
 
@@ -425,18 +425,18 @@ even though the model was refit with autocorrelation, it still doesn't look like
 ### Fitting
 ```{r recruitment univariate hm brmsfit, results = 'markdown', eval = FALSE}
 ```
-There were 17 divergent transitions
+There were no divergent no divergent transitions with the increased adapt_delta. 11 with these (narrower) sd priors of cauchy(0,0.5).  17 divergent transitions with lower adapt delta and with wider sd priors (cauchy(0,1))
 
 ### Prior checks
 ```{r recruitment univariate hm brm1 prior check, results = 'markdown', eval = TRUE}
 ```
 
-priors look quite ok. Maybe ar could come in a bit
+priors look quite ok
 
 ### MCMC
 ```{r recruitment univariate hm brm1 MCMC, results = 'markdown', eval = TRUE, cache = TRUE}
 ```
-sderr slightly autocorrelated at lag 1. One of the posteriors had a low sample size (~0.6). my guess is it will be ar. Or based on the stan_dens plot maybe sderr. density overlay plot a funky shape
+sderr a bit autocorrelated at lag 1 before adjusting thin, which fixed the problem. One of the posteriors had a low sample size (~0.6) before thinning/adapt delta adjustment. stan_dens plot - sderr estimate wide. density overlay plot a funky shape
 
 
 ### DHARMA residuals
@@ -444,10 +444,12 @@ sderr slightly autocorrelated at lag 1. One of the posteriors had a low sample s
 
 ```
 
+Something is a bit strange here - different number of groups to Treatment. Underdispersion
+
 ## Model Investigation
 ```{r recruitment univariate hm brm1 summary, results = 'markdown', eval = TRUE}
 
 ```
-The low ess var was sderr. ar estimate 0.5
+The low ess var was sderr. ar estimate 0.5 (compare to frequentist of 0.89)
 
 Low proportion of variance explained (14 - 18 with the random intercept)
