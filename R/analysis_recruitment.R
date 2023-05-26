@@ -245,7 +245,7 @@ fishdata %>%
 ## ---- fish EDA abundance vs biomass
 
 fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
-  mutate_at(c(2:5), factor)
+  mutate_at(c(2:5,9,11), factor)
 
 fishalgaedata %>% 
   group_by(Treatment, Replicate, Date) %>% 
@@ -1352,6 +1352,17 @@ fish.sp.abnd <- fish.sp.abnd %>%
   mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
 
 sp.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+
+sp.resid %>% testTemporalAutocorrelation(time =fish.sp.abnd$Day)
+test <- data.frame(Resid = sp.resid$scaledResiduals, group = fish.sp.abnd$plotID, 
+           Day = fish.sp.abnd$Day) %>%
+  group_by(Day) %>%
+  summarise(Resid = mean(Resid))
+
+sp.resid.recalc <- sp.resid %>% recalculateResiduals(group = fish.sp.abnd$Day)
+
+sp.resid.recalc %>% testTemporalAutocorrelation(time = unique(fish.sp.abnd$Day))
+
 #definitely autocorrelation
 ## ----end
 
@@ -1370,6 +1381,10 @@ sp.glmmTMB.ac <- readRDS(file = paste0(DATA_PATH, "modelled/sp.glmmTMB.ac.rds"))
 sp.ac.resid <- sp.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
 sp.ac.resid %>% testTemporalAutocorrelation((time = fish.sp.abnd$TIME))
 sp.ac.resid %>% testDispersion()
+
+sp.ac.resid.recalc <- sp.ac.resid %>% recalculateResiduals(group = fish.sp.abnd$Day)
+
+sp.ac.resid.recalc %>%  testTemporalAutocorrelation(time = unique(fish.sp.abnd$Day))
 
 ## ----end
 
@@ -2175,16 +2190,118 @@ hm.brm1 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 ## ----end
  ## Multivariate ================================================================
 
-## ---- Recruitment Multivariate
+
+### Data =========================================================================
+## ---- recruitment multivariate readData
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+  mutate_at(c(2:5,9,11), factor)
+## ----end
+
+## ---- recruitment multivariate data set up
   ### convert to abund/plot (eventually could use biomass if I need to)
 
-fish.wide <- fishdata %>% 
+fish.wide <- fishalgaedata %>%
   group_by(Treatment, Replicate, Date, Species) %>%
   summarise(abundance = sum(count)) %>% ## get abund/plot per species (eventually could use biomass if I need to)
   pivot_wider(names_from = Species,   ## convert to wide
               values_from = abundance,
               values_fill = 0)
+glimpse(fish.wide)
+
+fish.wide.end <- fishalgaedata %>% 
+  filter(Date == "2022-12-12") %>% 
+  group_by(Treatment, Replicate, Date, Species) %>%
+  summarise(abundance = sum(count)) %>% ## get abund/plot per species (eventually could use biomass if I need to)
+  pivot_wider(names_from = Species,   ## convert to wide
+              values_from = abundance,
+              values_fill = 0) %>% 
+  mutate(plotID = paste0(Treatment, Replicate) )%>% 
+           column_to_rownames(var = "plotID")
+           
+  View(fish.wide.end)
+## ----end  
   
+  
+##  ----recruitment multivariate end mds
+  #distance matrix (for )
+  fish.dist <- vegdist(wisconsin(fish.wide.end[,-c(1:3)]^0.25), "bray")
+  ## mds
+  #fish.mds <- metaMDS(fish.dist, k=2, seed = 123)
+  
+  fish.dist.mds <- metaMDS(fish.dist, k= 2, seed = 123) # can't figure out how to extract scores
+  fish.dist.mds
+  
+  #do mds on raw data (let it decide on standardisations)
+  fish.mds <- metaMDS(fish.wide.end[,-c(1:3)], k = 2, seed = 123)
+  fish.mds
+  
+  #check stressplot:
+  stressplot(fish.mds)
+## ----end
+
+  
+## ----recruitment multivariate end mds ggplot
+fish.mds.scores <-   fish.mds %>% fortify()
+  
+g <-
+  ggplot(data = NULL, aes(y=NMDS2, x=NMDS1)) +
+  geom_hline(yintercept=0, linetype='dotted') +
+  geom_vline(xintercept=0, linetype='dotted') +
+  geom_point(data=fish.mds.scores %>%
+               filter(Score=='sites'),
+             aes(color=fish.wide.end$Treatment)) + #colour the points according to their level of 'soil.dry
+  geom_text(data=fish.mds.scores %>%
+              filter(Score=='sites'),
+            aes(label=Label,
+                color=fish.wide.end$Treatment), hjust=-0.2) 
+g
+
+#probs needs some jitter/dodging but you can see some groupings (particularly w)
+## ----end
+  
+## ----recruitment multivariate end adonis
+#adonis to be performed on distance matrix (therefore might not match the mds done on raw data)
+fish.adonis <- adonis2(fish.dist ~ Treatment, data = fish.wide.end)
+fish.adonis
+#by levels
+
+treatment <- factor(fish.wide.end$Treatment, levels = c("BH", "BQ", "DL", "DM", "W"))
+mm <- model.matrix(~treatment) #predictor matrix
+colnames(mm) <-gsub("treatment","",colnames(mm)) #remove "treatment" from the start of each colname
+
+mm<- data.frame(mm)
+
+fish.adonis <- adonis2(fish.dist ~ BQ + DL + DM + W, data = mm,
+                       permm = 9999)
+fish.adonis
+## ----end
+  
+## ----recruitment multivariate end pairwise
+
+##not sure how well I can trust this but
+install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis") 
+library(pairwiseAdonis)
+pair.mod<-pairwise.adonis(fish.dist,factors=fish.wide.end$Treatment)
+pair.mod
+
+##none are significantly different once adjusted for multiple comparisons
+## ----end
+
+
+
+## ----recruitment multivariate end disper
+fish.disp <- betadisper(fish.dist, group = fish.wide.end$Treatment)
+
+boxplot(fish.disp)
+
+anova(fish.disp)
+
+permutest(fish.disp, pairwise = TRUE)
+
+plot(fish.disp)
+## ----end
+
+##    
  ## create distance matrix
 #fish.dist <- vegdist(wisconsin(fish.wide[,-c(1:3,5)]^0.25), ## 4th root transformation, remove factors and 'empty' col
 #                     "bray") #bray standardisation, 

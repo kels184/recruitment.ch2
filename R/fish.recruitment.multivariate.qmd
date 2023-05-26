@@ -1,0 +1,87 @@
+---
+title: "fish.recruitment.multivariate"
+author: "Kelsey Webber"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format: 
+  html:
+    css: ../docs/resources/AIMS-style.css
+    toc: true
+    toc-float: true
+    number-sections: true
+    number-depth: 5
+    embed-resources: true
+    code-fold: false
+    code-tools: true
+    code-summary: "Show the code"
+crossref:
+  fig-title: '**Figure**'
+  fig-labels: arabic
+  tbl-title: '**Table**'
+  tbl-labels: arabic
+engine: knitr
+output_dir: ../docs
+---
+
+```{r chunks, results='markdown', eval=TRUE, echo = FALSE, cache = TRUE}
+knitr::read_chunk('../R/functions.R')
+knitr::read_chunk('../R/analysis_recruitment.R')
+
+```
+
+# Preparations
+
+- Load any helper functions (functions.R)
+
+```{r loadFunctions, results='markdown', eval=FALSE}
+```
+
+```{r setup, include=FALSE, warnings=FALSE, message=FALSE}
+```
+
+
+- Load required packages (functions.R)
+
+```{r loadPackages, results='markdown', eval = TRUE, warnings = FALSE, message = FALSE}
+```
+
+- Prepare paths (functions.R)
+
+```{r preparePaths, results='markdown', eval = TRUE}
+
+```
+
+# Load Fish Recruitment data
+
+1. Load the data
+```{r recruitment multivariate readData, results = 'markdown', eval = TRUE}
+```
+
+
+2. Set up wide data
+```{r ecruitment multivariate data set up, results = 'markdown', eval = TRUE}
+```
+
+
+# MDS
+
+```{r recruitment multivariate end mds, results = 'markdown', eval = TRUE}
+
+```
+on distance: Stress is at an acceptable level (0.14). 2 convergent solutions found
+on raw data. no convergent. stress 0.178
+# Plot MDS
+```{r recruitment multivariate end mds ggplot, results = 'markdown', eval = TRUE}
+
+```
+
+
+```{r recruitment multivariate end adonis, results = 'markdown', eval = TRUE}
+
+```
+significant adonis result, but this could be driven by differences in dispersion
+BH different to W and DL
+
+```{r recruitment multivariate end disper, results = 'markdown', eval = TRUE}
+
+```
+Dispersion among treatents look ok?? or W may be different to DL- permuted p value of 0.013 for their contrast
