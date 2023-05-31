@@ -820,13 +820,22 @@ abnd.resid %>% testDispersion()
 #are the observations of the same plot temporally autocorrelated? DHARMA won't 
 #like that there are multiple observations at the same time, but maybe if I 
 #give each plot their own set of Time
-fish.sp.abnd <- fish.sp.abnd %>% 
-  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
-fish.sp.abnd %>% head
-fish.sp.abnd %>% tail
+#fish.sp.abnd <- fish.sp.abnd %>% 
+#  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
+#fish.sp.abnd %>% head
+#fish.sp.abnd %>% tail
 
-abnd.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
-abnd.resid %>% testZeroInflation()
+#abnd.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+
+acf(residuals(abnd.glmmTMB2, type = "pearson"))
+#definite autocorrelation
+testTemporalAutocorrelation(abnd.resid, time = fish.sp.abnd$Date)#won't work
+
+resid1 <- recalculateResiduals(abnd.resid, group = fish.sp.abnd$Date)
+testTemporalAutocorrelation(resid1, time = unique(fish.sp.abnd$Date))
+## In my case, DHARMa DOES detect the autocorrelation here
+
+
 ## ----end
 
 ## ---- recruitment univariate abundance refit autocorrelation
@@ -842,9 +851,17 @@ AICc(abnd.glmmTMB.ac, abnd.glmmTMB2)
 ## ----end
 
 ## ----recruitment univariate abundance revalidate
-abnd.ac.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
-abnd.ac.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
 
+
+abnd.ac.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
+#abnd.ac.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+
+acf(residuals(abnd.glmmTMB.ac, type = "pearson"))
+#autocorrelation accounted for
+
+resid1 <- recalculateResiduals(abnd.ac.resid, group = fish.sp.abnd$Date)
+testTemporalAutocorrelation(resid1, time = unique(fish.sp.abnd$Date))
+#despite DHARMA not seeing this
 
 ## ----end
 

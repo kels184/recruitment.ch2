@@ -64,11 +64,10 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 The 'Treatment' model with performed best. Plot weight model and all models with density included performed poorly. Note it wouldn't make sense to include density and treatment, but plot weight did vary within treatments. However the models including Treatment and plot.weight performed poorly 
 
 ## Validate/Refit
-```{r recruitment univariate abundance validate, results = 'markdown', eval = TRUE}
+```{r recruitment univariate abundance validate, results = 'markdown', eval = TRUE, warning = TRUE}
 ```
 residuals look quite  good.
 However, there appears to be definite autocorrelation
-No zero inflation
 
  - Fit with autocorrelation
 ```{r recruitment univariate abundance refit autocorrelation, results = 'markdown', eval = TRUE}
@@ -79,7 +78,9 @@ autocorrelation model fit straight away, and is the definite winner by AICc desp
 ```{r recruitment univariate abundance revalidate, results = 'markdown', eval = TRUE}
 
 ```
-The autocorrelation model's residuals didn't meet the assumptions, particularly uniformity. The result of the Dispersion test indicates UNDER-dispersion - of less concern than overdispersion, as rather than inflating the type I error rate, it shrinks it - more conservative. However I'm still concerned that there is autocorrelation in the residuals
+The autocorrelation model's residuals didn't meet the assumptions, particularly uniformity. The result of the Dispersion test indicates UNDER-dispersion - of less concern than overdispersion, as rather than inflating the type I error rate, it shrinks it - more conservative. 
+
+However, using ACF to test this, the autocorrelation has been accounted for by the new model
 
 
 
