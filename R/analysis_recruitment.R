@@ -781,7 +781,7 @@ fish.sp.abnd <-fishalgaedata %>%
 
 
 fish.sp.abnd %>% glimpse()
-fish.sp.abnd$Density %>% levels()
+fish.sp.abnd$Day %>% levels()
 ## ----end
 
    #### Fit =====================================================================
@@ -841,7 +841,7 @@ testTemporalAutocorrelation(resid1, time = unique(fish.sp.abnd$Date))
 ## ---- recruitment univariate abundance refit autocorrelation
 
 abnd.glmmTMB.ac <- update(abnd.glmmTMB2, .~. + 
-                            ar1(0 + Day| plotID) #ac part.No intercept(0), 
+                            ar1(0 + factor(Date)| plotID) #ac part.No intercept(0), 
  #Date must be a factor, with evenly spaced time steps. autocorrelation separate 
  #for each plot 
                           )
@@ -1141,6 +1141,9 @@ abnd.resids %>% testDispersion()
 abnd.resids %>% testUniformity()
 #fert.resids %>% testZeroInflation()
 
+#test ac
+#acf(residuals(abnd.brm1b, method = "pearson"))
+
 ## ----end
 
 
@@ -1365,27 +1368,30 @@ sp.resid <- sp.glmmTMB2 %>% simulateResiduals(plot = TRUE)
 sp.resid %>% testDispersion()
 sp.resid %>% testUniformity()
 #showing problems (underdispersion)
-fish.sp.abnd <- fish.sp.abnd %>% 
-  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
+#fish.sp.abnd <- fish.sp.abnd %>% 
+#  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
 
-sp.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+#sp.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
 
-sp.resid %>% testTemporalAutocorrelation(time =fish.sp.abnd$Day)
-test <- data.frame(Resid = sp.resid$scaledResiduals, group = fish.sp.abnd$plotID, 
-           Day = fish.sp.abnd$Day) %>%
-  group_by(Day) %>%
-  summarise(Resid = mean(Resid))
+#sp.resid %>% testTemporalAutocorrelation(time =fish.sp.abnd$Day)
 
-sp.resid.recalc <- sp.resid %>% recalculateResiduals(group = fish.sp.abnd$Day)
+#test <- data.frame(Resid = sp.resid$scaledResiduals, group = fish.sp.abnd$plotID, 
+#           Day = fish.sp.abnd$Day) %>%
+#  group_by(Day) %>%
+#  summarise(Resid = mean(Resid)) #something murray tried
 
-sp.resid.recalc %>% testTemporalAutocorrelation(time = unique(fish.sp.abnd$Day))
+sp.resid.recalc <- sp.resid %>% recalculateResiduals(group = fish.sp.abnd$Date)
 
-#definitely autocorrelation
+sp.resid.recalc %>% testTemporalAutocorrelation(time = unique(fish.sp.abnd$Date))
+#definitely autocorrelation, and DHARMa is picking it up
+
+acf(residuals(sp.glmmTMB2, type = "pearson"))
+c#acf also shows autocorrelation
 ## ----end
 
 ## recruitment univariate sp refit autocor
 
-sp.glmmTMB.ac <- update(sp.glmmTMB2, .~. + ar1(0 + Day|plotID))
+sp.glmmTMB.ac <- update(sp.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID))
 AICc(sp.glmmTMB.ac,sp.glmmTMB2)
 
 saveRDS(sp.glmmTMB.ac, file = paste0(DATA_PATH, "modelled/sp.glmmTMB.ac.rds") )
@@ -1399,9 +1405,11 @@ sp.ac.resid <- sp.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
 sp.ac.resid %>% testTemporalAutocorrelation((time = fish.sp.abnd$TIME))
 sp.ac.resid %>% testDispersion()
 
-sp.ac.resid.recalc <- sp.ac.resid %>% recalculateResiduals(group = fish.sp.abnd$Day)
+sp.ac.resid.recalc <- sp.ac.resid %>% recalculateResiduals(group = fish.sp.abnd$Date)
 
-sp.ac.resid.recalc %>%  testTemporalAutocorrelation(time = unique(fish.sp.abnd$Day))
+sp.ac.resid.recalc %>%  testTemporalAutocorrelation(time = unique(fish.sp.abnd$Date))
+
+acf(residuals(sp.glmmTMB.ac, type = "pearson"))
 
 ## ----end
 
@@ -2001,15 +2009,16 @@ MuMIn::AICc(hm.glmmTMB1,hm.glmmTMB2, hm.glmmTMB3)
 
 ## ---- recruitment univariate hm validate
 hm.resid <- hm.glmmTMB2 %>% simulateResiduals(plot = TRUE)
-hm.resid
 
 ##check autocorrelation
-common.abnd <- common.abnd %>% 
-  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
+#common.abnd <- common.abnd %>% 
+#  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
 
-hm.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
-                                           filter(Species == "Halichoeres miniatus") %>% 
-                                           pull(TIME) ) #extract just the Time column as a vector
+#hm.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+ #                                          filter(Species == "Halichoeres miniatus") %>% 
+#                                           pull(TIME) ) #extract just the Time column as a vector
+
+acf(residuals(hm.glmmTMB2, method = "pearson"))
 
 
 ## ----end
@@ -2018,13 +2027,15 @@ hm.resid %>% testTemporalAutocorrelation(time = common.abnd %>%
 
 hm.glmmTMB.ac <- update(hm.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
 
+acf(residuals(hm.glmmTMB.ac, method = "pearson"))
+
 hm.ac.resid <- hm.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
-hm.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
-                                           filter(Species == "Halichoeres miniatus") %>% 
-                                           pull(TIME) )
+#hm.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+#                                           filter(Species == "Halichoeres miniatus") %>% 
+#                                           pull(TIME) )
 
 hm.ac.resid %>% testDispersion()
-#stil evidence of autocorrelation, underdispersed
+#stil evidence of underdispersion
 
 #### Partial ====================================================================
 

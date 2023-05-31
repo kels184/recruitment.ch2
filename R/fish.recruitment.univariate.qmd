@@ -250,6 +250,8 @@ As with abundance, the Treatment + RE of plot model performed best, despite cons
 ```
 The residuals are showing signs of underdispersion (i.e. results more conservative). The Levene test is also warning that the homogeneity of variance assumption is violated. However the box plots look ok to me
 
+Definite autocorrelation of the residuals
+
 
 ```{r recruitment univariate sp refit autocor, results = 'markdown', eval = TRUE}
 
@@ -259,7 +261,9 @@ Despite there being evidence of autocorrelation, the ac model performed about th
 ```{r recruitment univariate sp revalidate, results = 'markdown', eval = TRUE, cache = TRUE}
 
 ```
-Similar problems evident (underdispersion), but without the red flag for the Levene test. Concerningly, autocorrelation doesn't seem to have been resolved.
+Similar problems evident (underdispersion), but without the red flag for the Levene test. 
+
+Concerningly, autocorrelation doesn't seem to have been resolved (at lag 1, acf was 0.23, reduced from 0.29)
 
 
 ## Partial Plot
@@ -404,7 +408,7 @@ autocorrelation the only problem
 ```{r recruitment univariate hm refit revalidate, results = 'markdown', eval = TRUE}
 
 ```
-even though the model was refit with autocorrelation, it still doesn't look like it's being accounted for.
+After the refit incorporating autocorrelation, acf is reduced (e.g. at lag 1 and 2: before - 0.15,0.14. after - -.08, .02)
 
 ##Partial Plot
 
