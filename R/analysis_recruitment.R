@@ -2279,6 +2279,90 @@ hm.brm1 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 
 
 ## ----end
+
+## ---- recruitment univariate hm brm contrasts
+hm.brm1%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  ) 
+
+## ----end
+
+#### Summary figures =========================================================
+
+## ---- recruitment univariate hm figures
+
+hm.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
+hm.brm1 %>% ggemmeans(~Treatment) %>% plot
+
+
+newdata <- hm.brm1 %>% emmeans(~Treatment, type = "link") %>% 
+  gather_emmeans_draws() %>% 
+  mutate(Fit = exp(.value)) %>% 
+  as.data.frame
+head(newdata)
+
+g1 <- newdata %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = Fit,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab("H. miniatus abundance") +
+  theme_classic()
+
+hm.em <- hm.brm1 %>%
+  emmeans(~Treatment, type = "link") %>%
+  pairs() %>%
+  gather_emmeans_draws() %>%
+  mutate(Fit = exp(.value)) %>% as.data.frame()
+head(sp.em)
+
+g2<- hm.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.5, 1, 1.1, 1.5, 2, 4)
+  ) +
+  
+  theme_classic()
+g1 + g2
+
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.png"),
+       g1,
+       height = 5,
+       width = 10,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.contr.png"),
+       g2,
+       height = 5,
+       width = 10,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 5,
+       width = 15,
+       dpi = 100)
+
  ## Multivariate ================================================================
 
 
