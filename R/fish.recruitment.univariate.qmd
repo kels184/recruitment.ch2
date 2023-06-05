@@ -458,3 +458,60 @@ Something is a bit strange here - different number of groups to Treatment. Under
 The low ess var was sderr. ar estimate 0.5 (compare to frequentist of 0.89)
 
 Low proportion of variance explained (14 - 18 with the random intercept)
+
+
+# SIGANUS DOLIATUS Abundance
+## Fit
+```{r recruitment univariate sd fit, results = 'markdown', eval = TRUE}
+
+```
+The best model for Siganus doliatus was the Treatment model (with random intercept)
+
+
+## Validate
+```{r recruitment univariate sd validate, results = 'markdown', eval = TRUE}
+
+```
+Boxplots look ok despite heterogeneity of variance warning. QQ plot, ks tests fine
+
+
+Looks like there is autocorrelation, (at least in plotID 1)
+```{r recruitment univariate sd refit revalidate, results = 'markdown', eval = TRUE}
+```
+the ar1 term appears to improve autocorrelation. Possibly a little underdispersed, (but much less than other models I've dealt with)
+
+## Partial Plot
+
+```{r recruitment univariate sd partial, results = 'markdown', eval = TRUE}
+```
+NOTE thisis just not the ac model. Very similar to total abundance, but a clear winner with W higher than everything else. BH does appear less than DM
+
+## Bayesian Model
+### Initial priors
+```{r recruitment univariate sd priors1, results = 'markdown', eval = TRUE}
+```
+In the default control group (BH), and in BQ and DL, the median couldn't be calculated - more than half the values were 0. I will start with normal(0.5, 0.4) as my priors for the intercept 
+Since values for this species are low, I might need to be careful about letting the model predict below zero.
+
+For the effects, normal(0,0.4) seems like it should be 
+
+I will keep my other priors from previous models
+
+###Fitting
+```{r recruitment univariate sd brmsfit, results = 'markdown', eval = TRUE}
+```
+no problem re divergent transitions, that's nice
+
+###Prior Checks
+```{r recruitment univariate sd brmsfit, results = 'markdown', eval = TRUE}
+```
+initially (priors <- prior(normal(0.5,0.4), class = "Intercept", lb = 0) +
+  prior(normal(0,0.4), class = "b")
+ar appears similar to the total abundance - high despite wide prior. Priors for the intercept is a bit off (since I restricted it to positive values, but doesn't appear to have driven the posterior, and the effect prior could have been wider. sd fine - prior much wider and not driving posterior. sderr seems ok, though the posterior is again very small and narrow
+After:
+
+###MCMC
+
+```{r recruitment univariate sd brm1 MCMC, results = 'markdown', eval = TRUE}
+```
+

@@ -2363,6 +2363,145 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.both.png"),
        width = 15,
        dpi = 100)
 
+### Siganus doliatus abundance  =================================================
+
+#### Fit =====================================================================
+## ----recruitment univariate sd fit
+
+common.abnd <- read_csv( paste0(DATA_PATH, "summarised/common.abnd.csv") ) %>% 
+  mutate_at(c(1:4,7,9, 10), factor) %>% 
+  data.frame()
+
+#Fewer candidate models (ones that make theoretical sense, instead of dredging)
+sd.glmmTMB1 <- glmmTMB(abundance ~ 1 + (1|plotID), #random intercept mode
+                       data = common.abnd %>% 
+                         filter(Species == "Siganus doliatus"),
+                       family = poisson(link = "log"),
+                       REML = TRUE)
+
+sd.glmmTMB2 <- update(sd.glmmTMB1, .~. + Treatment) #Treatment fixed, Random int
+
+sd.glmmTMB3 <- update(sd.glmmTMB1, .~. + plot.weight) #plot.weight fixed, rand int
+
+
+
+MuMIn::AICc(sd.glmmTMB1,sd.glmmTMB2, sd.glmmTMB3)
+
+
+## ----end
+
+#### Validate ==================================================================
+
+## ---- recruitment univariate sd validate
+sd.resid <- sd.glmmTMB2 %>% simulateResiduals(plot = TRUE)
+
+##check autocorrelation
+#common.abnd <- common.abnd %>% 
+#  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
+
+#hm.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+#                                          filter(Species == "Halichoeres miniatus") %>% 
+#                                           pull(TIME) ) #extract just the Time column as a vector
+
+acf(residuals(sd.glmmTMB2, method = "pearson"))
+
+
+## ----end
+
+## ----recruitment univariate sd refit revalidate
+
+sd.glmmTMB.ac <- update(sd.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
+
+acf(residuals(sd.glmmTMB.ac, method = "pearson"))
+
+sd.ac.resid <- sd.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
+#sd.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+#                                           filter(Species == "Halichoeres miniatus") %>% 
+#                                           pull(TIME) )
+
+sd.ac.resid %>% testDispersion()
+#some evidence of underdispersion
+
+#### Partial ====================================================================
+
+## ----recruitment univariate sd partial
+sd.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot()
+
+## ----end
+
+#### Bayesian ==================================================================
+##### Priors ===================================================================
+
+## ----recruitment univariate sd priors1
+common.abnd %>% filter(Species == "Siganus doliatus") %>% 
+  group_by(Treatment) %>%  summarise(log(median(abundance)), 
+                                     log(mad(abundance)))
+
+##priors for Effects
+common.abnd %>% filter(Species == "Siganus doliatus") %>% 
+  pull(abundance) %>% sd() %>% 
+  log()/apply(model.matrix(~Treatment, data = common.abnd), 2, sd)
+
+##
+
+##### Fitting ===============================================================
+
+## ----recruitment univariate sd brmsfit
+sd.form <- bf(abundance ~ Treatment
+              + (1|plotID),
+              autocor = ~ ar(time = Day, gr = plotID, 
+                             p = 1),
+              family = poisson(link = "log") )
+priors <- prior(normal(0,0.4), class = "Intercept") +
+  prior(normal(0,1), class = "b") + 
+  prior(cauchy(0,0.5), class = "sd") + 
+  prior(cauchy(0,0.5), class = "sderr") +
+  prior(uniform(-1,1), class = "ar") 
+
+sd.brm1 <- brm(sd.form,
+               data = common.abnd %>% 
+                 filter(Species == "Siganus doliatus"),
+               prior = priors,
+               sample_prior = "yes", #sample priors and posteriors
+               iter = 10000, warmup = 2000,
+               control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
+               chains = 3, cores = 3, 
+               thin = 10,
+               seed = 123)
+
+sd.brm1 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sd.brm1.rds"))
+
+
+## ----end
+
+##### Prior Checks =============================================================
+## ----recruitment univariate sd brm1 prior check
+sd.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm1.rds"))
+
+sd.brm1 %>% 
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '(^b|^prior).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'Intercept' at the end
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains sd ('sderr' will be included)
+           str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
+           str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
+         Par = str_replace(key, 'b_', '')) %>% 
+  
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+
+## ----end
+
  ## Multivariate ================================================================
 
 
@@ -2396,6 +2535,8 @@ fish.wide.end <- fishalgaedata %>%
   View(fish.wide.end)
 ## ----end  
   
+ ### NMDS =======================================================================
+  
   
 ##  ----recruitment multivariate end mds
   #distance matrix (for )
@@ -2417,23 +2558,32 @@ fish.wide.end <- fishalgaedata %>%
   
 ## ----recruitment multivariate end mds ggplot
 fish.mds.scores <-   fish.mds %>% fortify()
-  
+library(ggrepel)  
+
 g <-
   ggplot(data = NULL, aes(y=NMDS2, x=NMDS1)) +
   geom_hline(yintercept=0, linetype='dotted') +
   geom_vline(xintercept=0, linetype='dotted') +
   geom_point(data=fish.mds.scores %>%
                filter(Score=='sites'),
-             aes(color=fish.wide.end$Treatment)) + #colour the points according to their level of 'soil.dry
-  geom_text(data=fish.mds.scores %>%
+             aes(color=fish.wide.end$Treatment))  +#colour the points according to their level of 'soil.dry
+  geom_text_repel(data=fish.mds.scores %>%
               filter(Score=='sites'),
             aes(label=Label,
-                color=fish.wide.end$Treatment), hjust=-0.2) 
+                color=fish.wide.end$Treatment), hjust=-0.2
+            ) +
+  labs(color = "Treatment")
 g
 
 #probs needs some jitter/dodging but you can see some groupings (particularly w)
 ## ----end
   
+ggsave(filename = paste0(FIGS_PATH, "/nmds.end.png"),
+       g,
+       height = 5,
+       width = 10,
+       dpi = 100)
+
 ## ----recruitment multivariate end adonis
 #adonis to be performed on distance matrix (therefore might not match the mds done on raw data)
 fish.adonis <- adonis2(fish.dist ~ Treatment, data = fish.wide.end)
