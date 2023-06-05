@@ -362,7 +362,7 @@ This model had no divergent transitions
 
 
 
-### 5 DHARMA residuals
+### 5 DHARMa residuals
 
 ```{r recruitment univariate sp DHARMA residuals, results = 'markdown', eval = TRUE}
 
@@ -490,15 +490,18 @@ NOTE thisis just not the ac model. Very similar to total abundance, but a clear 
 ### Initial priors
 ```{r recruitment univariate sd priors1, results = 'markdown', eval = TRUE}
 ```
-In the default control group (BH), and in BQ and DL, the median couldn't be calculated - more than half the values were 0. I will start with normal(0.5, 0.4) as my priors for the intercept 
+In the default control group (BH), and in BQ and DL, the median couldn't be calculated - more than half the values were 0. I will instead use W as my intercept (reorder the treatment groups)
 Since values for this species are low, I might need to be careful about letting the model predict below zero.
 
-For the effects, normal(0,0.4) seems like it should be 
+For the effects, normal(0,0.4) seem ok (but I increased it anyway based on prior/posterior plots to 0,2)
 
 I will keep my other priors from previous models
 
+```{r recruitment univariate sd treatment reorder, results = 'markdown', eval = TRUE}
+```
+
 ###Fitting
-```{r recruitment univariate sd brmsfit, results = 'markdown', eval = TRUE}
+```{r recruitment univariate sd brmsfit, results = 'markdown', eval = FALSE}
 ```
 no problem re divergent transitions, that's nice
 
@@ -508,10 +511,48 @@ no problem re divergent transitions, that's nice
 initially (priors <- prior(normal(0.5,0.4), class = "Intercept", lb = 0) +
   prior(normal(0,0.4), class = "b")
 ar appears similar to the total abundance - high despite wide prior. Priors for the intercept is a bit off (since I restricted it to positive values, but doesn't appear to have driven the posterior, and the effect prior could have been wider. sd fine - prior much wider and not driving posterior. sderr seems ok, though the posterior is again very small and narrow
-After:
+2nd: took a while to fit. priors <- prior(normal(0,0.4), class = "Intercept") +
+  prior(normal(0,1), class = "b")
+Wider prior for intercept has allowed a mostly negative posterior that is being driven towards 0 by the prior
+Wider prior for effects probably still not wide enough.
+I think I need to reorder my treatments - make W my intercept and compare everything else to it
+3rd (reordered). no divergent. effects prior sufficiently wide. Intercept prior a better match
 
 ###MCMC
 
-```{r recruitment univariate sd brm1 MCMC, results = 'markdown', eval = TRUE}
+```{r recruitment univariate sd brm2 MCMC, results = 'markdown', eval = TRUE}
 ```
 
+I don't much like the dens_overlay plot (very bumpy), althought the response does follow the posterior pretty well. One ess just a lil below 0.8
+
+### DHARMa Residuals
+```{r recruitment univariate sd brm2 DHARMa, results = 'markdown', eval = TRUE}
+```
+
+underdispersed according to DHARMa, also heterogeneity of variance - one of the group boxplots (maybe DL? if the first is W and the rest are alphabetical). Also there are 6 (keep in mind the dharma method was from murray)
+
+## Model Investigation
+```{r recruitment univariate sd frequentist summary, results = 'markdown', eval = TRUE}
+```
+A 'significant' difference between BH and W. ar = 0.96
+The frequentist model (without ar1) explains ~18% without the random effects, with it about 38% (trigamma)
+
+```{r recruitment univariate sd brm2 summary, results = 'markdown', eval = TRUE}
+```
+ar = .7 for the bayesian model
+~28% without group-level effects, ~43%  (95% confidence that between 33.9 and 52.2% explained) with group level and population level effects
+
+recruitment univariate sd brm contrasts
+
+```{r recruitment univariate sd brm contrasts, results = 'markdown', eval = TRUE}
+```
+BH - BQ  0.762  0.238  
+ 2 BH - DL  0.600  0.400 no evidence 
+ 3 BH - DM  0.0508 0.949  evidence
+ 4 BQ - DL  0.313  0.687  no evidence
+ 5 BQ - DM  0.02   0.98   strong evidence
+ 6 DL - DM  0.0338 0.966  strong evidence
+ 7 W - BH   0.992  0.0075 very strong
+ 8 W - BQ   0.998  0.00208 very strong
+ 9 W - DL   0.996  0.00375 very strong
+10 W - DM   0.842  0.158  no evidence ?weak evidence?

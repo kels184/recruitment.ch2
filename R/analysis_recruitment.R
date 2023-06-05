@@ -2442,9 +2442,17 @@ common.abnd %>% filter(Species == "Siganus doliatus") %>%
   pull(abundance) %>% sd() %>% 
   log()/apply(model.matrix(~Treatment, data = common.abnd), 2, sd)
 
-##
 
-##### Fitting ===============================================================
+## ----end
+
+## ----recruitment univariate sd treatment reorder
+dat.sub <- common.abnd %>% filter(Species == "Siganus doliatus") %>% 
+  droplevels() %>% 
+  mutate(Treatment = forcats::fct_relevel(Treatment, "W")) #change first level to W
+
+## ----end
+
+    ##### Fitting ===============================================================
 
 ## ----recruitment univariate sd brmsfit
 sd.form <- bf(abundance ~ Treatment
@@ -2452,15 +2460,16 @@ sd.form <- bf(abundance ~ Treatment
               autocor = ~ ar(time = Day, gr = plotID, 
                              p = 1),
               family = poisson(link = "log") )
-priors <- prior(normal(0,0.4), class = "Intercept") +
-  prior(normal(0,1), class = "b") + 
+priors <- prior(normal(0.7, 0.4), class = "Intercept") +
+  prior(normal(0,2), class = "b") +
+  #prior(normal(0,0.4), class = "Intercept") +
+  #prior(normal(0,1), class = "b") + 
   prior(cauchy(0,0.5), class = "sd") + 
   prior(cauchy(0,0.5), class = "sderr") +
   prior(uniform(-1,1), class = "ar") 
 
-sd.brm1 <- brm(sd.form,
-               data = common.abnd %>% 
-                 filter(Species == "Siganus doliatus"),
+sd.brm2 <- brm(sd.form,
+               data = dat.sub,
                prior = priors,
                sample_prior = "yes", #sample priors and posteriors
                iter = 10000, warmup = 2000,
@@ -2469,16 +2478,16 @@ sd.brm1 <- brm(sd.form,
                thin = 10,
                seed = 123)
 
-sd.brm1 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sd.brm1.rds"))
-
+#sd.brm1 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sd.brm1.rds"))
+sd.brm2 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sd.brm2.rds"))
 
 ## ----end
 
-##### Prior Checks =============================================================
+ ##### Prior Checks =============================================================
 ## ----recruitment univariate sd brm1 prior check
-sd.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm1.rds"))
+sd.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm2.rds"))
 
-sd.brm1 %>% 
+sd.brm2 %>% 
   as_draws_df() %>% #get all the draws for everything estimated
   
   dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
@@ -2501,6 +2510,176 @@ sd.brm1 %>%
 
 
 ## ----end
+
+  #####MCMC =====================================================================
+
+## ----recruitment univariate sd brm2 MCMC
+sd.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm2.rds"))
+
+pars <- sd.brm2 %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^ar.*') %>% #that start with b, sd or ar
+  na.omit # omit the rest, resulting in an object of class 'omit'
+wch
+##Trace Plots
+stan_trace(sd.brm2$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(sd.brm2$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(sd.brm2$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(sd.brm2$fit, pars = wch)
+
+##Density plot
+stan_dens(sd.brm2$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+sd.brm2%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+## ----end
+
+##### DHARMA Residuals ==========================================================
+
+## ---- recruitment univariate sd brm2 DHARMa
+
+#step 1. Draw out predictions
+preds <- sd.brm2 %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                       summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                       observedResponse = dat.sub %>% 
+                         filter(Species == "Siganus doliatus") %>% 
+                         pull(abundance), #real response
+                       fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                       integerResponse = "TRUE" #is the response an integer? yes
+                       #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(resids)
+
+resids %>% testDispersion()
+## ----end
+
+#### Model Investigation ========================================================
+#Frequentist
+## ----recruitment univariate sd frequentist summary
+sd.glmmTMB.ac %>% summary()
+
+sd.glmmTMB2 %>% r.squaredGLMM()
+## ----end
+
+#Bayesian
+
+## ---- recruitment univariate sd brm2 summary
+sd.brm2$fit %>% tidyMCMC(pars = wch,
+                         estimate.method = "median",
+                         conf.int = TRUE,
+                         conf.method = "HPDinterval",
+                         rhat = TRUE,
+                         ess = TRUE)
+
+#"Marginal"
+sd.brm2 %>% brms::bayes_R2(re.form = NA, #or ~Treatment
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+# "Conditional"
+sd.brm2 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+
+## ----end
+
+## ---- recruitment univariate sd brm contrasts
+sd.brm2%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  ) 
+
+## ----end
+
+#### Summary figures =========================================================
+
+## ---- recruitment univariate sd figures
+
+sd.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm2.rds"))
+sd.brm2 %>% ggemmeans(~Treatment) %>% plot
+
+
+newdata <- sd.brm2 %>% emmeans(~Treatment, type = "link") %>% 
+  gather_emmeans_draws() %>% 
+  mutate(Fit = exp(.value)) %>% 
+  as.data.frame
+head(newdata)
+
+g1 <- newdata %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = Fit,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab("S. doliatus abundance") +
+  theme_classic()
+
+sd.em <- sd.brm2 %>%
+  emmeans(~Treatment, type = "link") %>%
+  pairs() %>%
+  gather_emmeans_draws() %>%
+  mutate(Fit = exp(.value)) %>% as.data.frame()
+#head(sp.em)
+
+g2<- sd.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.5, 1, 1.1, 1.5, 2, 4)
+  ) +
+  
+  theme_classic()
+g1 + g2
+
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.png"),
+       g1,
+       height = 5,
+       width = 10,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.contr.png"),
+       g2,
+       height = 5,
+       width = 10,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 5,
+       width = 15,
+       dpi = 100)
 
  ## Multivariate ================================================================
 
