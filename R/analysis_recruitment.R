@@ -2912,6 +2912,104 @@ plot(resids)
 resids %>% testDispersion()
 ## ----end
 
+## ---- recruitment univariate ps refit simpler
+
+ps.form <- bf(abundance ~ Treatment
+              + (1|plotID),
+              #autocor = ~ ar(time = Day, gr = plotID, 
+              #               p = 1),
+              family = poisson(link = "log") )
+priors <- prior(normal(1, 1), class = "Intercept") +
+  prior(normal(0,4), class = "b") +
+  prior(cauchy(0,0.5), class = "sd")
+
+
+
+ps.brm3 <- brm(ps.form,
+               data = dat.sub,
+               prior = priors,
+               sample_prior = "yes", #sample priors and posteriors
+               iter = 5000, warmup = 1000,
+               #control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
+               chains = 3, cores = 3, 
+               thin = 5,
+               seed = 123)
+
+ps.brm3 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/ps.brm3.rds"))
+## ----end
+
+## ---- recruitment univariate ps retest simpler
+ps.brm3 <- readRDS(file = paste0(DATA_PATH, "modelled/ps.brm3.rds"))
+
+ps.brm3 %>% 
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '(^b|^prior).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'Intercept' at the end
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains ps ('sderr' will be included)
+           str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
+           str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
+         Par = str_replace(key, 'b_', '')) %>% 
+  
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+
+
+pars <- ps.brm3 %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^ar.*') %>% #that start with b, ps or ar
+  na.omit # omit the rest, resulting in an object of class 'omit'
+wch
+##Trace Plots
+stan_trace(ps.brm3$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(ps.brm3$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(ps.brm3$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(ps.brm3$fit, pars = wch)
+
+##Density plot
+stan_dens(ps.brm3$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+ps.brm3%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+
+preds <- ps.brm3 %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                       summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                       observedResponse = dat.sub %>% 
+                         filter(Species == "Petroscirtes sp.") %>% 
+                         pull(abundance), #real response
+                       fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                       integerResponse = "TRUE" #is the response an integer? yes
+                       #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(resids)
+
+resids %>% testDispersion()
+resids %>% testZeroInflation()
+## ----end
+
 #### Model Investigation ========================================================
 #Frequentist
 ## ----recruitment univariate ps frequentist summary

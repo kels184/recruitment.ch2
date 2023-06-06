@@ -608,13 +608,15 @@ Initially, priors for the intercept were a bit narrow, and when the treatments w
 
 ```{r recruitment univariate ps brm2 MCMC, results = 'markdown', eval = TRUE}
 ```
-
+MCMC checks look good
 
 ### DHARMa Residuals
 ```{r recruitment univariate ps brm2 DHARMa, results = 'markdown', eval = TRUE}
 ```
+though this is a bit of a pointless exercise at this point, model appears underdispersed and there are a strange number of groups (and apparent heterogeneity and non-uniformity)
 
 
+I also tested an alternative model without the ar term (ps.brm3) - although the MCMC and prior checks were ok, residual diagnostics indicated underdispersion and zero inflation. There was a heterogeneity warning and a strange number of predictor catgeories (7) in the DHARMa plot
 
 ## Model Investigation
 ```{r recruitment univariate ps frequentist summary, results = 'markdown', eval = TRUE}
