@@ -3076,7 +3076,7 @@ g1 <- newdata %>% ggplot() +
     ))
   ), color = "black") +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  ylab("S. doliatus abundance") +
+  ylab("Petroscirtes sp. abundance") +
   theme_classic()
 
 ps.em <- ps.brm2 %>%

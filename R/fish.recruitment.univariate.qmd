@@ -451,6 +451,8 @@ sderr a bit autocorrelated at lag 1 before adjusting thin, which fixed the probl
 
 Something is a bit strange here - different number of groups to Treatment. Underdispersion
 
+
+
 ## Model Investigation
 ```{r recruitment univariate hm brm1 summary, results = 'markdown', eval = TRUE}
 
@@ -458,7 +460,15 @@ Something is a bit strange here - different number of groups to Treatment. Under
 The low ess var was sderr. ar estimate 0.5 (compare to frequentist of 0.89)
 
 Low proportion of variance explained (14 - 18 with the random intercept)
+```{r recruitment univariate hm brm contrasts, results = 'markdown', eval = TRUE}
 
+```
+
+
+## Summary Figures
+```{r recruitment univariate hm figures, results = 'markdown', eval = TRUE}
+
+```
 
 # SIGANUS DOLIATUS Abundance
 ## Fit
@@ -558,6 +568,12 @@ recruitment univariate sd brm contrasts
  9 W - DL   0.996  0.00375 very strong
 10 W - DM   0.842  0.158  no evidence ?weak evidence?
 
+## Summary Figures
+```{r recruitment univariate sd figures, results = 'markdown', eval = TRUE}
+
+```
+
+
 # PETROSCIRTES SP. Abundance
 ## Fit
 ```{r recruitment univariate ps fit, results = 'markdown', eval = TRUE}
@@ -621,11 +637,31 @@ I also tested an alternative model without the ar term (ps.brm3) - although the 
 ## Model Investigation
 ```{r recruitment univariate ps frequentist summary, results = 'markdown', eval = TRUE}
 ```
-
+R -squared 43 - 57% explained with (frequentist). ar ~0.81
 
 ```{r recruitment univariate ps brm2 summary, results = 'markdown', eval = TRUE}
 ```
 
 
+W clearly above everything else in Petroscirtes abundance. AR ~ 0.75
+R squared 43 population level effects only - 55% (45-65) with group level effects
+
 ```{r recruitment univariate ps brm contrasts, results = 'markdown', eval = TRUE}
 ```
+ 1 BH - BQ  0.753  0.247   - no evidence
+ 2 BH - DL  1      0       - very strong
+ 3 BH - DM  0.239  0.761   - no evidence
+ 4 BQ - DL  0.999  0.00125  - very strong
+ 5 BQ - DM  0.0792 0.921   - evidence
+ 6 DL - DM  0      1       - very strong
+ 7 W - BH   0.998  0.0025  - very strong
+ 8 W - BQ   0.999  0.000833 - very strong
+ 9 W - DL   1      0       - very strong
+10 W - DM   0.995  0.005  - very strong
+
+
+## Summary Figures
+
+```{r recruitment univariate ps figures, results = 'markdown', eval = TRUE}
+```
+
