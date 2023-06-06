@@ -90,7 +90,7 @@ Total abundance seems to follow a similar pattern to the biomass of macroalgae. 
 1.1 Total abundance over time
 ```{r fish EDA abundance time, results = 'markdown', eval = TRUE}
 ```
-Does abundance/diversity/biomass (size) change differently over time among treatments?
+Does abundance (size) change differently over time among treatments?
 
 Yes (Abundance) – W treatment seems to continuously increase, while other treatments (esp DL and BQ) flatten early. Carrying capacity being reached earlier? DM shows a hump in abundance
 
@@ -109,7 +109,7 @@ Similarly to abundance, richness seems to follow a similar pattern to the biomas
 2.1 Species richness over time
 ```{r fish EDA richness vs time, results = 'markdown', eval = TRUE}
 ```
-Does abundance/diversity/biomass (size) change differently over time among treatments?
+Does diversity change differently over time among treatments?
 
 For diversity,  W again seems to continuously increase, while other treatments (esp DL and BQ) flatten early. DM shows an even more prominent hump in abundance around day 8.
 
@@ -162,3 +162,24 @@ These plots show the mean number of fish of each length category averaged by Tre
 Not much of a pattern really to see - no obvious shift in size distributions over time for all fish combined, Petroscrites sp. or for Siganus doliatus
 
 
+### Exploring Temporal Patterns further
+
+The hump in abundance, species richness and Halichoeres and Petroscirtes abundance (see saved figure EDAfish.common.time.png) in treatment DM potentially influences my conclusions regarding the DM-BH comparison. So I would like to know what went on then.
+
+When did it occur?
+
+```{r fish EDA temporal hump when, results = "markdown", eval = TRUE}
+```
+The peaks in abundance and species richness occurred on the 1st and 3rd of December (day 7 and 9), respectively
+
+What patches did it involve?
+```{r fish EDA temporal hump what patches, results = "markdown", eval = TRUE}
+```
+Plot DM4 was the highest in both species richness and total abundance at the peak (day 7 and 9)
+
+What species increased during it and which declined after it?
+```{r fish EDA temporal hump species increase, results = "markdown", eval = TRUE}
+```
+
+```{r fish EDA temporal hump species decrease, results = "markdown", eval = TRUE}
+```

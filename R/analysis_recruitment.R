@@ -454,13 +454,15 @@ common.abnd%>%
 
 g.common.abnd 
 
+
+
+## ----end
+
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.png"),
        g.common.abnd,
        width = 10,
        height = 5,
        dpi = 100)
-
-## ----end
 
 ## ---- fish EDA common species2
 ## plot abundance over time
@@ -468,8 +470,9 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.png"),
 common.abnd %>% 
   ggplot() + aes(y = abundance, x = Date, colour = Treatment) + ## 
   geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
-  geom_smooth() +
+  
   facet_wrap(~Species) +
+  geom_smooth() +
   ylab("Abundance" ) + 
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
         axis.text = element_text(size = 10),
@@ -477,15 +480,17 @@ common.abnd %>%
         panel.grid = element_blank()
   ) +
   theme_bw() -> g.common.abnd.time
+g.common.abnd.time
+
+
+
+## ----end
 
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.time.png"),
        g.common.abnd.time,
        width = 10,
        height = 5,
        dpi = 100)
-
-## ----end
-
 
 ## ----fish EDA common species3
 ## plot abundance vs algal biomass
@@ -763,7 +768,75 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.doli.length.date.png"),
        height = 25,
        dpi = 100)
 
+#### Temporal Patterns in more detail ===========================================
 
+## ----fish EDA temporal hump when
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+  mutate_at(c(2:5,9,11), factor)
+glimpse(fishalgaedata)
+
+
+fish.sp.abnd <-fishalgaedata %>% 
+  group_by(Treatment, Replicate, Date) %>% 
+  summarise(abundance = sum(count), #calculate total abnd
+            sp.richness = if_else(Species != "empty", 
+                                  true = length(unique(Species)), 
+                                  false = 0), #calculate sp. richness
+            plot.weight = plot.weight # include the biomass of each plot in the output
+  ) %>% 
+  left_join(.,fishalgaedata %>% #join back together with fishalgaedata
+              select(-c(Length, count, Family, Species)) ) %>% #a version without these
+  distinct() %>% 
+  as.data.frame()
+
+dm.dat <- fish.sp.abnd %>% 
+    filter(Treatment == "DM")
+
+
+#treatment DM as a whole
+dm.dat%>%
+  group_by(Treatment, Date) %>% 
+  summarise(sp.rich = mean(sp.richness),
+            abund = mean(abundance)) %>%
+  filter(abund == max(abund) | sp.rich == max(sp.rich))
+## ----end
+
+## ----fish EDA temporal hump what patches
+
+#individual DM plot level
+dm.dat %>% 
+  filter(abundance == max(abundance) | sp.richness == max(sp.richness))
+
+library(zoo) #for rolling average calc
+
+dm.dat %>% 
+  ggplot() + aes(x = Day, y = abundance, colour = Replicate) +
+  geom_jitter(height = 0.2, width = 0.2)+ 
+  theme_bw()
+
+dm.dat %>% 
+  group_by(Replicate) %>% 
+  filter(abundance == max(abundance) 
+         #| sp.richness == max(sp.richness)
+         )
+
+dm.dat %>% 
+  ggplot() + aes(x = Day, y = sp.richness, colour = Replicate) +
+  geom_jitter(height = 0.2, width = 0.2)+ 
+  theme_bw()
+
+dm.dat %>% 
+  group_by(Replicate) %>% 
+  filter(sp.richness == max(sp.richness)
+  )
+ 
+dm.dat %>% 
+  group_by(Replicate) %>% 
+  filter(abundance == max(abundance) 
+         | sp.richness == max(sp.richness)) %>% 
+ filter(Day %in% c(6:10))
+
+## ----end
 
  ## Univariate modelling ========================================================
 
