@@ -479,6 +479,7 @@ Looks like there is autocorrelation, (at least in plotID 1)
 ```{r recruitment univariate sd refit revalidate, results = 'markdown', eval = TRUE}
 ```
 the ar1 term appears to improve autocorrelation. Possibly a little underdispersed, (but much less than other models I've dealt with)
+ac model better by aicc
 
 ## Partial Plot
 
@@ -546,7 +547,7 @@ recruitment univariate sd brm contrasts
 
 ```{r recruitment univariate sd brm contrasts, results = 'markdown', eval = TRUE}
 ```
-BH - BQ  0.762  0.238  
+ 1 BH - BQ  0.762  0.238 no evidence 
  2 BH - DL  0.600  0.400 no evidence 
  3 BH - DM  0.0508 0.949  evidence
  4 BQ - DL  0.313  0.687  no evidence
@@ -556,3 +557,72 @@ BH - BQ  0.762  0.238
  8 W - BQ   0.998  0.00208 very strong
  9 W - DL   0.996  0.00375 very strong
 10 W - DM   0.842  0.158  no evidence ?weak evidence?
+
+# PETROSCIRTES SP. Abundance
+## Fit
+```{r recruitment univariate ps fit, results = 'markdown', eval = TRUE}
+
+```
+
+treatment model best
+
+## Validate
+```{r recruitment univariate ps validate, results = 'markdown', eval = TRUE}
+
+```
+no residual problems, autocorrelation low? - need murray's response
+
+Looks like there is autocorrelation, (at least in plotID 1)
+
+```{r recruitment univariate ps refit revalidate, results = 'markdown', eval = TRUE}
+```
+ac model better by aicc, no residual problems
+
+## Partial Plot
+
+```{r recruitment univariate ps partial, results = 'markdown', eval = TRUE}
+```
+A different pattern for this species - In the high density treatments (W, BH and BQ), W is the clear winner. But biomass has less of an effect at the lower end of the scale (BH vs BQ are the same). The lowest density treatment patches had the fewest individuals, despite that treatment having less biomass patch than BQ. For this species Density appears to have a greater impact relative to biomass than other species
+
+## Bayesian Model
+### Initial priors
+```{r recruitment univariate ps priors1, results = 'markdown', eval = TRUE}
+```
+initial priors will be 0, 0.4 for the intercept, 0,2 for the effects
+
+```{r recruitment univariate ps treatment reorder, results = 'markdown', eval = TRUE}
+```
+
+###Fitting
+```{r recruitment univariate ps brmsfit, results = 'markdown', eval = FALSE}
+```
+
+
+###Prior Checks
+```{r recruitment univariate ps brmsfit, results = 'markdown', eval = TRUE}
+```
+
+
+###MCMC
+
+```{r recruitment univariate ps brm2 MCMC, results = 'markdown', eval = TRUE}
+```
+
+
+### DHARMa Residuals
+```{r recruitment univariate ps brm2 DHARMa, results = 'markdown', eval = TRUE}
+```
+
+
+
+## Model Investigation
+```{r recruitment univariate ps frequentist summary, results = 'markdown', eval = TRUE}
+```
+
+
+```{r recruitment univariate ps brm2 summary, results = 'markdown', eval = TRUE}
+```
+
+
+```{r recruitment univariate ps brm contrasts, results = 'markdown', eval = TRUE}
+```

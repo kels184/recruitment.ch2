@@ -95,6 +95,15 @@ algaedata %>%
   left_join(algae.sum,.) -> algae.sum
 
 algae.sum
+
+algae.sum %>% filter(Treatment == "W") %>% pull(mean.plot.wt)
+
+algae.sum %>% 
+  mutate(W.ratio = mean.plot.wt/
+           algae.sum %>% filter(Treatment == "W") %>% pull (mean.plot.wt),
+         DL.ratio = mean.plot.wt/
+           algae.sum %>% filter(Treatment == "DL") %>% pull (mean.plot.wt))
+
 ## ----end
 
 
@@ -2412,6 +2421,8 @@ acf(residuals(sd.glmmTMB2, method = "pearson"))
 
 sd.glmmTMB.ac <- update(sd.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
 
+sd.glmmTMB.ac %>% AICc(., sd.glmmTMB2)
+
 acf(residuals(sd.glmmTMB.ac, method = "pearson"))
 
 sd.ac.resid <- sd.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
@@ -2433,6 +2444,7 @@ sd.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot()
 ##### Priors ===================================================================
 
 ## ----recruitment univariate sd priors1
+
 common.abnd %>% filter(Species == "Siganus doliatus") %>% 
   group_by(Treatment) %>%  summarise(log(median(abundance)), 
                                      log(mad(abundance)))
@@ -2680,6 +2692,341 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.png"),
        height = 5,
        width = 15,
        dpi = 100)
+
+
+### Petroscirtes sp. abundance  =================================================
+
+#### Fit =====================================================================
+## ----recruitment univariate ps fit
+
+common.abnd <- read_csv( paste0(DATA_PATH, "summarised/common.abnd.csv") ) %>% 
+  mutate_at(c(1:4,7,9, 10), factor) %>% 
+  data.frame()
+
+#Fewer candidate models (ones that make theoretical sense, instead of dredging)
+ps.glmmTMB1 <- glmmTMB(abundance ~ 1 + (1|plotID), #random intercept mode
+                       data = common.abnd %>% 
+                         filter(Species == "Petroscirtes sp."),
+                       family = poisson(link = "log"),
+                       REML = TRUE)
+
+ps.glmmTMB2 <- update(ps.glmmTMB1, .~. + Treatment) #Treatment fixed, Random int
+
+ps.glmmTMB3 <- update(ps.glmmTMB1, .~. + plot.weight) #plot.weight fixed, rand int
+
+
+
+MuMIn::AICc(ps.glmmTMB1,ps.glmmTMB2, ps.glmmTMB3)
+
+
+## ----end
+
+#### Validate ==================================================================
+
+## ---- recruitment univariate ps validate
+ps.resid <- ps.glmmTMB2 %>% simulateResiduals(plot = TRUE)
+
+##check autocorrelation
+#common.abnd <- common.abnd %>% 
+ # mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
+
+#ps.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+  #                                        filter(Species == "Petroscirtes sp.") %>% 
+   #                                       pull(TIME) ) #extract just the Time column as a vector
+
+acf(residuals(ps.glmmTMB2, method = "pearson"))$acf
+
+
+## ----end
+
+## ----recruitment univariate ps refit revalidate
+
+ps.glmmTMB.ac <- update(ps.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
+
+ps.glmmTMB.ac %>% AICc(.,ps.glmmTMB2)
+
+acf(residuals(ps.glmmTMB.ac, method = "pearson"))$acf
+
+ps.ac.resid <- ps.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
+#ps.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+#                                           filter(Species == "Halichoeres miniatus") %>% 
+#                                           pull(TIME) )
+
+ps.ac.resid %>% testDispersion()
+#some evidence of underdispersion
+
+#### Partial ====================================================================
+
+## ----recruitment univariate ps partial
+ps.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot()
+
+## ----end
+
+#### Bayesian ==================================================================
+##### Priors ===================================================================
+
+## ----recruitment univariate ps priors1
+common.abnd %>% filter(Species == "Petroscirtes sp.") %>% 
+  group_by(Treatment) %>%  summarise(log(median(abundance)), 
+                                     log(mad(abundance)))
+
+##priors for Effects
+common.abnd %>% filter(Species == "Petroscirtes sp.") %>% 
+  pull(abundance) %>% sd() %>% 
+  log()/apply(model.matrix(~Treatment, data = common.abnd), 2, sd)
+
+
+## ----end
+
+## ----recruitment univariate ps treatment reorder
+dat.sub <- common.abnd %>% filter(Species == "Petroscirtes sp.") %>% 
+  droplevels() %>% 
+  mutate(Treatment = forcats::fct_relevel(Treatment, "W")) #change first level to W
+
+## ----end
+
+##### Fitting ===============================================================
+
+## ----recruitment univariate ps brmsfit
+ps.form <- bf(abundance ~ Treatment
+              + (1|plotID),
+              autocor = ~ ar(time = Day, gr = plotID, 
+                             p = 1),
+              family = poisson(link = "log") )
+priors <- prior(normal(1, 1), class = "Intercept") +
+  prior(normal(0,2), class = "b") +
+  #prior(normal(0,0.4), class = "Intercept") +
+  prior(cauchy(0,0.5), class = "sd") + 
+  prior(cauchy(0,0.5), class = "sderr") +
+  prior(uniform(-1,1), class = "ar") 
+
+
+#ps.brm1 <- brm(ps.form,
+#               data = common.abnd %>% 
+#                 filter(Species == "Petroscirtes sp."),
+#               prior = priors,
+#               sample_prior = "yes", #sample priors and posteriors
+#               iter = 10000, warmup = 2000,
+#               #control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
+#               chains = 3, cores = 3, 
+#               thin = 10,
+#               seed = 123)
+
+ps.brm2 <- brm(ps.form,
+               data = dat.sub,
+               prior = priors,
+               sample_prior = "yes", #sample priors and posteriors
+               iter = 10000, warmup = 2000,
+               #control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
+               chains = 3, cores = 3, 
+              thin = 10,
+               seed = 123)
+
+#ps.brm1 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/ps.brm1.rds"))
+ps.brm2 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/ps.brm2.rds"))
+
+## ----end
+
+##### Prior Checks =============================================================
+## ----recruitment univariate ps brm1 prior check
+ps.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/ps.brm2.rds"))
+
+ps.brm2 %>% 
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '(^b|^prior).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'Intercept' at the end
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains ps ('sderr' will be included)
+           str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
+           str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
+         Par = str_replace(key, 'b_', '')) %>% 
+  
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+
+## ----end
+
+#####MCMC =====================================================================
+
+## ----recruitment univariate ps brm2 MCMC
+ps.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/ps.brm2.rds"))
+
+pars <- ps.brm2 %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^ar.*') %>% #that start with b, ps or ar
+  na.omit # omit the rest, resulting in an object of class 'omit'
+wch
+##Trace Plots
+stan_trace(ps.brm2$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(ps.brm2$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(ps.brm2$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(ps.brm2$fit, pars = wch)
+
+##Density plot
+stan_dens(ps.brm2$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+ps.brm2%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+## ----end
+
+##### DHARMA Residuals ==========================================================
+
+## ---- recruitment univariate ps brm2 DHARMa
+
+#step 1. Draw out predictions
+preds <- ps.brm2 %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                       summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                       observedResponse = dat.sub %>% 
+                         filter(Species == "Petroscirtes sp.") %>% 
+                         pull(abundance), #real response
+                       fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                       integerResponse = "TRUE" #is the response an integer? yes
+                       #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(resids)
+
+resids %>% testDispersion()
+## ----end
+
+#### Model Investigation ========================================================
+#Frequentist
+## ----recruitment univariate ps frequentist summary
+ps.glmmTMB.ac %>% summary()
+
+ps.glmmTMB2 %>% r.squaredGLMM()
+## ----end
+
+#Bayesian
+
+## ---- recruitment univariate ps brm2 summary
+ps.brm2$fit %>% tidyMCMC(pars = wch,
+                         estimate.method = "median",
+                         conf.int = TRUE,
+                         conf.method = "HPDinterval",
+                         rhat = TRUE,
+                         ess = TRUE)
+
+#"Marginal"
+ps.brm2 %>% brms::bayes_R2(re.form = NA, #or ~Treatment
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+# "Conditional"
+ps.brm2 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+
+## ----end
+
+## ---- recruitment univariate ps brm contrasts
+ps.brm2%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  ) 
+
+## ----end
+
+#### Summary figures =========================================================
+
+## ---- recruitment univariate ps figures
+
+ps.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/ps.brm2.rds"))
+ps.brm2 %>% ggemmeans(~Treatment) %>% plot
+
+
+newdata <- ps.brm2 %>% emmeans(~Treatment, type = "link") %>% 
+  gather_emmeans_draws() %>% 
+  mutate(Fit = exp(.value)) %>% 
+  as.data.frame
+head(newdata)
+
+g1 <- newdata %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = Fit,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab("S. doliatus abundance") +
+  theme_classic()
+
+ps.em <- ps.brm2 %>%
+  emmeans(~Treatment, type = "link") %>%
+  pairs() %>%
+  gather_emmeans_draws() %>%
+  mutate(Fit = exp(.value)) %>% as.data.frame()
+#head(sp.em)
+
+g2<- ps.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.5, 1, 1.1, 1.5, 2, 4)
+  ) +
+  
+  theme_classic()
+g1 + g2
+
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.png"),
+       g1,
+       height = 5,
+       width = 10,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.contr.png"),
+       g2,
+       height = 5,
+       width = 10,
+       dpi = 100)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 5,
+       width = 15,
+       dpi = 100)
+
+
+
 
  ## Multivariate ================================================================
 
