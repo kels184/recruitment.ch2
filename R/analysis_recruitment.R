@@ -2496,7 +2496,7 @@ sd.brm2 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/s
 ## ----end
 
  ##### Prior Checks =============================================================
-## ----recruitment univariate sd brm1 prior check
+## ----recruitment univariate sd brm2 prior check
 sd.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm2.rds"))
 
 sd.brm2 %>% 
@@ -2514,7 +2514,7 @@ sd.brm2 %>%
            str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains sd ('sderr' will be included)
            str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
            str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
-         Par = str_replace(key, 'b_', '')) %>% 
+         Par = str_replace(key, 'b_', '')) %>% filter (Class == "ar") %>% View()
   
   ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
   stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
@@ -2794,7 +2794,8 @@ ps.form <- bf(abundance ~ Treatment
                              p = 1),
               family = poisson(link = "log") )
 priors <- prior(normal(1, 1), class = "Intercept") +
-  prior(normal(0,2), class = "b") +
+  prior(normal(0,4), class = "b") +
+  #prior(normal(0,2), class = "b") +
   #prior(normal(0,0.4), class = "Intercept") +
   prior(cauchy(0,0.5), class = "sd") + 
   prior(cauchy(0,0.5), class = "sderr") +
@@ -2828,7 +2829,7 @@ ps.brm2 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/p
 ## ----end
 
 ##### Prior Checks =============================================================
-## ----recruitment univariate ps brm1 prior check
+## ----recruitment univariate ps brm2 prior check
 ps.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/ps.brm2.rds"))
 
 ps.brm2 %>% 

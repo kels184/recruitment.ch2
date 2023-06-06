@@ -507,7 +507,7 @@ I will keep my other priors from previous models
 no problem re divergent transitions, that's nice
 
 ###Prior Checks
-```{r recruitment univariate sd brmsfit, results = 'markdown', eval = TRUE}
+```{r recruitment univariate sd brm2 prior check, results = 'markdown', eval = TRUE}
 ```
 initially (priors <- prior(normal(0.5,0.4), class = "Intercept", lb = 0) +
   prior(normal(0,0.4), class = "b")
@@ -596,11 +596,12 @@ initial priors will be 0, 0.4 for the intercept, 0,2 for the effects
 ###Fitting
 ```{r recruitment univariate ps brmsfit, results = 'markdown', eval = FALSE}
 ```
-
+no divergent transitions
 
 ###Prior Checks
-```{r recruitment univariate ps brmsfit, results = 'markdown', eval = TRUE}
+```{r recruitment univariate ps brm2 prior check, results = 'markdown', eval = TRUE}
 ```
+Initially, priors for the intercept were a bit narrow, and when the treatments were ordered in their default way, the intercept posterior was entirely negative and I didn't like it
 
 
 ###MCMC
