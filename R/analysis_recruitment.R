@@ -841,7 +841,7 @@ ggsave(filename = paste0(FIGS_PATH, "/DM.hump.sp.png"),
        width= 10)
 
 
-## fish EDA temporal hump day 6 - 10
+## ----fish EDA temporal hump day 6 - 10
 
 dm.dat %>% 
   group_by(Replicate) %>% 
@@ -851,7 +851,54 @@ dm.dat %>%
 
 ## ----end
 
- ## Univariate modelling ========================================================
+
+## ----fish EDA temporal hump species increase
+dm.dat.sub <- fishalgaedata %>% 
+  filter(plotID %in% c("DM4", "DM2", "DM5")) %>% 
+  group_by(plotID, Day, Species) %>% 
+  summarise(abundance = sum(count)) %>% 
+  ungroup() %>% droplevels() %>% 
+  complete(plotID, Day, Species,
+           fill = list(abundance = 0))
+
+
+dm.dat.sub %>% select(Species) %>% unique()
+
+#order the dataset descending according to count and show me the first 20
+dm.dat.sub %>% arrange(desc(abundance)) %>% head(20)
+
+##----end
+
+
+##---- fish EDA temporal hump quick nmds
+dm.dat.wide <- dm.dat.sub %>% 
+  pivot_wider(names_from = "Species", values_from ="abundance") %>% 
+  mutate(ID.Day = paste0(plotID, ".", Day)) %>% 
+  column_to_rownames(var = "ID.Day") %>% 
+  data.frame()
+
+
+dm.mds <- metaMDS(dm.dat.wide %>% select(!c(plotID, Day)), seed = 123)
+scores <- dm.mds %>% fortify
+g <-
+  ggplot(data = NULL, aes(y=NMDS2, x=NMDS1)) +
+  geom_hline(yintercept=0, linetype='dotted') +
+  geom_vline(xintercept=0, linetype='dotted') +
+  geom_point(data=scores %>%
+               filter(Score=='sites'),
+             aes(color=dm.dat.wide$plotID))  +#colour the points according to their level of 'soil.dry
+  geom_text_repel(data=fish.mds.scores %>%
+                    filter(Score=='sites'),
+                  aes(label=Label,
+                      color=dm.dat.wide$Day), hjust=-0.2
+  ) +
+  labs(color = "Patch")
+g
+
+##----end
+
+
+## Univariate modelling ========================================================
 
   ### Abundance =================================================================
 ## ----recruitment univariate setup data
