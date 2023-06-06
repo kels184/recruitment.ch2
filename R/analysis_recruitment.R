@@ -808,44 +808,40 @@ dm.dat %>%
   filter(abundance == max(abundance) | sp.richness == max(sp.richness))
 
 
-dm.dat %>% 
-  ggplot() + aes(x = Day, y = abundance, colour = Replicate) +
-  geom_jitter(height = 0.2, width = 0.2) + 
+g1 <- dm.dat %>% 
+  ggplot() + aes(x = Day, y = abundance) +
+  geom_point() + 
+  facet_wrap(~plotID) +
   theme_bw()
 
-dm.dat %>% 
-  group_by(Replicate) %>% 
-  filter(abundance == max(abundance)
-         )
-
-dm.dat %>% 
-  group_by(Replicate) %>% 
-  filter(abundance == max(abundance) 
-  )%>% 
-  filter(Day %in% c(6:10))
+g1
 ## ----end
+
+
 
 ## ----fish EDA temporal hump sp.richness
 
-dm.dat %>% 
-  ggplot() + aes(x = Day, y = sp.richness, colour = Replicate) +
-  geom_jitter(height = 0.2, width = 0.2)+ 
+g2 <- dm.dat %>% 
+  ggplot() + aes(x = Day, y = sp.richness) +
+  geom_point() + 
+  facet_wrap(~plotID) +
   theme_bw()
+g2
 
-dm.dat %>% 
-  group_by(Replicate) %>% 
-  filter(sp.richness == max(sp.richness)
-  )
-
-
-dm.dat %>% 
-  group_by(Replicate) %>% 
-  filter(sp.richness == max(sp.richness)
-  ) %>% 
-  filter(Day %in% c(6:10))
 ## ----end
 
-## fish EDA temporal hump abnd|sp
+ggsave(filename = paste0(FIGS_PATH, "/DM.hump.abund.png"),
+       g1,
+       height = 5,
+       width= 10)
+
+ggsave(filename = paste0(FIGS_PATH, "/DM.hump.sp.png"),
+       g2,
+       height = 5,
+       width= 10)
+
+
+## fish EDA temporal hump day 6 - 10
 
 dm.dat %>% 
   group_by(Replicate) %>% 

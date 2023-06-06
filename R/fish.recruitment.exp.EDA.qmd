@@ -173,14 +173,20 @@ When did it occur?
 The peaks in abundance and species richness occurred on the 1st and 3rd of December (day 7 and 9), respectively
 
 What patches did it involve?
-```{r fish EDA temporal hump what patches, results = "markdown", eval = TRUE}
+```{r fish EDA temporal hump abundance, results = "markdown", eval = TRUE}
 ```
-Plot DM4 was the highest in both species richness and total abundance at the peak (day 7 and 9)
+Patch DM4 was the patch involved in both peaks (days 7 and 9)
+Abundance also peaked in the period day 6 - 10 in 4 of the 5 patches (excluding patch DM3). However DM1 was also consistently the highest in abundance after that point. I would say DM4, 2 and 5 all share this hump
 
 ```{r fish EDA temporal hump sp.richness, results = "markdown", eval = TRUE}
 ```
 
-Plot DM4 was the highest in both species richness and total abundance at the peak (day 7 and 9)
+For species richness, patches DM4, 2 and 5 share the hump
+
+```{r fish EDA temporal hump day 6 - 10, results = "markdown", eval = TRUE}
+```
+
+though the peaks in abundance and sp richness didn't always occur on the same day, (DM 2 and DM4), they generally fell within the 4 day period of day 7 - 10.
 
 What species increased during it and which declined after it?
 ```{r fish EDA temporal hump species increase, results = "markdown", eval = TRUE}
