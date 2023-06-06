@@ -801,24 +801,31 @@ dm.dat%>%
   filter(abund == max(abund) | sp.rich == max(sp.rich))
 ## ----end
 
-## ----fish EDA temporal hump what patches
+## ----fish EDA temporal hump abundance
 
-#individual DM plot level
+#individual DM plot level abundance
 dm.dat %>% 
   filter(abundance == max(abundance) | sp.richness == max(sp.richness))
 
-library(zoo) #for rolling average calc
 
 dm.dat %>% 
   ggplot() + aes(x = Day, y = abundance, colour = Replicate) +
-  geom_jitter(height = 0.2, width = 0.2)+ 
+  geom_jitter(height = 0.2, width = 0.2) + 
   theme_bw()
 
 dm.dat %>% 
   group_by(Replicate) %>% 
-  filter(abundance == max(abundance) 
-         #| sp.richness == max(sp.richness)
+  filter(abundance == max(abundance)
          )
+
+dm.dat %>% 
+  group_by(Replicate) %>% 
+  filter(abundance == max(abundance) 
+  )%>% 
+  filter(Day %in% c(6:10))
+## ----end
+
+## ----fish EDA temporal hump sp.richness
 
 dm.dat %>% 
   ggplot() + aes(x = Day, y = sp.richness, colour = Replicate) +
@@ -829,7 +836,17 @@ dm.dat %>%
   group_by(Replicate) %>% 
   filter(sp.richness == max(sp.richness)
   )
- 
+
+
+dm.dat %>% 
+  group_by(Replicate) %>% 
+  filter(sp.richness == max(sp.richness)
+  ) %>% 
+  filter(Day %in% c(6:10))
+## ----end
+
+## fish EDA temporal hump abnd|sp
+
 dm.dat %>% 
   group_by(Replicate) %>% 
   filter(abundance == max(abundance) 

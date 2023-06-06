@@ -177,6 +177,11 @@ What patches did it involve?
 ```
 Plot DM4 was the highest in both species richness and total abundance at the peak (day 7 and 9)
 
+```{r fish EDA temporal hump sp.richness, results = "markdown", eval = TRUE}
+```
+
+Plot DM4 was the highest in both species richness and total abundance at the peak (day 7 and 9)
+
 What species increased during it and which declined after it?
 ```{r fish EDA temporal hump species increase, results = "markdown", eval = TRUE}
 ```
