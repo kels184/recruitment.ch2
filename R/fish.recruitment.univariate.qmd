@@ -152,7 +152,7 @@ sd and sderr: reducing the priors reduced the magnitude of difference between th
 
 The model fit, ggpredict had trouble, and there seems to be an error estimate for every data point (err[1]...err[450]). Compare with:  
 
-`r abnd.brm2.prior %>% get_variables()`   
+abnd.brm2.prior %>% get_variables()   
 
 (the variables of the model without the ar term)
 
