@@ -665,3 +665,68 @@ R squared 43 population level effects only - 55% (45-65) with group level effect
 ```{r recruitment univariate ps figures, results = 'markdown', eval = TRUE}
 ```
 
+# POMACENTRUS TRIPUNCTATUS Abundance
+## Fit
+```{r recruitment univariate pt fit, results = 'markdown', eval = TRUE}
+```
+
+treatment model best
+
+## Validate
+```{r recruitment univariate pt validate, results = 'markdown', eval = TRUE}
+```
+some problems already - slight non-uniformity, slight bit of heterogeneity. I think it's ok. We'll see with the ac model (there is evidence of autocorrelation)
+
+```{r recruitment univariate pt refit revalidate, results = 'markdown', eval = TRUE}
+```
+ac model better by aicc, seems, to have improved autocorrelation, uniformity now ok. a little underdispersed (more conservative). I'm happy with the box plots despite the warning
+
+## Partial Plot
+
+```{r recruitment univariate pt partial, results = 'markdown', eval = TRUE}
+```
+once again I need to reorder. I'll start with normal(0, 1) for the intercept, and normal(0,3) for the effects
+
+## Fitting
+```{r recruitment univariate pt brmsfit, results = 'markdown', eval = TRUE}
+```
+no divergent transitions
+
+###Prior Checks
+```{r recruitment univariate pt brm1 prior check, results = 'markdown', eval = TRUE}
+```
+Look ok to me. ar could maybe be positively restricted
+
+###MCMC
+
+```{r recruitment univariate pt brm1 MCMC, results = 'markdown', eval = TRUE}
+```
+MCMC checks look good
+
+### DHARMa Residuals
+```{r recruitment univariate pt brm1 DHARMa, results = 'markdown', eval = TRUE}
+```
+once again, apparently underdispersed
+
+## Model Investigation
+```{r recruitment univariate pt frequentist summary, results = 'markdown', eval = TRUE}
+```
+R -squared 43 - 57% explained with (frequentist). ar ~0.98
+
+```{r recruitment univariate pt brm1 summary, results = 'markdown', eval = TRUE}
+```
+
+
+W similar to DM and BH. AR ~ 0.76
+R squared 25% population level effects only - 50% (42-57) with group level effects
+
+```{r recruitment univariate pt brm contrasts, results = 'markdown', eval = TRUE}
+```
+
+no evidence for BH-BQ, BH-DL, BQ-DL or W-DM
+
+## Summary Figures
+
+```{r recruitment univariate pt figures, results = 'markdown', eval = TRUE}
+```
+the final figure produced is pretty ugly.  I should probably restrict my posteriors to the 95% quantiles or so - the skew is really bad for Pomacentrus tripunctatus DM. I've also always got a shit x axis for the contrast plot
