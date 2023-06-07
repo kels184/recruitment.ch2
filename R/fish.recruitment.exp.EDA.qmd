@@ -192,5 +192,21 @@ What species increased during it and which declined after it?
 ```{r fish EDA temporal hump species increase, results = "markdown", eval = TRUE}
 ```
 
-```{r fish EDA temporal hump species decrease, results = "markdown", eval = TRUE}
+```{r fish EDA temporal hump quick nmds, results = "markdown", eval = TRUE}
 ```
+I really can't see anything particularly special happening around the hump from this
+
+
+```{r fish EDA temporal hump look at raw data for those DMS, results = "markdown", eval = TRUE}
+```
+
+For DM4 pomacentrus tripunctatus and Petroscirtes were particularly abundant (6  individuals) at the peak, after the 9th it's mostly 0s and 1s for petroscirtes, 0 - 3 tripunctatus. Though Halichoeres miniatus also peaked (7 individuals) on day 7, there were always at least 3 after this
+
+On DM5, Halichoeres miniatus peaks in the day 7-10 area at around 6-8 individuals, then plateaus.Pomacentrus  tripunctatus peaks at 3, stays at 3 for a few days, then there are 1-2 until the end. Petroscirtes was 0-1 except on day 13 were there were 3. Siganus doliatus peaks at day 7, but there are none from day 11 (4 individuals)
+
+Petroscirtes the only one (checked H. miniatus, S. doliatus, Pomacentrus tripunctatus) with much of a pattern in DM2 - about 4 on the peak, rises to 6 on day 11 (after the peak for this patch), but then there are 0-2 after that
+
+```{r fish EDA temporal hump specific patch.species. plots, results = "markdown", eval = TRUE}
+```
+
+

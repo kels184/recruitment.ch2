@@ -877,26 +877,71 @@ dm.dat.wide <- dm.dat.sub %>%
   column_to_rownames(var = "ID.Day") %>% 
   data.frame()
 
+View(dm.dat.wide)
 
 dm.mds <- metaMDS(dm.dat.wide %>% select(!c(plotID, Day)), seed = 123)
+dm.mds
+
 scores <- dm.mds %>% fortify
+scores
 g <-
   ggplot(data = NULL, aes(y=NMDS2, x=NMDS1)) +
   geom_hline(yintercept=0, linetype='dotted') +
   geom_vline(xintercept=0, linetype='dotted') +
   geom_point(data=scores %>%
                filter(Score=='sites'),
-             aes(color=dm.dat.wide$plotID))  +#colour the points according to their level of 'soil.dry
-  geom_text_repel(data=fish.mds.scores %>%
-                    filter(Score=='sites'),
-                  aes(label=Label,
-                      color=dm.dat.wide$Day), hjust=-0.2
-  ) +
+             aes(color=dm.dat.wide$plotID))  +#colour the points according to their plotID
+  geom_text_repel(data = scores %>% 
+                    filter(Score == 'sites'),
+                    aes(label = dm.dat.wide$Day, hjust=-0.2) ) +
   labs(color = "Patch")
 g
 
 ##----end
 
+ggsave(filename = paste0(FIGS_PATH, "/nmds.DM245.png"),
+                         g,
+                         height = 10,
+                         width = 10,
+                         dpi = 100 )
+
+##---- fish EDA temporal hump look at raw data for those DMS
+dm.dat.wide %>% View()
+
+fishalgaedata %>% 
+  filter(plotID %in% c("DM4", "DM2", "DM5")) %>% 
+  arrange(plotID) %>% View ()
+# 
+
+##----end
+
+## ----fish EDA temporal hump specific patch.species.plots
+## plot abundance over time
+
+
+g.dm <- 
+  ggplot(dm.dat.sub %>% 
+           filter(Species %in% c("Halichoeres miniatus", "Petroscirtes sp.", 
+                                 "Pomacentrus tripunctatus", "Siganus doliatus")
+                  )) + aes(x = Day, y = abundance) + 
+  geom_point() +
+  facet_grid(rows = vars(Species), cols = vars(plotID)) +
+  theme(family = "calibri", text = element_text( size = 8, color = "black"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12),
+        panel.grid = element_blank()
+  ) +
+  theme_bw()
+
+g.dm
+
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/4commonDMhump.png"),
+       g.dm,
+       width = 15,
+       height = 15,
+       dpi = 100)
 
 ## Univariate modelling ========================================================
 
@@ -3324,7 +3369,7 @@ g <-
   geom_vline(xintercept=0, linetype='dotted') +
   geom_point(data=fish.mds.scores %>%
                filter(Score=='sites'),
-             aes(color=fish.wide.end$Treatment))  +#colour the points according to their level of 'soil.dry
+             aes(color=fish.wide.end$Treatment))  +#colour the points according to their Treatment
   geom_text_repel(data=fish.mds.scores %>%
               filter(Score=='sites'),
             aes(label=Label,
