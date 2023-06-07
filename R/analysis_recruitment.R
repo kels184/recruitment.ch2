@@ -3302,7 +3302,96 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.both.png"),
        width = 15,
        dpi = 100)
 
+### Pomacentrus tripunctatus abundance  =========================================
 
+#### Fit =====================================================================
+## ----recruitment univariate pt fit
+
+common.abnd <- read_csv( paste0(DATA_PATH, "summarised/common.abnd.csv") ) %>% 
+  mutate_at(c(1:4,7,9, 10), factor) %>% 
+  data.frame()
+
+#Fewer candidate models (ones that make theoretical sense, instead of dredging)
+pt.glmmTMB1 <- glmmTMB(abundance ~ 1 + (1|plotID), #random intercept mode
+                       data = common.abnd %>% 
+                         filter(Species == "Pomacentrus tripuncatus"),
+                       family = poisson(link = "log"),
+                       REML = TRUE)
+
+pt.glmmTMB2 <- update(pt.glmmTMB1, .~. + Treatment) #Treatment fixed, Random int
+
+pt.glmmTMB3 <- update(pt.glmmTMB1, .~. + plot.weight) #plot.weight fixed, rand int
+
+
+
+MuMIn::AICc(pt.glmmTMB1,pt.glmmTMB2, pt.glmmTMB3)
+
+
+## ----end
+
+#### Validate ==================================================================
+
+## ---- recruitment univariate pt validate
+pt.resid <- pt.glmmTMB2 %>% simulateResiduals(plot = TRUE)
+
+##check autocorrelation
+#common.abnd <- common.abnd %>% 
+# mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
+
+#pt.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+#                                        filter(Species == "Pomacentrus tripuncatus") %>% 
+#                                       pull(TIME) ) #extract just the Time column as a vector
+
+acf(residuals(pt.glmmTMB2, method = "pearson"))$acf
+
+
+## ----end
+
+## ----recruitment univariate pt refit revalidate
+
+pt.glmmTMB.ac <- update(pt.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
+
+pt.glmmTMB.ac %>% AICc(.,pt.glmmTMB2)
+
+acf(residuals(pt.glmmTMB.ac, method = "pearson"))$acf
+
+pt.ac.resid <- pt.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
+#pt.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
+#                                           filter(Species == "Halichoeres miniatus") %>% 
+#                                           pull(TIME) )
+
+pt.ac.resid %>% testDispersion()
+#some evidence of underdispersion
+
+#### Partial ====================================================================
+
+## ----recruitment univariate pt partial
+pt.glmmTMB2 %>% ggpredict(terms = "Treatment") %>% plot()
+
+## ----end
+
+#### Bayesian ==================================================================
+##### Priors ===================================================================
+
+## ----recruitment univariate pt priors1
+common.abnd %>% filter(Species == "Pomacentrus tripuncatus") %>% 
+  group_by(Treatment) %>%  summarise(log(median(abundance)), 
+                                     log(mad(abundance)))
+
+##priors for Effects
+common.abnd %>% filter(Species == "Pomacentrus tripuncatus") %>% 
+  pull(abundance) %>% sd() %>% 
+  log()/apply(model.matrix(~Treatment, data = common.abnd), 2, sd)
+
+
+## ----end
+
+## ----recruitment univariate pt treatment reorder
+dat.sub <- common.abnd %>% filter(Species == "Pomacentrus tripuncatus") %>% 
+  droplevels() %>% 
+  mutate(Treatment = forcats::fct_relevel(Treatment, "W")) #change first level to W
+
+## ----end
 
 
  ## Multivariate ================================================================
