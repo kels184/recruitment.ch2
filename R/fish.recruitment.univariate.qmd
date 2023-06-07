@@ -861,7 +861,7 @@ mean and sd (rather than median) again since no treatment group had enough indiv
 ### Fitting
 ```{r recruitment univariate la brmsfit, results = 'markdown', eval = FALSE}
 ```
-Divergent transitions? 13 at first. adjusted adapt delta
+Divergent transitions? 13 at first. adjusted adapt delta, after which there were 0
 
 ###Prior Checks
 ```{r recruitment univariate la brm1 prior check, results = 'markdown', eval = TRUE}
@@ -878,22 +878,22 @@ MCMC checks look good
 ### DHARMa Residuals
 ```{r recruitment univariate la brm1 DHARMa, results = 'markdown', eval = TRUE}
 ```
-again, a weird number of catPreds - this time only 3! I;m going to ignore that side. No apparent under or overdispersion
+again, a weird number of catPreds - this time only 2! I'm going to ignore that side again. No apparent under or overdispersion
 
 ## Model Investigation
 ```{r recruitment univariate la frequentist summary, results = 'markdown', eval = TRUE}
 ```
-a low proportion (under 10%) of variance explained. 0.79 ar
+a low proportion (under 10%) of variance explained. 0.94 ar
 
 ```{r recruitment univariate la brm1 summary, results = 'markdown', eval = TRUE}
 ```
 
-for once, ar is pretty close to frequentist - 0.75. Looks like W only different to BQ. BRM model with the group level effects explaining 22% (11-35%)
+ar back to being far from frequentist - 0.35. Looks like W only different to BQ, perhaps BH. BRM model with the group level effects explaining 18% (9-28%)
 
 
 ```{r recruitment univariate la brm contrasts, results = 'markdown', eval = TRUE}
 ```
-BQ-DM, and W vs BH, BQ and DL the contrasts with evidence
+ the contrasts with evidence were DM vs BH, BQ and DL, and W vs BH, BQ and DL. In other words, DM and W the same but above everything else
 
 ## Summary Figures
 

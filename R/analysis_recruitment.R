@@ -4134,7 +4134,7 @@ preds <- sf.brm1 %>% posterior_predict(ndraws = 250, #extract 250 posterior draw
 #Step 2 create DHARMA resids
 resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
                        observedResponse = dat.sub %>% 
-                         filter(Species == "Lethrinus atkinsoni") %>% 
+                         filter(Species == "Siganus fuscescens") %>% 
                          pull(abundance), #real response
                        fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
                        integerResponse = "TRUE" #is the response an integer? yes
