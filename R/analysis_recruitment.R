@@ -4453,3 +4453,52 @@ scores(fish.mds, choices = 1:3, display = c("sites")) #this seemed to work, alth
 #also couldn't get "species" scores
 
 ## ----end
+
+   #Size Distribution Testing ===================================================
+ 
+ ## Data ========================================================================
+## ----recruitment size data
+
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+  mutate_at(c(2:5,9), factor)
+glimpse(fishalgaedata)
+
+
+sp.abnd <- read_csv(paste0(DATA_PATH, "summarised/species.abundance.csv"))
+
+commondata <- fishalgaedata %>% 
+  filter(Species %in% paste0(sp.abnd$Species[1:6]) ) %>% #include only the commonest 6 sp
+  droplevels %>% #remove the levels with no data
+  filter(!Family == "empty" ) %>% #remove rows with no fish
+glimpse(commondata)
+
+## ----end
+
+  ## Example test ===============================================================
+#two distributions with different shape
+
+##from https://stats.stackexchange.com/questions/30919/is-there-a-quantitative-way-to-compare-the-distribution-shape-of-different-sampl
+y<-rnorm(100,0,3)
+x<-rpois(100,1)
+x_s<-(x-median(x))/mad(x)
+y_s<-(y-median(y))/mad(y)
+par(mfrow=c(2,1))
+hist(y_s)
+hist(x_s)
+ks.test(x_s,y_s)
+##You can't use the associated p-values because the center and scale components,
+#have been determined by the data, but the D stat gives a relative measure of the 
+#distance between the 2 vectors (in a nutshell it's simply the Chebychev distance between the two CDFs)
+
+
+
+#https://stats.stackexchange.com/questions/35461/is-there-a-multiple-sample-version-or-alternative-to-the-kolmogorov-smirnov-test 
+
+# since I'm comparing between more than 2 groups, I might need to define specific hypotheses
+#and/or control for multiple comparisons (e.g. False Discovery Rate correction BH procedure in stats)
+#https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1716-1 
+#from above ^:
+#Benjamini and Hochberg step-up procedure (in package "stats") assumes exchangeability, i.e. that all tests 
+#are exchangeable and, therefore, that the power to detect discoveries is equally likely among all tests
+# i think this an ok assumptio for my wee tests. Independent hypothesis weighting method (package "ihw")
+#looks like the one to go with if not (and defaults to BH if covariate is uninformative)
