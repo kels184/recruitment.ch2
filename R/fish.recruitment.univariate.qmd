@@ -821,3 +821,83 @@ BQ-DM, and W vs BH, BQ and DL the contrasts with evidence
 ```{r recruitment univariate la figures, results = 'markdown', eval = TRUE}
 ```
 
+
+# SIGANUS FUSCESCENS Abundance
+
+## Fit
+```{r recruitment univariate la fit, results = 'markdown', eval = TRUE}
+```
+
+treatment model best
+
+## Validate
+```{r recruitment univariate la validate, results = 'markdown', eval = TRUE}
+```
+fine, besides a little autocorrelation
+
+```{r recruitment univariate la refit revalidate, results = 'markdown', eval = TRUE}
+```
+ac slightly worse aicc, now better than the null. seems to have improved autocorrelation slightly. a little underdispersed (more conservative)
+
+## Partial Plot
+
+```{r recruitment univariate la partial, results = 'markdown', eval = TRUE}
+```
+
+
+## Bayesian Model
+
+### Initial Priors
+
+```{r recruitment univariate la priors1, results = 'markdown', eval = TRUE}
+```
+mean and sd (rather than median) again since no treatment group had enough individuals for the log to mean anything
+ (-1,1) and (0,3) for my intercept and effect priors (normal) again
+
+```{r recruitment univariate la treatment reorder, results = 'markdown', eval = TRUE}
+```
+
+
+### Fitting
+```{r recruitment univariate la brmsfit, results = 'markdown', eval = FALSE}
+```
+Divergent transitions? 13 at first. adjusted adapt delta
+
+###Prior Checks
+```{r recruitment univariate la brm1 prior check, results = 'markdown', eval = TRUE}
+```
+priors good
+
+
+###MCMC
+
+```{r recruitment univariate la brm1 MCMC, results = 'markdown', eval = TRUE}
+```
+MCMC checks look good
+
+### DHARMa Residuals
+```{r recruitment univariate la brm1 DHARMa, results = 'markdown', eval = TRUE}
+```
+again, a weird number of catPreds - this time only 3! I;m going to ignore that side. No apparent under or overdispersion
+
+## Model Investigation
+```{r recruitment univariate la frequentist summary, results = 'markdown', eval = TRUE}
+```
+a low proportion (under 10%) of variance explained. 0.79 ar
+
+```{r recruitment univariate la brm1 summary, results = 'markdown', eval = TRUE}
+```
+
+for once, ar is pretty close to frequentist - 0.75. Looks like W only different to BQ. BRM model with the group level effects explaining 22% (11-35%)
+
+
+```{r recruitment univariate la brm contrasts, results = 'markdown', eval = TRUE}
+```
+BQ-DM, and W vs BH, BQ and DL the contrasts with evidence
+
+## Summary Figures
+
+```{r recruitment univariate la figures, results = 'markdown', eval = TRUE}
+```
+
+
