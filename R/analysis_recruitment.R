@@ -4500,5 +4500,12 @@ ks.test(x_s,y_s)
 #from above ^:
 #Benjamini and Hochberg step-up procedure (in package "stats") assumes exchangeability, i.e. that all tests 
 #are exchangeable and, therefore, that the power to detect discoveries is equally likely among all tests
-# i think this an ok assumptio for my wee tests. Independent hypothesis weighting method (package "ihw")
+# i think this an ok assumptio for my wee tests. Independent hypothesis weighting method (package "IHW")
 #looks like the one to go with if not (and defaults to BH if covariate is uninformative)
+
+#BH
+#Adjusted p values by BH were obtained using the p.adjust function from the stats base R package, with option method=~BH~.
+
+
+#IHW
+#Adjusted p values by IHW were obtained using the adj _pvalues function on the output of the ihw function, both from version 1.8.0 of the IHW Bioconductor R package.
