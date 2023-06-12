@@ -162,7 +162,7 @@ These plots show the mean number of fish of each length category averaged by Tre
 Not much of a pattern really to see - no obvious shift in size distributions over time for all fish combined, Petroscrites sp. or for Siganus doliatus
 
 
-### Exploring Temporal Patterns further
+### 6 Exploring Temporal Patterns further
 
 The hump in abundance, species richness and Halichoeres and Petroscirtes abundance (see saved figure EDAfish.common.time.png) in treatment DM potentially influences my conclusions regarding the DM-BH comparison. So I would like to know what went on then.
 
@@ -191,7 +191,9 @@ though the peaks in abundance and sp richness didn't always occur on the same da
 What species increased during it and which declined after it?
 ```{r fish EDA temporal hump species increase, results = "markdown", eval = TRUE}
 ```
+Halichoeres miniatus and petroscirtes sp. typically the highest per patch per day, several of the highest abundances (9-6 ind per species) occurred during the window 6-10
 
+Quck nmds
 ```{r fish EDA temporal hump quick nmds, results = "markdown", eval = TRUE}
 ```
 I really can't see anything particularly special happening around the hump from this
@@ -208,5 +210,5 @@ Petroscirtes the only one (checked H. miniatus, S. doliatus, Pomacentrus tripunc
 
 ```{r fish EDA temporal hump specific patch.species. plots, results = "markdown", eval = TRUE}
 ```
-
-
+The hump seems to be spread across several species and several patches. It doesn not appear to be due to some manipulation/maintenance activity specific to these dates and patches. In DM4, a dominance/exclusion by Halichoeres miniatus may have happened, leading to low numbers of other species post day 8, though if this is the case it is unclear
+why high halichoeres miniatus numbers did not necessarily have similar effects in other patches

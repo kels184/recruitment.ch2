@@ -854,11 +854,11 @@ dm.dat %>%
 
 ## ----fish EDA temporal hump species increase
 dm.dat.sub <- fishalgaedata %>% 
-  filter(plotID %in% c("DM4", "DM2", "DM5")) %>% 
+  filter(plotID %in% c("DM4", "DM2", "DM5", "DM1", "DM3")) %>% #only these patches
   group_by(plotID, Day, Species) %>% 
-  summarise(abundance = sum(count)) %>% 
+  summarise(abundance = sum(count)) %>% #get abundance per Species, per patch, per day
   ungroup() %>% droplevels() %>% 
-  complete(plotID, Day, Species,
+  complete(plotID, Day, Species, #fill zeroes
            fill = list(abundance = 0))
 
 
@@ -899,11 +899,11 @@ g
 
 ##----end
 
-ggsave(filename = paste0(FIGS_PATH, "/nmds.DM245.png"),
-                         g,
-                         height = 10,
-                         width = 10,
-                         dpi = 100 )
+#ggsave(filename = paste0(FIGS_PATH, "/nmds.DM245.png"),
+ #                        g,
+  #                       height = 10,
+   #                      width = 10,
+    #                     dpi = 100 )
 
 ##---- fish EDA temporal hump look at raw data for those DMS
 dm.dat.wide %>% View()
