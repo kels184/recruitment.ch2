@@ -1014,6 +1014,21 @@ abnd.resid %>% testDispersion()
 
 #abnd.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
 
+
+
+
+abnd.glmmTMB2 %>% 
+  residuals(type = "pearson") %>% 
+  group_by(plotID)
+
+
+
+
+
+
+
+
+
 acf(residuals(abnd.glmmTMB2, type = "pearson"))
 #definite autocorrelation
 testTemporalAutocorrelation(abnd.resid, time = fish.sp.abnd$Date)#won't work
