@@ -945,6 +945,27 @@ ggsave(filename = paste0(FIGS_PATH, "/4commonDMhump.png"),
 
 ## Univariate modelling ========================================================
 
+  ### Algae plot biomass ========================================================
+dat<- algaedata %>% 
+  group_by(Treatment,Replicate) %>% 
+  summarise(plot.weight = sum(Weight))
+
+form <- bf(plot.weight ~ Treatment,
+           family = gaussian(link = "identity"))
+form %>% get_prior(data = dat)
+
+##prior for intercept
+dat %>%  group_by(Treatment) %>%  summarise(median(plot.weight), 
+                                   mad(plot.weight))
+
+##priors for Effects
+
+sd(dat$plot.weight)/apply(model.matrix(~Treatment, data = dat), 2, sd)
+
+priors <- prior(normal(387, 100), class = "Intercept") + 
+  prior(normal(0,500), class = "b") + 
+  prior(cauchy(0,2), class = )
+
   ### Abundance =================================================================
 ## ----recruitment univariate setup data
 fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
