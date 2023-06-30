@@ -1005,6 +1005,7 @@ MuMIn::AICc(abnd.glmmTMB1,abnd.glmmTMB2, abnd.glmmTMB3, abnd.glmmTMB4,
 abnd.resid <- abnd.glmmTMB2 %>% DHARMa::simulateResiduals(plot = T)
 abnd.resid %>% testDispersion()
 
+## ----end
 #are the observations of the same plot temporally autocorrelated? DHARMA won't 
 #like that there are multiple observations at the same time, but maybe if I 
 #give each plot their own set of Time
@@ -1014,32 +1015,67 @@ abnd.resid %>% testDispersion()
 #fish.sp.abnd %>% tail
 
 #abnd.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+#testTemporalAutocorrelation(abnd.resid, time = fish.sp.abnd$Date)#won't work
+
+#resid1 <- recalculateResiduals(abnd.resid, group = fish.sp.abnd$Date)
+#testTemporalAutocorrelation(resid1, time = unique(fish.sp.abnd$Date))
+
+
+#here's how I can get acfs (had gpt for docs help me)
+
+  ##### Temporal autocorrelation test ================================================
+
+## ----recruitment univariate abundance validate autocorrelation
+df <- fish.sp.abnd %>% 
+  mutate(abnd.residuals = residuals(abnd.glmmTMB2, type = "pearson"))
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #add a lag column, values from 0-17
+            ac = acf(abnd.residuals, #in an ac column, calculate the acfs
+                     lag.max = 18, #important this is here, or it will only do the first 12
+                     plot = FALSE
+                     )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac) #include only these cols in the output
+
+average.ac <- ac %>% 
+  unnest(ac) %>% 
+  group_by(lag) %>% 
+  summarise(average = mean(ac))
+
+average.ac
+
+g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  labs(x = "Lag", y = "Average Autocorrelation") + 
+  theme_bw()
 
 
 
 
-abnd.glmmTMB2 %>% 
-  residuals(type = "pearson") %>% 
-  group_by(plotID)
-
-
-
-
-
-
-
-
-
-acf(residuals(abnd.glmmTMB2, type = "pearson"))
-#definite autocorrelation
-testTemporalAutocorrelation(abnd.resid, time = fish.sp.abnd$Date)#won't work
-
-resid1 <- recalculateResiduals(abnd.resid, group = fish.sp.abnd$Date)
-testTemporalAutocorrelation(resid1, time = unique(fish.sp.abnd$Date))
-## In my case, DHARMa DOES detect the autocorrelation here
-
-
+#plotted separately by plotID:
+g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  facet_wrap(~plotID) +
+  labs(x = "Lag", y = "Autocorrelation") + 
+  theme_bw()
 ## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.abundance.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.abundance.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
+
+
+##### Temporal autocorrelation refit ================================================
 
 ## ---- recruitment univariate abundance refit autocorrelation
 
@@ -1053,20 +1089,74 @@ AICc(abnd.glmmTMB.ac, abnd.glmmTMB2)
 
 ## ----end
 
+
+##### Temporal autocorrelation revalidate ================================================
 ## ----recruitment univariate abundance revalidate
 
 
 abnd.ac.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
-#abnd.ac.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
-
-acf(residuals(abnd.glmmTMB.ac, type = "pearson"))
-#autocorrelation accounted for
-
-resid1 <- recalculateResiduals(abnd.ac.resid, group = fish.sp.abnd$Date)
-testTemporalAutocorrelation(resid1, time = unique(fish.sp.abnd$Date))
-#despite DHARMA not seeing this
 
 ## ----end
+#abnd.ac.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
+
+#acf(residuals(abnd.glmmTMB.ac, type = "pearson"))
+#autocorrelation accounted for
+
+#resid1 <- recalculateResiduals(abnd.ac.resid, group = fish.sp.abnd$Date)
+#testTemporalAutocorrelation(resid1, time = unique(fish.sp.abnd$Date))
+##despite DHARMA not seeing this
+
+
+## ----recruitment univariate abundance revalidate acf
+df <- fish.sp.abnd %>% 
+  mutate(abnd.residuals.ac = residuals(abnd.glmmTMB.ac, type = "pearson"))
+
+ac.ac<- df %>% group_by(plotID) %>% 
+  mutate(lag = 0:(n() - 1),
+         ac = acf(abnd.residuals.ac,
+                  lag.max = 18 
+         )$acf[lag+1]) %>% 
+  select(plotID, lag, ac)
+
+average.ac.ac <- ac.ac %>% 
+  unnest(ac) %>% 
+  group_by(lag) %>% 
+  summarise(average = mean(ac))
+
+average.ac.ac
+
+g.av<- ggplot(average.ac.ac, aes(y = average, x = lag) )+ 
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  labs(x = "Lag", y = "Average Autocorrelation") + 
+  theme_bw()
+
+g.av
+
+
+#plotted separately by plotID:
+g.all <- ggplot(ac.ac, aes(x = lag, y = ac)) +
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  facet_wrap(~plotID) +
+  labs(x = "Lag", y = "Autocorrelation") + 
+  theme_bw()
+g.all
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.abndAC.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.abndAC.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
+
+
 
 ## ----recruitment univariate abundance revalidate2
 
@@ -4305,8 +4395,12 @@ dat %>%  group_by(Treatment) %>%  summarise(median(plot.weight),
                                             mad(plot.weight))
 
 
+#prior for effects
+sd(dat$plot.weight)/apply(model.matrix(~Treatment, data = dat), 2, sd)
+
+
 priors <- prior(normal(387, 100), class = "Intercept") + 
-  prior(normal(0,2), class = "b") 
+  prior(normal(0,520), class = "b") 
 #use default sigma prior
 
 biom.brm1 <- brm(form, data = dat,
@@ -4317,7 +4411,7 @@ biom.brm1 <- brm(form, data = dat,
                  thin = 5,
                  seed = 123)
 
-biom.brm1 %>% SUYR_prior_and_posterior()
+biom.brm1 %>% SUYR_prior_and_posterior() #better now b is wider
 
 pars <- biom.brm1 %>% get_variables()
 
@@ -4377,7 +4471,7 @@ biom.brm1 %>% brms::bayes_R2(re.form = NA, #or ~Treatment
                            summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
   median_hdci # get the hdci of the r2
 
-#model explaining very little of the variance. I think this is a bit sus
+#model explaining very little (4e-5) sof the variance. I think this is a bit sus
 
 
 biom.brm1%>%
@@ -4396,7 +4490,26 @@ biom.brm1%>%
     TRUE ~ "no evidence"
   )
   )
+#no evidence for all comparisons
 
+
+
+newdata <- biom.brm1 %>% emmeans(~Treatment) %>% 
+  gather_emmeans_draws() %>% 
+  as.data.frame
+head(newdata)
+
+g1 <- newdata %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = .value,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab("Patch Biomass") +
+  theme_classic()
 
  ## Multivariate ================================================================
 

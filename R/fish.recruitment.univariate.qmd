@@ -67,6 +67,15 @@ The 'Treatment' model with performed best. Plot weight model and all models with
 ```{r recruitment univariate abundance validate, results = 'markdown', eval = TRUE, warning = TRUE}
 ```
 residuals look quite  good.
+
+### Temporal autocorrelation
+
+```{r recruitment univariate abundance validate autocorrelation, results = 'markdown', eval = TRUE}
+
+```
+
+
+
 However, there appears to be definite autocorrelation
 
  - Fit with autocorrelation
