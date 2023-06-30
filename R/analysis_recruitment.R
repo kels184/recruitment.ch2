@@ -945,28 +945,8 @@ ggsave(filename = paste0(FIGS_PATH, "/4commonDMhump.png"),
 
 ## Univariate modelling ========================================================
 
-  ### Algae plot biomass ========================================================
-dat<- algaedata %>% 
-  group_by(Treatment,Replicate) %>% 
-  summarise(plot.weight = sum(Weight))
 
-form <- bf(plot.weight ~ Treatment,
-           family = gaussian(link = "identity"))
-form %>% get_prior(data = dat)
-
-##prior for intercept
-dat %>%  group_by(Treatment) %>%  summarise(median(plot.weight), 
-                                   mad(plot.weight))
-
-##priors for Effects
-
-sd(dat$plot.weight)/apply(model.matrix(~Treatment, data = dat), 2, sd)
-
-priors <- prior(normal(387, 100), class = "Intercept") + 
-  prior(normal(0,500), class = "b") + 
-  prior(cauchy(0,2), class = )
-
-  ### Abundance =================================================================
+### Abundance =================================================================
 ## ----recruitment univariate setup data
 fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
   mutate_at(c(2:5,9,11), factor)
@@ -4303,6 +4283,119 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.both.png"),
        height = 5,
        width = 15,
        dpi = 100)
+
+### Algae plot biomass ========================================================
+dat<- algaedata %>% 
+  group_by(Treatment,Replicate) %>% 
+  summarise(plot.weight = sum(Weight))
+
+biom.glmmTMB <- glmmTMB(plot.weight ~ Treatment, data = dat, family = gaussian())
+
+biom.glmmTMB %>% simulateResiduals(plot = TRUE)
+
+biom.glmmTMB %>% summary
+#all default comparisons significant (incl BH-DM)
+
+form <- bf(plot.weight ~ Treatment,
+           family = gaussian(link = "identity"))
+form %>% get_prior(data = dat)
+
+##prior for intercept
+dat %>%  group_by(Treatment) %>%  summarise(median(plot.weight), 
+                                            mad(plot.weight))
+
+
+priors <- prior(normal(387, 100), class = "Intercept") + 
+  prior(normal(0,2), class = "b") 
+#use default sigma prior
+
+biom.brm1 <- brm(form, data = dat,
+                 prior = priors,
+                 sample_prior = "yes", 
+                 iter = 5000, warmup = 1000,
+                 chains = 3, cores = 3, 
+                 thin = 5,
+                 seed = 123)
+
+biom.brm1 %>% SUYR_prior_and_posterior()
+
+pars <- biom.brm1 %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^sigma') %>% #that start with b, sd or are sigma
+  na.omit # omit the rest, resulting in an object of class 'omit'
+wch
+##Trace Plots
+stan_trace(biom.brm1$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(biom.brm1$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(biom.brm1$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(biom.brm1$fit, pars = wch)
+
+##Density plot
+stan_dens(biom.brm1$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+biom.brm1%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+
+#step 1. Draw out predictions
+preds <- biom.brm1 %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                          summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+abnd.resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                            observedResponse = dat$plot.weight, #real response
+                            fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                            integerResponse = "TRUE" #is the response an integer? yes
+                            #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(abnd.resids)
+
+#i don't care enough to worry about that
+
+
+biom.brm1$fit %>% tidyMCMC(pars = wch,
+                         estimate.method = "median",
+                         conf.int = TRUE,
+                         conf.method = "HPDinterval",
+                         rhat = TRUE,
+                         ess = TRUE)
+
+biom.brm1 %>% ggemmeans(~Treatment) %>% plot#not working
+
+#"Marginal"
+biom.brm1 %>% brms::bayes_R2(re.form = NA, #or ~Treatment
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+#model explaining very little of the variance. I think this is a bit sus
+
+
+biom.brm1%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  ) %>% 
+  ungroup() %>% 
+  mutate(evidence = case_when(
+    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
+    `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
 
 
  ## Multivariate ================================================================
