@@ -187,6 +187,13 @@ The residuals don't look too good - similarly to the Frequentist approach, both 
 
 However, this again is likely caused by not simulating Conditional residuals  
 
+### Autocorrelation check
+
+```{r recruitment univariate abundance brm ac, results = "markdown", eval = TRUE}
+
+```
+The autocorrelations produced are more similar to those of the TMB model WITHOUT autocorrelation (i.e. more autocorrelated than the TMB model with ar term). I'm hoping this is because the residuals() function is not fit for brms models with autocorrelation structure
+
 
 ## Model Investigation
 ### 1 Frequentist models

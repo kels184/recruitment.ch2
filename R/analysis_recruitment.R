@@ -1440,6 +1440,62 @@ abnd.resids %>% testUniformity()
 ## ----end
 
 
+  #####Autocorrelation Check====================================================
+
+## ---- recruitment univariate abundance brm ac
+residuals_df <- as.data.frame(residuals(abnd.brm1b, type = "pearson"))
+
+df <- cbind(df,residuals_df)
+df %>% head
+
+#as above (for the glmmTMB model), so below
+ac<- df %>% group_by(plotID) %>% 
+  mutate(lag = 0:(n() - 1), 
+         ac = acf(Estimate,
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>%
+  select(plotID, lag, ac) 
+
+average.ac <- ac %>% 
+  unnest(ac) %>% 
+  group_by(lag) %>% 
+  summarise(average = mean(ac))
+
+average.ac
+
+g.av<- ggplot(average.ac, aes(y = average, x = lag) )+ 
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  labs(x = "Lag", y = "Average Autocorrelation") + 
+  theme_bw()
+
+g.av
+
+
+#plotted separately by plotID:
+g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  facet_wrap(~plotID) +
+  labs(x = "Lag", y = "Autocorrelation") + 
+  theme_bw()
+g.all
+
+## ----end
+ggsave(filename = paste0(FIGS_PATH, "/acf.abndBRM.av.png"),
+       g.av,
+       height = 5,
+       width = 10,
+       dpi = 100)
+
+
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.abndBRM.all.png"),
+       g.all,
+       height = 15,
+       width = 15,
+       dpi = 100)
 
    #### Model investigation =====================================================
    ##### Frequentist ============================================================
