@@ -1037,6 +1037,9 @@ ac<- df %>% group_by(plotID) %>% #group by plotID
                      )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
   select(plotID, lag, ac) #include only these cols in the output
 
+ac %>% filter(lag != 0) %>% 
+  subset(abs(ac) > 2/sqrt(18))
+
 average.ac <- ac %>% 
   unnest(ac) %>% 
   group_by(lag) %>% 
@@ -1117,6 +1120,9 @@ ac.ac<- df %>% group_by(plotID) %>%
                   lag.max = 18 
          )$acf[lag+1]) %>% 
   select(plotID, lag, ac)
+
+ac.ac %>% filter(lag != 0) %>% 
+  subset(abs(ac) > 2/sqrt(18))
 
 average.ac.ac <- ac.ac %>% 
   unnest(ac) %>% 
@@ -1457,6 +1463,11 @@ ac<- df %>% group_by(plotID) %>%
          )$acf[lag+1]) %>%
   select(plotID, lag, ac) 
 
+
+
+ac %>% filter(lag != 0) %>% 
+  subset(abs(ac) > 2/sqrt(18))
+
 average.ac <- ac %>% 
   unnest(ac) %>% 
   group_by(lag) %>% 
@@ -1619,23 +1630,54 @@ abnd.end.glmmTMB.fixed %>% ggpredict(Terms = "Treatment") %>%  plot()
 ## ---- recruitment univariate abundance summary figure
 abnd.brm1b <- readRDS(file = paste0(DATA_PATH, "modelled/abnd.brm1b.rds"))
 
+
 newdata <- abnd.brm1b %>% emmeans(~Treatment, type = "link") %>% 
   gather_emmeans_draws() %>% 
   mutate(Fit = exp(.value)) %>% 
   as.data.frame
-head(newdata)
 
-g1 <- newdata %>% ggplot() + 
+
+# Reorder Treatment levels
+newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+
+
+#setup quantiles
+newdata_quantiles <- newdata %>%
+  group_by(Treatment) %>%
+  summarise(q_0.5 = quantile(Fit, probs = 0.5),
+            q_0.8 = quantile(Fit, probs = 0.8),
+            q_0.95 = quantile(Fit, probs = 0.95)) %>%
+  ungroup()
+
+#filter to only 95% quantiles
+newdata_filtered <- newdata %>%
+  left_join(newdata_quantiles, by = "Treatment") %>%
+  filter(Fit <= q_0.95)
+
+newdata_filtered$Fit
+
+
+#Plot
+
+
+
+g1 <- newdata_filtered %>% ggplot() + 
   stat_slab(aes(
     x = Treatment, y = Fit,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), 
+  p_limits = c(0.05, 0.95), color = "black") +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab("Total Abundance") +
   theme_classic()
+g1
+
+
+
+
 
 abnd.em <- abnd.brm1b %>%
   emmeans(~Treatment, type = "link") %>%
