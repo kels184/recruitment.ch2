@@ -1647,7 +1647,7 @@ g1 <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab("Total abundance") +
   theme_classic()
@@ -1688,7 +1688,7 @@ g2<- abnd.em_mod %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -1707,7 +1707,7 @@ g.all.cont <- abnd.em %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -1718,21 +1718,31 @@ g.all.cont <- abnd.em %>%
   
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.png"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.pdf"),
        g1,
        height = 5,
-       width = 10,
-       dpi = 100)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.contr.png"),
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.contr.pdf"),
        g2,
        height = 5,
-       width = 10,
-       dpi = 100)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.png"),
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.pdf"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
-       width = 15,
-       dpi = 100)
+       width = 16,
+       units = "cm",
+       dpi = 600)
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.all.contr.pdf"),
+       g.all.cont,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
 
 ########trying to restrict
 ########
