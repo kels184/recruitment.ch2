@@ -134,41 +134,48 @@ g.wt <- ggplot(algaedata) + aes(y = Weight, x = Treatment) +
 g.wt
 
 
-g.plot.wt <- algaedata %>% 
+g.plot.wt <- algaedata %>% #reorder Treatment
+  mutate(Treatment = factor(Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))) %>% 
   group_by(Treatment,Replicate) %>% ## first create a vector with the 
   summarise(plot.weight = sum(Weight)) %>% ## total biomass of each plot
   ggplot() + 
   aes(y = plot.weight, x = Treatment) +
   geom_point(alpha = 0.1) + 
   geom_violin(fill = NA) +
-  ylab(expression("Plot Biomass (g wet wt)") ) +
-  theme(family = "calibri", text = element_text( size = 8, color = "black"),
-        axis.text = element_text(size = 10),
-        axis.title = element_text(size = 12),
-        panel.grid = element_blank()
-  ) +
-  theme_bw()
+  theme_classic() +
+  ylab(expression("Plot Biomass (g wet wt)") )
+
+
 g.plot.wt
+## ----end
 
 ggsave(filename = paste0(FIGS_PATH, "/Alg.len.png"),
        g.len,
        width = 10,
        height = 5,
-       dpi = 100)
+       dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/Alg.wt.png"),
        g.wt,
        width = 10,
        height = 5,
-       dpi = 100)
+       dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.png"),
+ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.pdf"),
        g.plot.wt,
-       width = 10,
+       width = 8,
        height = 5,
-       dpi = 100)
+       units = "cm",
+       dpi = 600)
+
+#ppt
+ggsave(filename = paste0(FIGS_PATH, "/ppt/Alg.plot.wt.png"),
+       g.plot.wt,
+       width = 20,
+       height = 10,
+       units = "cm",
+       dpi = 1000)
 
 
-## ----end
 
 ### Fish ========================================================================
 
@@ -1743,6 +1750,15 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.all.contr.pdf"),
        width = 8,
        units = "cm",
        dpi = 600)
+
+##For powerpoint:
+ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.abund.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 1000)
+
 
 ########trying to restrict
 ########
