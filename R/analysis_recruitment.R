@@ -1644,7 +1644,7 @@ g1 <- newdata %>% ggplot() +
   stat_slab(aes(
     x = Treatment, y = Fit,
     fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.8, 0.95),
+                                   .width = c(0.5, 0.9, 0.95),
                                    labels = scales::percent_format()
     ))
   ), color = "black") +
@@ -1660,19 +1660,33 @@ abnd.em <- abnd.brm1b %>%
   mutate(Fit = exp(.value)) %>% as.data.frame()
 head(abnd.em)
 
+#create modified contrast set containing only key contrastss
 abnd.em_mod <- abnd.em %>% 
-  filter(contrast %in% c("BH - W", "BQ - W", "BH - BQ", "BH - DM"))
+  filter(#filter to key contrasts
+    contrast %in% c("BH - W", "BQ - W", "BH - BQ", "BH - DM")) %>% 
+  mutate(contrast = fct_recode(contrast, #rename some levels of contrast
+                               "W - BH" = "BH - W", 
+                               "W - BQ" = "BQ - W", 
+                               "BH - BQ" = "BH - BQ",
+                               "BH - DM" = "BH - DM"),
+         Fit = if_else(#calculate inverse effect for the renamed levels
+           contrast %in% c("W - BH", "W - BQ"), 
+           1/Fit, 
+           Fit),
+         contrast = factor(contrast, #reorder contrast levels
+                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
+         )
 
-abnd.em_filtered %>% glimpse
 
-g2<- abnd.em %>%
+g2<- abnd.em_mod %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
   # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
   stat_slab(aes(
-    x = Fit, y = contrast,
+    x = Fit, 
+    reorder(contrast, desc(contrast)), #reorder y axis (descending)
     fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.8, 0.95),
+                                   .width = c(0.5, 0.9, 0.95),
                                    labels = scales::percent_format()
     ))
   ), color = "black") +
@@ -1681,8 +1695,9 @@ g2<- abnd.em %>%
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.5, 1, 1.1, 1.5, 2, 4)
   ) +
-
-  theme_classic()
+  theme_classic() +
+  
+  labs(y = "Total Abundance")
 g1 + g2
 
   
