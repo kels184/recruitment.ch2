@@ -1681,10 +1681,9 @@ abnd.em_mod <- abnd.em %>%
 g2<- abnd.em_mod %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
-  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
   stat_slab(aes(
     x = Fit, 
-    reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
@@ -1699,6 +1698,23 @@ g2<- abnd.em_mod %>%
   labs(y = "Total Abundance")
 g1 + g2
 
+g.all.cont <- abnd.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans()
+  ) +
+  theme_classic() +
+  
+  labs(y = "Total Abundance")
   
 ## ----end
 
