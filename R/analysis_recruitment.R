@@ -1644,7 +1644,7 @@ g1 <- newdata %>% ggplot() +
   stat_slab(aes(
     x = Treatment, y = Fit,
     fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.9, 0.95),
+                                   .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
   ), color = "black") +
@@ -1686,14 +1686,13 @@ g2<- abnd.em_mod %>%
     x = Fit, 
     reorder(contrast, desc(contrast)), #reorder y axis (descending)
     fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.9, 0.95),
+                                   .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
   ), color = "black") +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
-                     trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 1.1, 1.5, 2, 4)
+                     trans = scales::log2_trans()
   ) +
   theme_classic() +
   
