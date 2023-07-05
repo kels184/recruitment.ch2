@@ -1636,47 +1636,21 @@ newdata <- abnd.brm1b %>% emmeans(~Treatment, type = "link") %>%
   mutate(Fit = exp(.value)) %>% 
   as.data.frame
 
-
 # Reorder Treatment levels
 newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
 
 
-#setup quantiles
-newdata_quantiles <- newdata %>%
-  group_by(Treatment) %>%
-  summarise(q_0.5 = quantile(Fit, probs = 0.5),
-            q_0.8 = quantile(Fit, probs = 0.8),
-            q_0.95 = quantile(Fit, probs = 0.95)) %>%
-  ungroup()
-
-#filter to only 95% quantiles
-newdata_filtered <- newdata %>%
-  left_join(newdata_quantiles, by = "Treatment") %>%
-  filter(Fit <= q_0.95)
-
-newdata_filtered$Fit
-
-
-#Plot
-
-
-
-g1 <- newdata_filtered %>% ggplot() + 
+g1 <- newdata %>% ggplot() + 
   stat_slab(aes(
     x = Treatment, y = Fit,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), 
-  p_limits = c(0.05, 0.95), color = "black") +
+  ), color = "black") +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  ylab("Total Abundance") +
+  ylab("Total abundance") +
   theme_classic()
-g1
-
-
-
 
 
 abnd.em <- abnd.brm1b %>%
@@ -1685,6 +1659,11 @@ abnd.em <- abnd.brm1b %>%
   gather_emmeans_draws() %>%
   mutate(Fit = exp(.value)) %>% as.data.frame()
 head(abnd.em)
+
+abnd.em_mod <- abnd.em %>% 
+  filter(contrast %in% c("BH - W", "BQ - W", "BH - BQ", "BH - DM"))
+
+abnd.em_filtered %>% glimpse
 
 g2<- abnd.em %>%
   ggplot() +
@@ -1724,6 +1703,50 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.png"),
        height = 5,
        width = 15,
        dpi = 100)
+
+########trying to restrict
+########
+
+
+
+#setup quantiles
+newdata_quantiles <- newdata %>%
+  group_by(Treatment) %>%
+  summarise(q_0.5 = quantile(Fit, probs = 0.5),
+            q_0.8 = quantile(Fit, probs = 0.8),
+            q_0.95 = quantile(Fit, probs = 0.95)) %>%
+  ungroup()
+
+#filter to only 95% quantiles
+newdata_filtered <- newdata %>%
+  left_join(newdata_quantiles, by = "Treatment") %>%
+  filter(Fit <= q_0.95)
+
+newdata_filtered$Fit
+
+
+#Plot
+
+
+
+g1 <- newdata_filtered %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = Fit,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), 
+  p_limits = c(0.05, 0.95), color = "black") +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab("Total Abundance") +
+  theme_classic()
+g1
+
+
+#####
+#####not working so far
+
 
   ### Species Richness ==========================================================
 
