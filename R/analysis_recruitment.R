@@ -4490,43 +4490,93 @@ la.em <- la.brm1 %>%
   mutate(Fit = exp(.value)) %>% as.data.frame()
 #head(sp.em)
 
-g2<- la.em %>%
+
+#create modified contrast set containing only key contrastss
+la.em_mod <- la.em %>% 
+  filter(#filter to key contrasts
+    contrast %in% c("W - BH", "W - BQ", "BH - BQ", "BH - DM")) %>% 
+  mutate(contrast = factor(contrast, #reorder contrast levels
+                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
+  )
+
+
+g2<- la.em_mod %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
-  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
+  stat_slab(aes(
+    x = Fit, 
+    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     limits = c(0.05,16)
+  ) +
+  theme_classic() +
+  
+  labs(y = "Contrast")
+g1 + g2
+
+g.all.cont <- la.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
   stat_slab(aes(
     x = Fit, y = contrast,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 1.1, 1.5, 2, 4)
+                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     limits = c(0.05,16)
   ) +
-  
   theme_classic()
-g1 + g2
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.la.png"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.la.pdf"),
        g1,
        height = 5,
-       width = 10,
-       dpi = 100)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.la.contr.png"),
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.la.contr.pdf"),
        g2,
        height = 5,
-       width = 10,
-       dpi = 100)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.la.both.png"),
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.la.both.pdf"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
-       width = 15,
-       dpi = 100)
+       width = 16,
+       units = "cm",
+       dpi = 600)
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.la.all.contr.pdf"),
+       g.all.cont,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+
+##For powerpoint:
+ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.la.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 1000)
+
+
 
 ### Siganus fuscescens abundance  =========================================
 
