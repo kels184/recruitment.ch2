@@ -1585,7 +1585,7 @@ abnd.cont.tbl <- abnd.brm1b%>%
   )  %>% 
   ungroup() %>% 
   mutate(evidence = case_when(
-    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
     `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
@@ -2336,7 +2336,7 @@ sp.cont.tbl <- sp.brm1f%>%
   ) %>% 
   ungroup() %>% 
   mutate(evidence = case_when(
-    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
     `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
@@ -2853,7 +2853,7 @@ hm.cont.tbl <- hm.brm1%>%
   )  %>% 
   ungroup() %>% 
   mutate(evidence = case_when(
-    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
     `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
@@ -3241,7 +3241,7 @@ sd.cont.tbl <- sd.brm2%>%
   ) %>% 
   ungroup() %>% 
   mutate(evidence = case_when(
-    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
     `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
@@ -3733,7 +3733,7 @@ ps.cont.tbl <- ps.brm2%>%
   ) %>% 
   ungroup() %>% 
   mutate(evidence = case_when(
-    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
     `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
@@ -4111,7 +4111,7 @@ ungroup()
 
 pt.cont.tbl <- contrast.tbl %>% 
   mutate(evidence = case_when(
-    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
     `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
@@ -4486,7 +4486,7 @@ la.cont.tbl <- la.brm1%>%
   ) %>% 
   ungroup() %>% 
   mutate(evidence = case_when(
-    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
     `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
@@ -4859,7 +4859,7 @@ sf.cont.tbl <- sf.brm1%>%
   ) %>% 
   ungroup() %>% 
   mutate(evidence = case_when(
-    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
     `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
@@ -5124,7 +5124,7 @@ biom.brm1%>%
   ) %>% 
   ungroup() %>% 
   mutate(evidence = case_when(
-    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
     `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
