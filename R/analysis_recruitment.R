@@ -4868,6 +4868,29 @@ sf.cont.tbl <- sf.brm1%>%
 sf.cont.tbl
 ## ----end
 write.csv(sf.cont.tbl, "clipboard")
+
+
+##Combine cont.tbls (assuming they're all in the current environment)
+# Get the names of objects in the current environment that match the pattern
+object_names <- ls(pattern = "\\.cont\\.tbl$")
+
+# Initialize an empty list to store the tables
+tables <- list()
+
+# Loop through the object names and extract the relevant tables
+for (name in object_names) {
+  table <- get(name)  # Get the table associated with the name
+  table$Model <- substr(name, 1, regexpr("\\.", name) - 1)  # Extract the model name
+  
+  tables[[name]] <- table  # Store the table in the list
+}
+
+# Combine the tables into one using bind_rows()
+combined_table <- bind_rows(tables)
+
+view(combined_table)
+
+write.csv(combined_table, paste0(DATA_PATH, "/summarised/cont.tbl.csv"))
 #### Summary figures =========================================================
 
 ## ---- recruitment univariate sf figures
