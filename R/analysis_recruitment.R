@@ -1575,18 +1575,27 @@ abnd.brm1b%>%
   pairs
 
 
-abnd.brm1b%>%
+abnd.cont.tbl <- abnd.brm1b%>%
   emmeans(~Treatment, type = 'link') %>% #link scale
   pairs() %>% #pairwise comparison
   gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
   #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
   summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
             'P<' = sum(.value<0)/n(),
-  ) 
+  )  %>% 
+  ungroup() %>% 
+  mutate(evidence = case_when(
+    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
+    `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+abnd.cont.tbl
 
 ## ----end
 
-
+write.csv(abnd.cont.tbl, "clipboard")
 
 
 ## ---- recruitment univariate abundance planned contrasts
@@ -2317,17 +2326,25 @@ sp.brm1f %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 
 ##all (Tukey style) contrasts (exceedance)
 
-sp.brm1f%>%
+sp.cont.tbl <- sp.brm1f%>%
   emmeans(~Treatment, type = 'link') %>% #link scale
   pairs() %>% #pairwise comparison
   gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
   #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
   summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
             'P<' = sum(.value<0)/n(),
-  ) 
-
+  ) %>% 
+  ungroup() %>% 
+  mutate(evidence = case_when(
+    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
+    `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+sp.cont.tbl
 ## ----end
-
+write.csv(sp.cont.tbl, "clipboard")
    ##### Temporal Subset of data ================================================
 
 ## ----recruitment univariate sp end
@@ -2826,17 +2843,25 @@ hm.brm1 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 ## ----end
 
 ## ---- recruitment univariate hm brm contrasts
-hm.brm1%>%
+hm.cont.tbl <- hm.brm1%>%
   emmeans(~Treatment, type = 'link') %>% #link scale
   pairs() %>% #pairwise comparison
   gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
   #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
   summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
             'P<' = sum(.value<0)/n(),
-  ) 
-
+  )  %>% 
+  ungroup() %>% 
+  mutate(evidence = case_when(
+    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
+    `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+hm.cont.tbl
 ## ----end
-
+write.csv(hm.cont.tbl, "clipboard")
 #### Summary figures =========================================================
 
 ## ---- recruitment univariate hm figures
@@ -3206,17 +3231,25 @@ sd.brm2 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 ## ----end
 
 ## ---- recruitment univariate sd brm contrasts
-sd.brm2%>%
+sd.cont.tbl <- sd.brm2%>%
   emmeans(~Treatment, type = 'link') %>% #link scale
   pairs() %>% #pairwise comparison
   gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
   #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
   summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
             'P<' = sum(.value<0)/n(),
-  ) 
-
+  ) %>% 
+  ungroup() %>% 
+  mutate(evidence = case_when(
+    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
+    `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+sd.cont.tbl
 ## ----end
-
+write.csv(sd.cont.tbl, "clipboard")
 #### Summary figures =========================================================
 
 ## ---- recruitment univariate sd figures
@@ -3690,17 +3723,25 @@ ps.brm2 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 ## ----end
 
 ## ---- recruitment univariate ps brm contrasts
-ps.brm2%>%
+ps.cont.tbl <- ps.brm2%>%
   emmeans(~Treatment, type = 'link') %>% #link scale
   pairs() %>% #pairwise comparison
   gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
   #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
   summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
             'P<' = sum(.value<0)/n(),
-  ) 
-
+  ) %>% 
+  ungroup() %>% 
+  mutate(evidence = case_when(
+    `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
+    `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
+    `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+ps.cont.tbl
 ## ----end
-
+write.csv(ps.cont.tbl, "clipboard")
 #### Summary figures =========================================================
 
 ## ---- recruitment univariate ps figures
@@ -4068,7 +4109,7 @@ contrast.tbl <- pt.brm1%>%
 ungroup()
   
 
-contrast.tbl %>% 
+pt.cont.tbl <- contrast.tbl %>% 
   mutate(evidence = case_when(
     `P>` >= 0.99 | `P>` >= 0.99 ~ "very strong",
     `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
@@ -4076,8 +4117,9 @@ contrast.tbl %>%
     TRUE ~ "no evidence"
   )
 )
+pt.cont.tbl
 ## ----end
-
+write.csv(pt.cont.tbl, "clipboard")
 #### Summary figures =========================================================
 
 ## ---- recruitment univariate pt figures
@@ -4434,7 +4476,7 @@ la.brm1 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 ## ----end
 
 ## ---- recruitment univariate la brm contrasts
-la.brm1%>%
+la.cont.tbl <- la.brm1%>%
   emmeans(~Treatment, type = 'link') %>% #link scale
   pairs() %>% #pairwise comparison
   gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
@@ -4450,9 +4492,9 @@ la.brm1%>%
     TRUE ~ "no evidence"
   )
   )
-
+la.cont.tbl
 ## ----end
-
+write.csv(la.cont.tbl,"clipboard")
 #### Summary figures =========================================================
 
 ## ---- recruitment univariate la figures
@@ -4807,7 +4849,7 @@ sf.brm1 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 ## ----end
 
 ## ---- recruitment univariate sf brm contrasts
-sf.brm1%>%
+sf.cont.tbl <- sf.brm1%>%
   emmeans(~Treatment, type = 'link') %>% #link scale
   pairs() %>% #pairwise comparison
   gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
@@ -4823,9 +4865,9 @@ sf.brm1%>%
     TRUE ~ "no evidence"
   )
   )
-
+sf.cont.tbl
 ## ----end
-
+write.csv(sf.cont.tbl, "clipboard")
 #### Summary figures =========================================================
 
 ## ---- recruitment univariate sf figures
