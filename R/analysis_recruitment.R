@@ -1733,7 +1733,7 @@ g3 <- ggplot() +
   theme_classic()
 
   
-g1 + element_blank()
+
 ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.pdf"),
        g1,
        height = 5,
@@ -2470,6 +2470,11 @@ newdata <- sp.brm1f %>% emmeans(~Treatment, type = "link") %>%
   as.data.frame
 head(newdata)
 
+
+# Reorder Treatment levels
+newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+
+
 g1 <- newdata %>% ggplot() + 
   stat_slab(aes(
     x = Treatment, y = Fit,
@@ -2477,10 +2482,11 @@ g1 <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab("Species Richness") +
   theme_classic()
+
 
 sp.em <- sp.brm1f %>%
   emmeans(~Treatment, type = "link") %>%
@@ -2489,7 +2495,43 @@ sp.em <- sp.brm1f %>%
   mutate(Fit = exp(.value)) %>% as.data.frame()
 head(sp.em)
 
-g2<- sp.em %>%
+sp.em_mod <- sp.em %>% 
+  filter(#filter to key contrasts
+    contrast %in% c("BH - W", "BQ - W", "BH - BQ", "BH - DM")) %>% 
+  mutate(contrast = fct_recode(contrast, #rename some levels of contrast
+                               "W - BH" = "BH - W", 
+                               "W - BQ" = "BQ - W", 
+                               "BH - BQ" = "BH - BQ",
+                               "BH - DM" = "BH - DM"),
+         Fit = if_else(#calculate inverse effect for the renamed levels
+           contrast %in% c("W - BH", "W - BQ"), 
+           1/Fit, 
+           Fit),
+         contrast = factor(contrast, #reorder contrast levels
+                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
+  )
+
+
+g2<- sp.em_mod %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  stat_slab(aes(
+    x = Fit, 
+    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans()
+  ) +
+  theme_classic() +
+  
+  labs(y = "Contrast")
+
+g.all.cont<- sp.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
   # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
@@ -2502,30 +2544,47 @@ g2<- sp.em %>%
   ), color = "black") +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
-                     trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 1.1, 1.5, 2, 4)
+                     trans = scales::log2_trans()
   ) +
-  
   theme_classic()
 g1 + g2
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.png"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.pdf"),
        g1,
        height = 5,
-       width = 10,
-       dpi = 100)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.contr.png"),
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.contr.pdf"),
        g2,
        height = 5,
-       width = 10,
-       dpi = 100)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.both.png"),
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.both.pdf"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
-       width = 15,
-       dpi = 100)
+       width = 16,
+       units = "cm",
+       dpi = 600)
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.all.contr.pdf"),
+       g.all.cont,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+
+##For powerpoint:
+ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sp.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 1000)
+
 
   ### Halichoeres miniatus abundance=============================================
 
@@ -2792,6 +2851,10 @@ newdata <- hm.brm1 %>% emmeans(~Treatment, type = "link") %>%
   as.data.frame
 head(newdata)
 
+# Reorder Treatment levels
+newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+
+
 g1 <- newdata %>% ggplot() + 
   stat_slab(aes(
     x = Treatment, y = Fit,
@@ -2799,10 +2862,11 @@ g1 <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  ylab("H. miniatus abundance") +
+  ylab(expression(paste(italic("H. miniatus"), " abundance"))) +
   theme_classic()
+
 
 hm.em <- hm.brm1 %>%
   emmeans(~Treatment, type = "link") %>%
@@ -2811,7 +2875,45 @@ hm.em <- hm.brm1 %>%
   mutate(Fit = exp(.value)) %>% as.data.frame()
 head(sp.em)
 
-g2<- hm.em %>%
+hm.em_mod <- hm.em %>% 
+  filter(#filter to key contrasts
+    contrast %in% c("BH - W", "BQ - W", "BH - BQ", "BH - DM")) %>% 
+  mutate(contrast = fct_recode(contrast, #rename some levels of contrast
+                               "W - BH" = "BH - W", 
+                               "W - BQ" = "BQ - W", 
+                               "BH - BQ" = "BH - BQ",
+                               "BH - DM" = "BH - DM"),
+         Fit = if_else(#calculate inverse effect for the renamed levels
+           contrast %in% c("W - BH", "W - BQ"), 
+           1/Fit, 
+           Fit),
+         contrast = factor(contrast, #reorder contrast levels
+                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
+  )
+
+
+g2 <- hm.em_mod %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  stat_slab(aes(
+    x = Fit, 
+    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans()
+  ) +
+  theme_classic() +
+  
+  labs(y = "Contrast")
+
+
+
+g.all.cont <- hm.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
   # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
@@ -2824,30 +2926,46 @@ g2<- hm.em %>%
   ), color = "black") +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
-                     trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 1.1, 1.5, 2, 4)
+                     trans = scales::log2_trans()
   ) +
-  
   theme_classic()
 g1 + g2
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.png"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.pdf"),
        g1,
        height = 5,
-       width = 10,
-       dpi = 100)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.contr.png"),
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.contr.pdf"),
        g2,
        height = 5,
-       width = 10,
-       dpi = 100)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.both.png"),
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.both.pdf"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
-       width = 15,
-       dpi = 100)
+       width = 16,
+       units = "cm",
+       dpi = 600)
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.all.contr.pdf"),
+       g.all.cont,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+
+##For powerpoint:
+ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hm.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 1000)
 
 ### Siganus doliatus abundance  =================================================
 
