@@ -4466,6 +4466,9 @@ newdata <- la.brm1 %>% emmeans(~Treatment, type = "link") %>%
   mutate(Fit = exp(.value)) %>% 
   as.data.frame
 head(newdata)
+# Reorder Treatment levels
+newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+
 
 g1 <- newdata %>% ggplot() + 
   stat_slab(aes(
@@ -4474,10 +4477,11 @@ g1 <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  ylab("L. atkinsoni abundance") +
+  ylab(expression(paste(italic("L. atkinsoni"), " abundance"))) +
   theme_classic()
+
 
 la.em <- la.brm1 %>%
   emmeans(~Treatment, type = "link") %>%
