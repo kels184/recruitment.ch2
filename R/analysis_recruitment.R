@@ -1702,7 +1702,7 @@ g2<- abnd.em_mod %>%
   ) +
   theme_classic() +
   
-  labs(y = "Total Abundance")
+  labs(y = "Contrast")
 g1 + g2
 
 g.all.cont <- abnd.em %>%
@@ -1721,10 +1721,19 @@ g.all.cont <- abnd.em %>%
   ) +
   theme_classic() +
   
-  labs(y = "Total Abundance")
-  
 ## ----end
+#blank plot:
 
+
+g3 <- ggplot() +
+  scale_x_continuous(limits = c(0, 2), breaks = c(0.5, 1, 2)) +
+  scale_y_discrete(limits = c("BH - DM", "BH - BQ", "W - BQ", "W - BH")) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  labs(x = "Effect", y = "Contrast") +
+  theme_classic()
+
+  
+g1 + element_blank()
 ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.pdf"),
        g1,
        height = 5,
@@ -1760,7 +1769,14 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.abund.both.png"),
        dpi = 1000)
 
 
-########trying to restrict
+ggsave(filename = paste0(FIGS_PATH, "/ppt/BLANK_cont.png"),
+       g3,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 1000)
+
+########trying to restrict to 
 ########
 
 
