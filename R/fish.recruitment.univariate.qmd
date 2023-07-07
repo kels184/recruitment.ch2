@@ -917,3 +917,29 @@ ar back to being far from frequentist - 0.35. Looks like W only different to BQ,
 ```
 
 
+
+
+
+#OVERALL SIZE
+First, look at the data a little
+```{r recruitment univariate size data, results = 'markdown', eval = TRUE}
+
+```
+Median the same across treatments (3). Treatment unlikely to explain variation
+
+## Fit
+I'll first fit the models gaussian (measurements, theoretically a continuous metric)
+```{r recruitment univariate size fit, results = 'markdown', eval = TRUE}
+
+```
+The base (random intercept only) performed the best. However we'll keep looking at the Treatment model for now
+
+## Validate 
+```{r recruitment univariate size validate, results = 'markdown', eval = TRUE}
+
+```
+Poor fit to the assumed distribution. Heterogeneity of variance
+```{r recruitment univariate size validate autocorrelation, results = 'markdown', eval = TRUE}
+
+```
+

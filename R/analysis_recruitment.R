@@ -4995,6 +4995,85 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sf.both.png"),
        dpi = 1000)
 
 
+### Overall Size model ==========================================================
+## ----recruitment univariate size data
+fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
+  mutate_at(c(2:5,9,11), factor)
+glimpse(fishalgaedata)
+
+fishalgaedata %>% group_by(Treatment) %>% 
+  summarise(med.Size = median(Length),
+            mad = mad(Length) )
+## ----end
+  #### Fit =======================================================================
+## ----recruitment univariate size fit
+size.glmmTMB1 <- glmmTMB(Length ~ 1 + (1|plotID), #random intercept mode
+                       data = fishalgaedata,
+                       family = gaussian(link = "identity"),
+                       REML = TRUE)
+
+size.glmmTMB2 <- update(size.glmmTMB1, .~. + Treatment) #Treatment fixed, Random int
+
+size.glmmTMB3 <- update(size.glmmTMB1, .~. + plot.weight) #plot.weight fixed, rand int
+
+AICc(size.glmmTMB1,size.glmmTMB2,size.glmmTMB3)
+
+## ----end
+
+       ####Validate =============================================================
+## ----recruitment univariate size validate
+simulateResiduals(size.glmmTMB2, plot = TRUE)
+## ----end
+
+
+## ----recruitment univariate size refit
+size.glmmTMB4 <- update(size.glmmTMB2, family = poisson(link = "log"))
+## ----end
+
+## ----recruitment univariate size validate autocorrelation
+df <- fishalgaedata %>% 
+  mutate(size.residuals = residuals(size.glmmTMB2, type = "pearson"))
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #add a lag column, values from 0-17
+         ac = acf(abnd.residuals, #in an ac column, calculate the acfs
+                  lag.max = 18, #important this is here, or it will only do the first 12
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac) #include only these cols in the output
+
+ac %>% filter(lag != 0) %>% 
+  subset(abs(ac) > 2/sqrt(18))
+
+average.ac <- ac %>% 
+  unnest(ac) %>% 
+  group_by(lag) %>% 
+  summarise(average = mean(ac))
+
+average.ac
+
+g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  labs(x = "Lag", y = "Average Autocorrelation") + 
+  theme_bw()
+
+
+
+
+#plotted separately by plotID:
+g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  facet_wrap(~plotID) +
+  labs(x = "Lag", y = "Autocorrelation") + 
+  theme_bw()
+## ----end
+## ----recruitment univariate size refit
+
+## ----end
+
+
 ### Summary Tables ==============================================================
 
 ##Combine cont.tbls (assuming they're all in the current environment)
