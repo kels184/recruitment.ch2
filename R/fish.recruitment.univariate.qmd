@@ -939,7 +939,36 @@ The base (random intercept only) performed the best. However we'll keep looking 
 
 ```
 Poor fit to the assumed distribution. Heterogeneity of variance
+
+##Refit/Revalidate
+I'll see what distribution options I have
+```{r recruitment univariate size refit, results = 'markdown', eval = TRUE, error = TRUE}
+
+```
+Gamma unavailable
+Tweedie fits
+zigamma for somem reason doesn't fit - this would be my preferred seeing as the brms has hurdle gamma models but not tweedie
+
+```{r recruitment univariate size validate, results = 'markdown', eval = TRUE}
+
+```
+tweedie model indicates some problems, however the outlier test indcates too FEW outliers, and the boxplots don't look terrible to me.there are slightly fewer values than expected in the middle area
+
+
 ```{r recruitment univariate size validate autocorrelation, results = 'markdown', eval = TRUE}
 
 ```
+Autocorrelation in the tweedie model is low and I won't worry about fitting an ac model.
+
+##Bayesian Model
+
+
+##Summary
+###Frequentist
+
+```{r recruitment univariate size frequentist summary, results = 'markdown', eval = TRUE}
+
+```
+Weirdly, there do seem to be differences among treatments - albeit small (<1cm)
+
 

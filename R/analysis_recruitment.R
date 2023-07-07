@@ -5027,21 +5027,35 @@ simulateResiduals(size.glmmTMB2, plot = TRUE)
 
 
 ## ----recruitment univariate size refit
-size.glmmTMB4 <- update(size.glmmTMB2, family = poisson(link = "log"))
+size.glmmTMB4 <- update(size.glmmTMB2, family = Gamma(link = "inverse"))
+
+size.glmmTMB4 <- update(size.glmmTMB2, family = tweedie(link = "log"))
+
+size.glmmTMB5 <- update(size.glmmTMB2, family = ziGamma(link = "inverse"))
+
+#size.glmmTMB6 <- update(size.glmmTMB2, family = gaussian(link = "log"))
+size.glmmTMB6 <- 
+## ----end
+
+## ----recruitment univariate size revalidate
+resid <- simulateResiduals(size.glmmTMB4, plot = TRUE)
+
+resid %>% testOutliers()
 ## ----end
 
 ## ----recruitment univariate size validate autocorrelation
 df <- fishalgaedata %>% 
-  mutate(size.residuals = residuals(size.glmmTMB2, type = "pearson"))
+  mutate(size.residuals = residuals(size.glmmTMB4, type = "pearson"))
 
 ac<- df %>% group_by(plotID) %>% #group by plotID
   mutate(lag = 0:(n() - 1), #add a lag column, values from 0-17
-         ac = acf(abnd.residuals, #in an ac column, calculate the acfs
+         ac = acf(size.residuals, #in an ac column, calculate the acfs
                   lag.max = 18, #important this is here, or it will only do the first 12
                   plot = FALSE
          )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
   select(plotID, lag, ac) #include only these cols in the output
 
+#how many exceed the acf plot cutofff?
 ac %>% filter(lag != 0) %>% 
   subset(abs(ac) > 2/sqrt(18))
 
@@ -5058,7 +5072,7 @@ g.av <- ggplot(average.ac, aes(y = average, x = lag) )+
   labs(x = "Lag", y = "Average Autocorrelation") + 
   theme_bw()
 
-
+g.av
 
 
 #plotted separately by plotID:
@@ -5068,11 +5082,25 @@ g.all <- ggplot(ac, aes(x = lag, y = ac)) +
   facet_wrap(~plotID) +
   labs(x = "Lag", y = "Autocorrelation") + 
   theme_bw()
-## ----end
-## ----recruitment univariate size refit
-
+g.all
 ## ----end
 
+ ####Bayesian ====================================================================
+
+
+
+ ####Summary
+##### Frequentist
+
+## ----recruitment univariate size frequentist summary
+size.glmmTMB4 %>% summary()
+
+##effect size
+exp(1.138)
+exp(1.138+0.161)
+exp(1.138+0.0979)
+## ----end
+ ##### Priors ===================================================================
 
 ### Summary Tables ==============================================================
 
