@@ -1735,7 +1735,7 @@ g.all.cont <- abnd.em %>%
 
 
 g3 <- ggplot() +
-  scale_x_continuous(limits = c(0, 2), breaks = c(0.5, 1, 2)) +
+  scale_x_continuous(limits = c(0, 2), breaks = 1) +
   scale_y_discrete(limits = c("BH - DM", "BH - BQ", "W - BQ", "W - BH")) +
   geom_vline(xintercept = 1, linetype = "dashed") +
   labs(x = "Effect", y = "Contrast") +
