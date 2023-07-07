@@ -953,7 +953,7 @@ ggsave(filename = paste0(FIGS_PATH, "/4commonDMhump.png"),
 ## Univariate modelling ========================================================
 
 
-### Abundance =================================================================
+### Total Abundance =================================================================
 ## ----recruitment univariate setup data
 fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
   mutate_at(c(2:5,9,11), factor)
@@ -1692,6 +1692,7 @@ abnd.em_mod <- abnd.em %>%
          contrast = factor(contrast, #reorder contrast levels
                            levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
          )
+
 
 
 g2<- abnd.em_mod %>%
@@ -4870,27 +4871,7 @@ sf.cont.tbl
 write.csv(sf.cont.tbl, "clipboard")
 
 
-##Combine cont.tbls (assuming they're all in the current environment)
-# Get the names of objects in the current environment that match the pattern
-object_names <- ls(pattern = "\\.cont\\.tbl$")
 
-# Initialize an empty list to store the tables
-tables <- list()
-
-# Loop through the object names and extract the relevant tables
-for (name in object_names) {
-  table <- get(name)  # Get the table associated with the name
-  table$Model <- substr(name, 1, regexpr("\\.", name) - 1)  # Extract the model name
-  
-  tables[[name]] <- table  # Store the table in the list
-}
-
-# Combine the tables into one using bind_rows()
-combined_table <- bind_rows(tables)
-
-view(combined_table)
-
-write.csv(combined_table, paste0(DATA_PATH, "/summarised/cont.tbl.csv"))
 #### Summary figures =========================================================
 
 ## ---- recruitment univariate sf figures
@@ -5013,6 +4994,32 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sf.both.png"),
        units = "cm",
        dpi = 1000)
 
+
+### Summary Tables ==============================================================
+
+##Combine cont.tbls (assuming they're all in the current environment)
+# Get the names of objects in the current environment that match the pattern
+object_names <- ls(pattern = "\\.cont\\.tbl$")
+
+# Initialize an empty list to store the tables
+tables <- list()
+
+# Loop through the object names and extract the relevant tables
+for (name in object_names) {
+  table <- get(name)  # Get the table associated with the name
+  table$Model <- substr(name, 1, regexpr("\\.", name) - 1)  # Extract the model name
+  
+  tables[[name]] <- table  # Store the table in the list
+}
+
+# Combine the tables into one using bind_rows()
+combined_table <- bind_rows(tables)
+
+view(combined_table)
+
+write.csv(combined_table, paste0(DATA_PATH, "/summarised/cont.tbl.csv"))
+
+###combine em_mods tables 
 
 ### Algae plot biomass ========================================================
 dat<- algaedata %>% 
