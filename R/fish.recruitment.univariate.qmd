@@ -969,6 +969,6 @@ Autocorrelation in the tweedie model is low and I won't worry about fitting an a
 ```{r recruitment univariate size frequentist summary, results = 'markdown', eval = TRUE}
 
 ```
-Weirdly, there do seem to be differences among treatments - albeit small (<1cm)
+There do seem to be differences among treatments - albeit small (<1cm)
 
 
