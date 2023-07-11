@@ -3629,7 +3629,7 @@ ps.resid <- ps.glmmTMB2 %>% simulateResiduals(plot = TRUE)
 
 ##### Temporal autocorrelation test ================================================
 
-## ----recruitment univariate sd validate autocorrelation
+## ----recruitment univariate ps validate autocorrelation
 df <- common.abnd %>% 
   filter(Species == "Petroscirtes sp.") %>% #add residuals to this df
   mutate(ps.residuals = residuals(ps.glmmTMB2, type = "pearson")) 
@@ -3689,16 +3689,61 @@ ps.glmmTMB.ac <- update(ps.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
 
 ps.glmmTMB.ac %>% AICc(.,ps.glmmTMB2)
 
-acf(residuals(ps.glmmTMB.ac, method = "pearson"))$acf
 
 ps.ac.resid <- ps.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
-#ps.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
-#                                           filter(Species == "Halichoeres miniatus") %>% 
-#                                           pull(TIME) )
 
-ps.ac.resid %>% testDispersion()
-#some evidence of underdispersion
 
+## AC check
+df <- common.abnd %>% 
+  filter(Species == "Petroscirtes sp.") %>% #add residuals to this df
+  mutate(ps.residuals = residuals(ps.glmmTMB.ac, type = "pearson")) 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(ps.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+(average.ac <- ac %>% 
+    unnest(ac) %>% 
+    group_by(lag) %>% 
+    summarise(average = mean(abs(ac))) )
+
+
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    labs(x = "Lag", y = "Average Autocorrelation") + 
+    theme_bw() )
+
+
+
+
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    facet_wrap(~plotID) +
+    labs(x = "Lag", y = "Autocorrelation") + 
+    theme_bw() )
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.psAC.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.psAC.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
 #### Partial ====================================================================
 
 ## ----recruitment univariate ps partial
@@ -4163,7 +4208,62 @@ pt.resid <- pt.glmmTMB2 %>% simulateResiduals(plot = TRUE)
 pt.resid %>% testDispersion()
 pt.resid %>% testUniformity()
 
-acf(residuals(pt.glmmTMB2, method = "pearson"))$acf
+##### Temporal autocorrelation test ================================================
+
+## ----recruitment univariate pt validate autocorrelation
+df <- common.abnd %>% 
+  filter(Species == "Pomacentrus tripunctatus") %>% #add residuals to this df
+  mutate(pt.residuals = residuals(pt.glmmTMB2, type = "pearson")) 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(pt.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+View(ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+(average.ac <- ac %>% 
+    unnest(ac) %>% 
+    group_by(lag) %>% 
+    summarise(average = mean(abs(ac))) )
+
+
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    labs(x = "Lag", y = "Average Autocorrelation") + 
+    theme_bw() )
+
+
+
+
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    facet_wrap(~plotID) +
+    labs(x = "Lag", y = "Autocorrelation") + 
+    theme_bw() )
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.pt.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.pt.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
+
 
 
 ## ----end
