@@ -5103,16 +5103,102 @@ g.all
   #### Partial ==================================================================
 
 ## ---- recruitment univariate size partial
+
 ##make sure fishalgaedata is a data frame before fitting!
+
 size.zig %>% ggpredict(terms = "Treatment") %>% plot()
 ## ----end
 
  ####Bayesian ====================================================================
 
-
-
  ##### Priors ===================================================================
 
+## ---- recruitment univariate size priors
+#for intercept
+fishalgaedata %>% group_by(Treatment) %>% 
+  summarise(med.Size = 1/median(Length),
+            mad = 1/mad(Length) )
+
+#for effect:
+1/fishalgaedata$Length %>% sd()/ 1/apply(model.matrix(~Treatment, 
+                                                  data = fishalgaedata), 
+                                     2, sd)
+size.form <- bf(Length ~ Treatment
+                + (1|plotID),
+                hu = ~ 1,
+                family = hurdle_gamma(link = "inverse"))
+
+#what are the default
+size.form %>% get_prior(data= fishalgaedata)
+
+priors <- prior(normal(3,1), class = "Intercept") + 
+  prior(normal(0,5), class= "b") + 
+  prior(cauchy(0,1), class = "sd") 
+## ----end
+
+ ##### Fit ======================================================================
+
+## ---- recruitment univariate size brmsfit
+
+size.brm1 <- brm(size.form,
+            data = fishalgaedata,
+            prior = priors,
+            sample_prior = "yes",
+            iter = 5000, warmup = 1000,
+            chains = 3, cores = 3, 
+            thin = 5,
+            seed = 123)
+size.brm1 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/size.brm1.rds"))
+## ----end
+
+
+ ##### Prior Checks =============================================================
+## ----recruitment univariate size brm1 prior checks
+
+size.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/size.brm1.rds"))
+
+size.brm1 %>% get_variables()
+
+size.brm1 %>% 
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '^(b|prior)(?!.*hu).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'intercept' at the end and does not contain "hu"
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains la ('sderr' will be included)
+           str_detect(key, 'hu') ~ 'hu', #hu, if it contains hu
+           str_detect(key, 'shape') ~ 'shape'), #shape, if it contains shaape
+         Par = str_replace(key, 'b_', '')) %>% 
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+## ----end
+
+## ----recruitment univariate size brm2 priors
+
+priors <- prior(normal(.3,1), class = "Intercept") + 
+  prior(normal(0,1), class= "b") + 
+  prior(cauchy(0,.5), class = "sd") + 
+  prior(logistic(0,3), class = "hu") +
+  prior(gamma(1,1), class = "shape")
+
+size.brm2 <- brm(size.form,
+                 data = fishalgaedata,
+                 prior = priors,
+                 sample_prior = "yes",
+                 iter = 5000, warmup = 1000,
+                 chains = 3, cores = 3, 
+                 thin = 5,
+                 seed = 123)
+size.brm2 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/size.brm2.rds"))
+## ----end
 
  ####Summary
 ##### Frequentist

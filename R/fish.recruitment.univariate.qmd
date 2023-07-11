@@ -966,12 +966,36 @@ Autocorrelation in the tweedie model is low and I won't worry about fitting an a
 ```
 
 ##Bayesian Model
+### Priors
+```{r recruitment univariate size priors, results = 'markdown', eval = TRUE}
+
+```
 
 
+### Fitting
+```{r recruitment univariate size brmsfit, results = 'markdown', eval = FALSE}
+
+```
+
+A bunch of warnings/errors but this model did fit in about 7min 40
+
+###Prior Checks
+
+```{r recruitment univariate size priors, results = 'markdown', eval = TRUE}
+
+```
+Priors were too wide for Intercept and effect (forgot inverse link) and for sd, but not wide enough for shape and mu
+
+
+###Refit
+
+```{r recruitment univariate size brm2 priors, results = 'markdown', eval = FALSE}
+
+```
 ##Summary
 ###Frequentist
 
-```{r recruitment univariate size frequentist summary, results = 'markdown', eval = TRUE}
+```{r recruitment univariate size brm1 prior checks, results = 'markdown', eval = TRUE}
 
 ```
 There do seem to be differences among treatments - albeit small (<1cm)
