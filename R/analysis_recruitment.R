@@ -3158,7 +3158,7 @@ sd.resid <- sd.glmmTMB2 %>% simulateResiduals(plot = TRUE)
 
 ## ----recruitment univariate sd validate autocorrelation
 df <- common.abnd %>% 
-  filter(Species == "Siganus doliatus") %>% #add residuals to fish.sd.abnd
+  filter(Species == "Siganus doliatus") %>% #add residuals to this
   mutate(sd.residuals = residuals(sd.glmmTMB2, type = "pearson")) 
 
 ac<- df %>% group_by(plotID) %>% #group by plotID
@@ -3214,7 +3214,9 @@ sd.glmmTMB.ac <- update(sd.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
 
 sd.glmmTMB.ac %>% AICc(., sd.glmmTMB2)
 
-acf(residuals(sd.glmmTMB.ac, method = "pearson"))
+sd.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
+
+sd.glmmTMB.ac %>% testDispersion()
 
 
 ## Autocorrelation checks
@@ -3623,18 +3625,63 @@ MuMIn::AICc(ps.glmmTMB1,ps.glmmTMB2, ps.glmmTMB3)
 ## ---- recruitment univariate ps validate
 ps.resid <- ps.glmmTMB2 %>% simulateResiduals(plot = TRUE)
 
-##check autocorrelation
-#common.abnd <- common.abnd %>% 
- # mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
-
-#ps.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
-  #                                        filter(Species == "Petroscirtes sp.") %>% 
-   #                                       pull(TIME) ) #extract just the Time column as a vector
-
-acf(residuals(ps.glmmTMB2, method = "pearson"))$acf
-
-
 ## ----end
+
+##### Temporal autocorrelation test ================================================
+
+## ----recruitment univariate sd validate autocorrelation
+df <- common.abnd %>% 
+  filter(Species == "Petroscirtes sp.") %>% #add residuals to this df
+  mutate(ps.residuals = residuals(ps.glmmTMB2, type = "pearson")) 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(ps.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+(average.ac <- ac %>% 
+    unnest(ac) %>% 
+    group_by(lag) %>% 
+    summarise(average = mean(abs(ac))) )
+
+
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    labs(x = "Lag", y = "Average Autocorrelation") + 
+    theme_bw() )
+
+
+
+
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    facet_wrap(~plotID) +
+    labs(x = "Lag", y = "Autocorrelation") + 
+    theme_bw() )
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.ps.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.ps.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
+
+
 
 ## ----recruitment univariate ps refit revalidate
 

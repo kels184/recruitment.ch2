@@ -531,7 +531,7 @@ ac model better by aicc
 
 ```{r recruitment univariate sd partial, results = 'markdown', eval = TRUE}
 ```
-NOTE thisis just not the ac model. Very similar to total abundance, but a clear winner with W higher than everything else. BH does appear less than DM
+NOTE this is just not the ac model. Very similar to total abundance, but a clear winner with W higher than everything else. BH does appear less than DM
 
 ## Bayesian Model
 ### Initial priors
@@ -624,11 +624,15 @@ treatment model best
 ```
 no residual problems, autocorrelation low? - need murray's response
 
-Looks like there is autocorrelation, (at least in plotID 1)
+```{r recruitment univariate ps validate autocorrelation, results = 'markdown', eval = TRUE}
+
+```
+
+Looks like there is autocorrelation, cutoff exceeded 5 times (all treatments)
 
 ```{r recruitment univariate ps refit revalidate, results = 'markdown', eval = TRUE}
 ```
-ac model better by aicc, no residual problems
+ac model better by aicc, no residual problems. Autocorrelation slightly reduced, 3 instead of 5 times cutoff exceeded
 
 ## Partial Plot
 
