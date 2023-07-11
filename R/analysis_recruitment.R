@@ -4215,12 +4215,16 @@ df <- common.abnd %>%
   filter(Species == "Pomacentrus tripunctatus") %>% #add residuals to this df
   mutate(pt.residuals = residuals(pt.glmmTMB2, type = "pearson")) 
 
+
+df %>% group_by(plotID) %>% 
+  summarise(pt.sightings = sum(abundance)) %>% view()
+
 ac<- df %>% group_by(plotID) %>% #group by plotID
   mutate(lag = 0:(n() - 1), #lag column, values from 0-17
          ac = acf(pt.residuals, #calculate the acfs
                   lag.max = 18, 
                   plot = FALSE
-         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+         )$acf[lag+1])  %>%  #extract the value of acf at the lag+1th spot
   select(plotID, lag, ac)
 
 View(ac)
@@ -4229,6 +4233,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
   subset(abs(ac) > 2/sqrt(18))
 
 (average.ac <- ac %>% 
+    filter(!plotID %in% c("BQ4", "DL1")) %>% 
     unnest(ac) %>% 
     group_by(lag) %>% 
     summarise(average = mean(abs(ac))) )
@@ -4274,15 +4279,65 @@ pt.glmmTMB.ac <- update(pt.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
 
 pt.glmmTMB.ac %>% AICc(.,pt.glmmTMB2)
 
-acf(residuals(pt.glmmTMB.ac, method = "pearson"))$acf
-
 pt.ac.resid <- pt.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
-#pt.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
-#                                           filter(Species == "Halichoeres miniatus") %>% 
-#                                           pull(TIME) )
 
-pt.ac.resid %>% testDispersion()
-#some evidence of underdispersion
+df <- common.abnd %>% 
+  filter(Species == "Pomacentrus tripunctatus") %>% #add residuals to this df
+  mutate(pt.residuals = residuals(pt.glmmTMB.ac, type = "pearson")) 
+
+
+#df %>% group_by(plotID) %>% summarise(pt.sightings = sum(abundance)) %>% view()
+ 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(pt.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1])  %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+#View(ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+(average.ac <- ac %>% 
+   # filter(!plotID %in% c("BQ4", "DL1")) %>% don't need to remove here because no NAs
+    unnest(ac) %>% 
+    group_by(lag) %>% 
+    summarise(average = mean(abs(ac))) )
+
+
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    labs(x = "Lag", y = "Average Autocorrelation") + 
+    theme_bw() )
+
+
+
+
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    facet_wrap(~plotID) +
+    labs(x = "Lag", y = "Autocorrelation") + 
+    theme_bw() )
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.ptAC.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.ptAC.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
 
 #### Partial ====================================================================
 

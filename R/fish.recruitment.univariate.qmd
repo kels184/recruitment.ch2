@@ -715,11 +715,16 @@ treatment model best
 ## Validate
 ```{r recruitment univariate pt validate, results = 'markdown', eval = TRUE}
 ```
-some problems already - slight non-uniformity, slight bit of heterogeneity. I think it's ok. We'll see with the ac model (there is evidence of autocorrelation)
+some problems already - slight non-uniformity, slight bit of heterogeneity. I think it's ok. We'll see with the ac model 
+
+```{r recruitment univariate pt validate autocorrelation, results = 'markdown', eval = TRUE}
+```
+
+there is evidence of autocorrelation - cutoff exceeded 10 times
 
 ```{r recruitment univariate pt refit revalidate, results = 'markdown', eval = TRUE}
 ```
-ac model better by aicc, seems, to have improved autocorrelation, uniformity now ok. a little underdispersed (more conservative). I'm happy with the box plots despite the warning
+ac model better by aicc, seems, has improved autocorrelation (3 times exceeded, 2 of those times it was in patches where Pomacentrus tripunctatus was never recorded, BQ4 and DL1), uniformity now ok. a little underdispersed (more conservative). I'm happy with the box plots despite the warning
 
 ## Partial Plot
 
