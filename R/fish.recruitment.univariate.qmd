@@ -981,7 +981,7 @@ A bunch of warnings/errors but this model did fit in about 7min 40
 
 ###Prior Checks
 
-```{r recruitment univariate size priors, results = 'markdown', eval = TRUE}
+```{r recruitment univariate size brm1 prior checks, results = 'markdown', eval = TRUE}
 
 ```
 Priors were too wide for Intercept and effect (forgot inverse link) and for sd, but not wide enough for shape and mu
@@ -989,9 +989,30 @@ Priors were too wide for Intercept and effect (forgot inverse link) and for sd, 
 
 ###Refit
 
-```{r recruitment univariate size brm2 priors, results = 'markdown', eval = FALSE}
+```{r recruitment univariate size brm2 fit, results = 'markdown', eval = FALSE}
 
 ```
+refit in 8 mins
+
+```{r recruitment univariate size brm2 prior checks, results = 'markdown', eval = TRUE}
+```
+Prior distributions look fine, wide in most cases but not shifting any posteriors
+
+## MCMC
+
+```{r recruitment univariate sf brm2 MCMC, results = 'markdown', eval = TRUE}
+
+```
+no issues presenting themselves
+
+
+## DHARMa residuals
+ 
+```{r recruitment univariate size brm DHARMa, results = 'markdown', eval = TRUE}
+
+```
+Some issues (unifirmity) but I'm not too concerned - slightly fewer in the mid range of expected values but otherwise qq is a straight line
+
 ##Summary
 ###Frequentist
 
@@ -1000,4 +1021,27 @@ Priors were too wide for Intercept and effect (forgot inverse link) and for sd, 
 ```
 There do seem to be differences among treatments - albeit small (<1cm)
 
+Zero-inflation model - a binomial (logit link)
+% of zeroes false: plogis(-7.18) = `r plogis(-7.3)*100`% of zeroes are false. There were 3, so basically none
 
+###Bayesian
+
+```{r recruitment univariate size brm summary, results = 'markdown', eval = TRUE}
+
+```
+similar zero-inflation estimate (-7.3) - ~.07% of zeroes are false. Appears to be evidence of a difference between treatment BH and BQ
+
+The model did a very poor job of accounting for variation in fish size - 1.3% explained by Treatment, 2.8% including random effects.
+
+```{r recruitment univariate size brm contrasts, results = 'markdown', eval = TRUE}
+
+```
+There is evidence (very strong in some cases) of among treatment differences. But is there any evidence of differences of about half a cm or more, the minimum size I could confidently differentiate?
+
+Table 1 shows that the highest upper 95% credible limit was .085 (for BH-BQ), the lowest was -0.078 (for BQ-DM). That corresponds to a difference of (1/(.32067-0.0491)) * .0854  `r (1/(.32067-0.0491)) * .0854` (0.31cm) and (1/(.32067-0.000917)) * .078 `r (1/(.32067-0.000917)) * .078` (0.24cm). A 0.5cm difference would mean a contrast value of 0.5 / 3 = .16 
+
+
+```{r recruitment univariate size brm contrasts, results = 'markdown', eval = TRUE}
+
+```
+There was no evidence of a 0.5cm or more difference for any contrast, nor even for a difference of half that (0.25cm), the smallest interval of size I tried to estimate in the field

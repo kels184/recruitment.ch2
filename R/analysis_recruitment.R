@@ -4816,7 +4816,7 @@ resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated pre
 #Step 3 - plot!
 plot(resids)
 
-
+## ----end
 
 #### Model Investigation ========================================================
 #Frequentist
@@ -5179,15 +5179,21 @@ size.brm1 %>%
   stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
   facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
 
+standist::visualize("logistic(-7,1)", xlim = c(-20,0) )
+standist::visualize("gamma(4,1)", xlim = c(0,20) )
+standist::visualize("normal(.3,.5)", xlim = c(-5,5) )
+standist::visualize("cauchy(0,.1", xlim = c(0,1))
 ## ----end
 
-## ----recruitment univariate size brm2 priors
 
-priors <- prior(normal(.3,1), class = "Intercept") + 
-  prior(normal(0,1), class= "b") + 
-  prior(cauchy(0,.5), class = "sd") + 
-  prior(logistic(0,3), class = "hu") +
-  prior(gamma(1,1), class = "shape")
+
+## ----recruitment univariate size brm2 fit
+
+priors <- prior(normal(.3,.5), class = "Intercept") + 
+  prior(normal(0,.5), class= "b") + 
+  prior(cauchy(0,.1), class = "sd") + 
+  prior(logistic(-7,1), class = "Intercept", dpar = "hu") +
+  prior(gamma(4,1), class = "shape")
 
 size.brm2 <- brm(size.form,
                  data = fishalgaedata,
@@ -5200,8 +5206,88 @@ size.brm2 <- brm(size.form,
 size.brm2 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/size.brm2.rds"))
 ## ----end
 
- ####Summary
-##### Frequentist
+## ----recruitment univariate size brm2 prior checks
+
+size.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/size.brm2.rds"))
+
+size.brm2 %>% 
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '^(b|prior)(?!.*hu).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'intercept' at the end and does not contain "hu"
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains la ('sderr' will be included)
+           str_detect(key, 'hu') ~ 'hu', #hu, if it contains hu
+           str_detect(key, 'shape') ~ 'shape'), #shape, if it contains shaape
+         Par = str_replace(key, 'b_', '')) %>% 
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+## ----end
+
+
+   #####MCMC =====================================================================
+
+## ----recruitment univariate sf brm2 MCMC
+size.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/size.brm2.rds"))
+
+pars <- size.brm2 %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^shape.*') %>% #that start with b, sf or shape
+  na.omit # omit the rest, resulting in an object of class 'omit'
+#wch
+##Trace Plots
+stan_trace(size.brm2$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(size.brm2$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(size.brm2$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(size.brm2$fit, pars = wch)
+
+##Density plot
+stan_dens(size.brm2$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+size.brm2%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+## ----end
+
+##### DHARMA Residuals ==========================================================
+
+## ---- recruitment univariate size brm DHARMa
+
+#step 1. Draw out predictions
+preds <- size.brm2 %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                       summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                       observedResponse = fishalgaedata$Length, #real response
+                       fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                       integerResponse = "FALSE" #is the response an integer? NO
+                       #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(resids)
+
+## ----end
+
+ ####Model Invesstigation =======================================================
+##### Frequentist ===============================================================
 
 ## ----recruitment univariate size frequentist summary
 size.zig %>% summary()
@@ -5214,6 +5300,91 @@ size.zig1 %>% summary()
 
 ## ----end
 
+##### Bayesian ==================================================================
+
+## ----recruitment univariate size brm summary
+size.brm2$fit %>% tidyMCMC(pars = wch,
+                           estimate.method = "median",
+                           conf.int = TRUE,
+                           conf.method = "HPDinterval",
+                           rhat = TRUE,
+                           ess = TRUE)
+
+#"Marginal"
+size.brm2 %>% brms::bayes_R2(re.form = NA, #or ~Treatment
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+# "Conditional"
+size.brm2 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+
+## ----end
+
+## ---- recruitment univariate size brm contrasts
+size.brm2%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale - doesn't change anything in this case
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  median_hdci(.value) #show median and hdcis of each contrast
+
+size.cont.tbl <- size.brm2%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% 
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+         'P<' = sum(.value<0)/n(),
+  ) %>% 
+  ungroup() %>% 
+  mutate(exc.evidence = case_when(
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
+    `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
+    `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+size.cont.tbl
+
+## ----end
+
+##  recruitment univariate size brm contrasts2
+
+size.cont.tbl2 <- size.brm2%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% 
+  summarise('P>0.5cm' = sum(.value>0.16)/n(), #exceedance probabilities
+         'P<-0.5cm' = sum(.value<-.16)/n(),
+  ) %>% 
+  ungroup() %>% 
+  mutate(exc.evidence = case_when(
+    `P>0.5cm` >= 0.99 | `P<-0.5cm` >= 0.99 ~ "very strong",
+    `P>0.5cm` >= 0.95 |`P<-0.5cm` >= 0.95 ~ "strong",
+    `P>0.5cm` >= 0.90 |`P<-0.5cm` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+
+size.cont.tbl2
+
+size.brm2%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% 
+  summarise('P>0.25cm' = sum(.value>0.08)/n(), #exceedance probabilities
+         'P<-0.25cm' = sum(.value<-.08)/n(),
+  ) %>% 
+  ungroup() %>% 
+  mutate(exc.evidence = case_when(
+    `P>0.25cm` >= 0.99 | `P<-0.25cm` >= 0.99 ~ "very strong",
+    `P>0.25cm` >= 0.95 |`P<-0.25cm` >= 0.95 ~ "strong",
+    `P>0.25cm` >= 0.90 |`P<-0.25cm` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+## ----end
 
 
 ### Summary Tables ==============================================================
