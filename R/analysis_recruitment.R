@@ -4996,9 +4996,12 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sf.both.png"),
 
 
 ### Overall Size model ==========================================================
+
+
 ## ----recruitment univariate size data
 fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
-  mutate_at(c(2:5,9,11), factor)
+  mutate_at(c(2:5,9,11), factor) %>% 
+  as.data.frame()
 glimpse(fishalgaedata)
 
 fishalgaedata %>% group_by(Treatment) %>% 
@@ -5022,7 +5025,9 @@ AICc(size.glmmTMB1,size.glmmTMB2,size.glmmTMB3)
 
        ####Validate =============================================================
 ## ----recruitment univariate size validate
-simulateResiduals(size.glmmTMB2, plot = TRUE)
+resid <- simulateResiduals(size.glmmTMB2, plot = TRUE)
+resid %>% testUniformity()
+resid %>% testCategorical(catPred = fishalgaedata$Treatment)
 ## ----end
 
 
@@ -5031,21 +5036,31 @@ size.glmmTMB4 <- update(size.glmmTMB2, family = Gamma(link = "inverse"))
 
 size.glmmTMB4 <- update(size.glmmTMB2, family = tweedie(link = "log"))
 
-size.glmmTMB5 <- update(size.glmmTMB2, family = ziGamma(link = "inverse"))
+size.zig <- glmmTMB(Length ~ Treatment + (1|plotID), zi = ~1, data = fishalgaedata,
+                    family = ziGamma(link = "inverse"),
+                    REML = TRUE)
 
-#size.glmmTMB6 <- update(size.glmmTMB2, family = gaussian(link = "log"))
-size.glmmTMB6 <- 
+size.zig1 <- glmmTMB(Length ~ Treatment + (1|plotID), zi = ~ Treatment, data = fishalgaedata,
+                     family = ziGamma(link = "inverse"),
+                     REML = TRUE)
+
+#size.glmmTMB6 <- update(size.glmmTMB2, family = ziGamma(link = "identity"))
+
 ## ----end
 
 ## ----recruitment univariate size revalidate
-resid <- simulateResiduals(size.glmmTMB4, plot = TRUE)
+resid <- simulateResiduals(size.zig, plot = TRUE)
+resid %>% testUniformity()
+resid %>% testCategorical(catPred = fishalgaedata$Treatment)
 
-resid %>% testOutliers()
+resid1 <- simulateResiduals(size.zig1, plot = TRUE)
+resid %>% testUniformity()
+resid %>% testCategorical(catPred = fishalgaedata$Treatment)
 ## ----end
 
 ## ----recruitment univariate size validate autocorrelation
 df <- fishalgaedata %>% 
-  mutate(size.residuals = residuals(size.glmmTMB4, type = "pearson"))
+  mutate(size.residuals = residuals(size.zig, type = "pearson"))
 
 ac<- df %>% group_by(plotID) %>% #group by plotID
   mutate(lag = 0:(n() - 1), #add a lag column, values from 0-17
@@ -5085,22 +5100,35 @@ g.all <- ggplot(ac, aes(x = lag, y = ac)) +
 g.all
 ## ----end
 
+  #### Partial ==================================================================
+
+## ---- recruitment univariate size partial
+##make sure fishalgaedata is a data frame before fitting!
+size.zig %>% ggpredict(terms = "Treatment") %>% plot()
+## ----end
+
  ####Bayesian ====================================================================
 
+
+
+ ##### Priors ===================================================================
 
 
  ####Summary
 ##### Frequentist
 
 ## ----recruitment univariate size frequentist summary
-size.glmmTMB4 %>% summary()
+size.zig %>% summary()
+size.zig1 %>% summary()
 
 ##effect size
-exp(1.138)
-exp(1.138+0.161)
-exp(1.138+0.0979)
+1/.32
+
+1/(.32-.05)
+
 ## ----end
- ##### Priors ===================================================================
+
+
 
 ### Summary Tables ==============================================================
 
@@ -5456,7 +5484,8 @@ scores(fish.mds, choices = 1:3, display = c("sites")) #this seemed to work, alth
 ## ----recruitment size data
 
 fishalgaedata <- read_csv(file = paste0(DATA_PATH, "processed/fishalgaedata.csv")) %>% 
-  mutate_at(c(2:5,9), factor)
+  mutate_at(c(2:5,9), factor) %>% 
+  as.data.frame()
 glimpse(fishalgaedata)
 
 
