@@ -75,8 +75,7 @@ residuals look quite  good.
 ```
 
 
-
-However, there appears to be definite autocorrelation
+However, there appears to be autocorrelation
 
  - Fit with autocorrelation
 ```{r recruitment univariate abundance refit autocorrelation, results = 'markdown', eval = TRUE}
@@ -266,8 +265,15 @@ As with abundance, the Treatment + RE of plot model performed best, despite cons
 ```
 The residuals are showing signs of underdispersion (i.e. results more conservative). The Levene test is also warning that the homogeneity of variance assumption is violated. However the box plots look ok to me
 
-Definite autocorrelation of the residuals
+### Temporal autocorrelation
 
+```{r recruitment univariate sp validate autocorrelation, results = 'markdown', eval = TRUE}
+
+```
+
+There appears to be autocorrelation - particularly in treatments DL, DM and W
+
+ - Fit with autocorrelation
 
 ```{r recruitment univariate sp refit autocor, results = 'markdown', eval = TRUE}
 
@@ -279,12 +285,14 @@ Despite there being evidence of autocorrelation, the ac model performed about th
 ```
 Similar problems evident (underdispersion), but without the red flag for the Levene test. 
 
-Concerningly, autocorrelation doesn't seem to have been resolved (at lag 1, acf was 0.23, reduced from 0.29)
+```{r recruitment univariate sp revalidate autocor, results = 'markdown', eval = TRUE, cache = TRUE}
 
+```
+The autocorrelation model has improved the autocorrelation issue, reducing the number of times the cutoff is exceeded by 2/3rds (9 to 3)
 
 ## Partial Plot
-```{r recruitment univariate sp partial, results='markdown', eval = TRUE}
-
+```{r recruitment univariatesp partial, results='markdown', eval = TRUE}
+ 
 ```
 
 ## Bayesian Model
@@ -418,13 +426,17 @@ The best model for halichoeres miniatus was the Treatment model (with random int
 ```{r recruitment univariate hm validate, results = 'markdown', eval = TRUE}
 
 ```
-autocorrelation the only problem
+
+```{r recruitment univariate hm validate autocor, results = 'markdown', eval = TRUE}
+
+```
+Autocorrelation not of too much concern - the cutoff was exceeded only twice(in BH5)
 
 
 ```{r recruitment univariate hm refit revalidate, results = 'markdown', eval = TRUE}
 
 ```
-After the refit incorporating autocorrelation, acf is reduced (e.g. at lag 1 and 2: before - 0.15,0.14. after - -.08, .02)
+After the refit incorporating autocorrelation, acf is reduced slightly on averagee and there is 1 less acf value exceeding the cutoff (2-1)
 
 ##Partial Plot
 
@@ -501,10 +513,18 @@ The best model for Siganus doliatus was the Treatment model (with random interce
 Boxplots look ok despite heterogeneity of variance warning. QQ plot, ks tests fine
 
 
-Looks like there is autocorrelation, (at least in plotID 1)
+### Temporal autocorrelation
+
+```{r recruitment univariate sd validate autocorrelation, results = 'markdown', eval = TRUE}
+
+```
+There is autocorrelation, the vutoff was exceeded 7 times, at least once in all treatments
+
 ```{r recruitment univariate sd refit revalidate, results = 'markdown', eval = TRUE}
 ```
-the ar1 term appears to improve autocorrelation. Possibly a little underdispersed, (but much less than other models I've dealt with)
+
+
+the ar1 term appears to improve autocorrelation - only exceeded twice Possibly a little underdispersed, (but much less than other models I've dealt with)
 ac model better by aicc
 
 ## Partial Plot

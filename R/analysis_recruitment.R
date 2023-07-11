@@ -1050,7 +1050,7 @@ ac %>% filter(lag != 0) %>%
 average.ac <- ac %>% 
   unnest(ac) %>% 
   group_by(lag) %>% 
-  summarise(average = mean(ac))
+  summarise(average = mean(abs(ac)))
 
 average.ac
 
@@ -1107,15 +1107,6 @@ AICc(abnd.glmmTMB.ac, abnd.glmmTMB2)
 abnd.ac.resid <- abnd.glmmTMB.ac %>% simulateResiduals(plot = T)
 
 ## ----end
-#abnd.ac.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
-
-#acf(residuals(abnd.glmmTMB.ac, type = "pearson"))
-#autocorrelation accounted for
-
-#resid1 <- recalculateResiduals(abnd.ac.resid, group = fish.sp.abnd$Date)
-#testTemporalAutocorrelation(resid1, time = unique(fish.sp.abnd$Date))
-##despite DHARMA not seeing this
-
 
 ## ----recruitment univariate abundance revalidate acf
 df <- fish.sp.abnd %>% 
@@ -1134,7 +1125,7 @@ ac.ac %>% filter(lag != 0) %>%
 average.ac.ac <- ac.ac %>% 
   unnest(ac) %>% 
   group_by(lag) %>% 
-  summarise(average = mean(ac))
+  summarise(average = mean(abs(ac)))
 
 average.ac.ac
 
@@ -1864,28 +1855,63 @@ sp.resid <- sp.glmmTMB2 %>% simulateResiduals(plot = TRUE)
 sp.resid %>% testDispersion()
 sp.resid %>% testUniformity()
 #showing problems (underdispersion)
-#fish.sp.abnd <- fish.sp.abnd %>% 
-#  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
 
-#sp.resid %>% testTemporalAutocorrelation(time = fish.sp.abnd$TIME)
-
-#sp.resid %>% testTemporalAutocorrelation(time =fish.sp.abnd$Day)
-
-#test <- data.frame(Resid = sp.resid$scaledResiduals, group = fish.sp.abnd$plotID, 
-#           Day = fish.sp.abnd$Day) %>%
-#  group_by(Day) %>%
-#  summarise(Resid = mean(Resid)) #something murray tried
-
-sp.resid.recalc <- sp.resid %>% recalculateResiduals(group = fish.sp.abnd$Date)
-
-sp.resid.recalc %>% testTemporalAutocorrelation(time = unique(fish.sp.abnd$Date))
-#definitely autocorrelation, and DHARMa is picking it up
-
-acf(residuals(sp.glmmTMB2, type = "pearson"))
-c#acf also shows autocorrelation
 ## ----end
 
-## recruitment univariate sp refit autocor
+##### Temporal autocorrelation test ================================================
+
+## ----recruitment univariate sp validate autocorrelation
+df <- fish.sp.abnd %>% #add residuals to fish.sp.abnd
+  mutate(sp.residuals = residuals(sp.glmmTMB2, type = "pearson")) 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(sp.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+(average.ac <- ac %>% 
+  unnest(ac) %>% 
+  group_by(lag) %>% 
+  summarise(average = mean(abs(ac))) )
+
+
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  labs(x = "Lag", y = "Average Autocorrelation") + 
+  theme_bw() )
+
+
+
+
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+  geom_col() + 
+  geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+  facet_wrap(~plotID) +
+  labs(x = "Lag", y = "Autocorrelation") + 
+  theme_bw() )
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.sp.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.sp.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
+
+## ----recruitment univariate sp refit autocor
 
 sp.glmmTMB.ac <- update(sp.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID))
 AICc(sp.glmmTMB.ac,sp.glmmTMB2)
@@ -1898,54 +1924,61 @@ saveRDS(sp.glmmTMB.ac, file = paste0(DATA_PATH, "modelled/sp.glmmTMB.ac.rds") )
 sp.glmmTMB.ac <- readRDS(file = paste0(DATA_PATH, "modelled/sp.glmmTMB.ac.rds"))
 
 sp.ac.resid <- sp.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
-sp.ac.resid %>% testTemporalAutocorrelation((time = fish.sp.abnd$TIME))
+
 sp.ac.resid %>% testDispersion()
 
-sp.ac.resid.recalc <- sp.ac.resid %>% recalculateResiduals(group = fish.sp.abnd$Date)
-
-sp.ac.resid.recalc %>%  testTemporalAutocorrelation(time = unique(fish.sp.abnd$Date))
-
-acf(residuals(sp.glmmTMB.ac, type = "pearson"))
-
 ## ----end
 
-## ---- recruitment univariate sp ac residuals v date
-g1 <- ggplot(fish.sp.abnd) + aes(y = sp.ac.resid$fittedResiduals, x = Day) +
-  geom_point() +
-  geom_line() +
-  facet_wrap(~plotID)
+## ----recruitment univariate sp revalidate autocor
+df <- fish.sp.abnd %>% #add residuals to fish.sp.abnd
+  mutate(sp.residuals = residuals(sp.glmmTMB.ac, type = "pearson")) 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(sp.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+average.ac <- ac %>% 
+    unnest(ac) %>% 
+    group_by(lag) %>% 
+    summarise(average = mean(ac))
 
 
-g2 <- ggplot(fish.sp.abnd) + aes(y = sp.ac.resid$scaledResiduals, x = Day) +
-  geom_point() +
-  geom_line() +
-  facet_wrap(~plotID)
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    labs(x = "Lag", y = "Average Autocorrelation") + 
+    theme_bw() )
 
-#before the ac term:
-g3 <- ggplot(fish.sp.abnd) + aes(y = sp.resid$scaledResiduals, x = Day)+
-  geom_point() +
-  geom_line() +
-  facet_wrap(~plotID)
 
-ggsave(filename = paste0(FIGS_PATH, "/spAC.fit.residuals.date.png"),
-       g1,
-       width = 40,
-       height = 25,
-       dpi = 100)
 
-ggsave(filename = paste0(FIGS_PATH, "/spAC.sc.residuals.date.png"),
-       g2,
-       width = 40,
-       height = 25,
-       dpi = 100)
 
-ggsave(filename = paste0(FIGS_PATH, "/spNOAC.sc.residuals.date.png"),
-       g3,
-       width = 40,
-       height = 25,
-       dpi = 100)
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    facet_wrap(~plotID) +
+    labs(x = "Lag", y = "Autocorrelation") + 
+    theme_bw() )
 ## ----end
 
+ggsave(filename = paste0(FIGS_PATH, "/acf.spAC.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.spAC.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
 
    #### Partial Plot ============================================================
 ## ---- recruitment univariate sp partial
@@ -2636,18 +2669,62 @@ MuMIn::AICc(hm.glmmTMB1,hm.glmmTMB2, hm.glmmTMB3)
 ## ---- recruitment univariate hm validate
 hm.resid <- hm.glmmTMB2 %>% simulateResiduals(plot = TRUE)
 
-##check autocorrelation
-#common.abnd <- common.abnd %>% 
-#  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
-
-#hm.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
- #                                          filter(Species == "Halichoeres miniatus") %>% 
-#                                           pull(TIME) ) #extract just the Time column as a vector
-
-acf(residuals(hm.glmmTMB2, method = "pearson"))
-
-
 ## ----end
+
+
+##### Temporal autocorrelation test ================================================
+
+## ----recruitment univariate hm validate autocor
+df <- common.abnd %>% 
+  filter(Species == "Halichoeres miniatus") %>% #add residuals to common.abnd
+  mutate(hm.residuals = residuals(hm.glmmTMB2, type = "pearson")) 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(hm.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+average.ac <- ac %>% 
+  unnest(ac) %>% 
+  group_by(lag) %>% 
+  summarise(average = mean(abs(ac)))
+
+
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    labs(x = "Lag", y = "Average Autocorrelation") + 
+    theme_bw() )
+
+
+
+
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    facet_wrap(~plotID) +
+    labs(x = "Lag", y = "Autocorrelation") + 
+    theme_bw() )
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.hm.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.hm.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
 
 ## ----recruitment univariate hm refit revalidate
 
@@ -2656,13 +2733,63 @@ hm.glmmTMB.ac <- update(hm.glmmTMB2, .~. + ar1(0 + factor(Date)|plotID) )
 acf(residuals(hm.glmmTMB.ac, method = "pearson"))
 
 hm.ac.resid <- hm.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
-#hm.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
-#                                           filter(Species == "Halichoeres miniatus") %>% 
-#                                           pull(TIME) )
 
 hm.ac.resid %>% testDispersion()
 #stil evidence of underdispersion
 
+## ----end
+
+## ----recruitment univariate hm refit revalidate autocor
+df <- common.abnd %>% 
+  filter(Species == "Halichoeres miniatus") %>% #add residuals to common.abnd
+  mutate(hm.residuals = residuals(hm.glmmTMB.ac, type = "pearson")) 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(hm.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+average.ac <- ac %>% 
+  unnest(ac) %>% 
+  group_by(lag) %>% 
+  summarise(average = mean(abs(ac)))
+
+
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    labs(x = "Lag", y = "Average Autocorrelation") + 
+    theme_bw() )
+
+
+
+
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    facet_wrap(~plotID) +
+    labs(x = "Lag", y = "Autocorrelation") + 
+    theme_bw() )
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.hmAC.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.hmAC.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
 #### Partial ====================================================================
 
 ## ----recruitment univariate hm partial
@@ -3025,18 +3152,61 @@ MuMIn::AICc(sd.glmmTMB1,sd.glmmTMB2, sd.glmmTMB3)
 ## ---- recruitment univariate sd validate
 sd.resid <- sd.glmmTMB2 %>% simulateResiduals(plot = TRUE)
 
-##check autocorrelation
-#common.abnd <- common.abnd %>% 
-#  mutate(TIME = as.numeric(plotID) + as.numeric(Day)*10^-2)
-
-#hm.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
-#                                          filter(Species == "Halichoeres miniatus") %>% 
-#                                           pull(TIME) ) #extract just the Time column as a vector
-
-acf(residuals(sd.glmmTMB2, method = "pearson"))
-
-
 ## ----end
+
+##### Temporal autocorrelation test ================================================
+
+## ----recruitment univariate sd validate autocorrelation
+df <- common.abnd %>% 
+  filter(Species == "Siganus doliatus") %>% #add residuals to fish.sd.abnd
+  mutate(sd.residuals = residuals(sd.glmmTMB2, type = "pearson")) 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(sd.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+(average.ac <- ac %>% 
+    unnest(ac) %>% 
+    group_by(lag) %>% 
+    summarise(average = mean(abs(ac))) )
+
+
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    labs(x = "Lag", y = "Average Autocorrelation") + 
+    theme_bw() )
+
+
+
+
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    facet_wrap(~plotID) +
+    labs(x = "Lag", y = "Autocorrelation") + 
+    theme_bw() )
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.sd.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.sd.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
 
 ## ----recruitment univariate sd refit revalidate
 
@@ -3046,13 +3216,58 @@ sd.glmmTMB.ac %>% AICc(., sd.glmmTMB2)
 
 acf(residuals(sd.glmmTMB.ac, method = "pearson"))
 
-sd.ac.resid <- sd.glmmTMB.ac %>% simulateResiduals(plot = TRUE)
-#sd.ac.resid %>% testTemporalAutocorrelation(time = common.abnd %>% 
-#                                           filter(Species == "Halichoeres miniatus") %>% 
-#                                           pull(TIME) )
 
-sd.ac.resid %>% testDispersion()
-#some evidence of underdispersion
+## Autocorrelation checks
+df <- common.abnd %>% 
+  filter(Species == "Siganus doliatus") %>% #add residuals to fish.sd.abnd
+  mutate(sd.residuals = residuals(sd.glmmTMB.ac, type = "pearson")) 
+
+ac<- df %>% group_by(plotID) %>% #group by plotID
+  mutate(lag = 0:(n() - 1), #lag column, values from 0-17
+         ac = acf(sd.residuals, #calculate the acfs
+                  lag.max = 18, 
+                  plot = FALSE
+         )$acf[lag+1]) %>% #extract the value of acf at the lag+1th spot
+  select(plotID, lag, ac)
+
+ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
+  subset(abs(ac) > 2/sqrt(18))
+
+(average.ac <- ac %>% 
+    unnest(ac) %>% 
+    group_by(lag) %>% 
+    summarise(average = mean(abs(ac))) )
+
+
+( g.av <- ggplot(average.ac, aes(y = average, x = lag) )+ 
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    labs(x = "Lag", y = "Average Autocorrelation") + 
+    theme_bw() )
+
+
+
+
+#plotted separately by plotID:
+( g.all <- ggplot(ac, aes(x = lag, y = ac)) +
+    geom_col() + 
+    geom_hline(yintercept = c(2/sqrt(18), -2/sqrt(18)), linetype = "dashed", color = "red") +
+    facet_wrap(~plotID) +
+    labs(x = "Lag", y = "Autocorrelation") + 
+    theme_bw() )
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.sdAC.av.png"),
+       g.av,
+       width = 10,
+       height = 5,
+       dpi = 100)
+
+ggsave(filename = paste0(FIGS_PATH, "/acf.sdAC.all.png"),
+       g.all,
+       width = 25,
+       height = 25,
+       dpi = 100)
 
 #### Partial ====================================================================
 
