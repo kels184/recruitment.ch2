@@ -622,10 +622,10 @@ treatment model best
 ```{r recruitment univariate ps validate, results = 'markdown', eval = TRUE}
 
 ```
-no residual problems, autocorrelation low? - need murray's response
+no residual problems, 
 
+### Temporal autocorrelation
 ```{r recruitment univariate ps validate autocorrelation, results = 'markdown', eval = TRUE}
-
 ```
 
 Looks like there is autocorrelation, cutoff exceeded 5 times (all treatments)
@@ -717,6 +717,8 @@ treatment model best
 ```
 some problems already - slight non-uniformity, slight bit of heterogeneity. I think it's ok. We'll see with the ac model 
 
+
+### Temporal autocorrelation
 ```{r recruitment univariate pt validate autocorrelation, results = 'markdown', eval = TRUE}
 ```
 
@@ -794,16 +796,23 @@ the final figure produced is pretty ugly.  I should probably restrict my posteri
 ```{r recruitment univariate la fit, results = 'markdown', eval = TRUE}
 ```
 
-treatment model better than the plot.weight model, but not really any better than the null (random intercela only) model
+treatment model better than the plot.weight model, but not really any better than the null (random intercept only) model
 
 ## Validate
 ```{r recruitment univariate la validate, results = 'markdown', eval = TRUE}
 ```
-fine, besides a little autocorrelation
+fine
+
+### Temporal autocorrelation
+```{r recruitment univariate la validate autocorrelation, results = 'markdown', eval = TRUE}
+```
+Some autocorrelation - exceeded 3 times (BH5, DM1, W4). Also 2 patches where Lethrinus atkinsoni never occurred, so the ac model may only be able to reduce this to 2 if the same thing happens as for P tripunctatus
 
 ```{r recruitment univariate la refit revalidate, results = 'markdown', eval = TRUE}
 ```
-ac model better by aicc, now better than the null. seems to have improved autocorrelation. a little underdispersed (more conservative)
+ac model better by aicc, now better than the null. seems to have improved autocorrelation - 2 times exceeded (DL2 and BQ2, the patches in which this species was never recorded). a little underdispersed (more conservative)
+
+Based on the aicc and the slight improvement to autocorrelation, I choose this model
 
 ## Partial Plot
 
@@ -878,11 +887,17 @@ treatment model best
 ## Validate
 ```{r recruitment univariate la validate, results = 'markdown', eval = TRUE}
 ```
-fine, besides a little autocorrelation
+fine - no residual problems
+
+```{r  recruitment univariate sf validate autocorrelation, results = 'markdown', eval = TRUE}
+```
+Cutoff exceeded in DL2, DM4 and W4 (3 times). But 5 patches never saw Siganus fuscescens, so ac unlikely to improve this
 
 ```{r recruitment univariate la refit revalidate, results = 'markdown', eval = TRUE}
 ```
-ac slightly worse aicc, now better than the null. seems to have improved autocorrelation slightly. a little underdispersed (more conservative)
+ac slightly worse aicc, now better than the null.  a little underdispersed (more conservative). seems to have WORSENED autocorrelation - cutoff exceeded 6 times - everywhere this species wasn't seen, plus DL2 (lag 4)
+
+Based on worse AIC, underdispersion and worsened autocorrelation I think I need to use a non AC model for Siganus fuscescens
 
 ## Partial Plot
 
