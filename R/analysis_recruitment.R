@@ -1720,7 +1720,7 @@ g.all.cont <- abnd.em %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
   ) +
-  theme_classic() +
+  theme_classic()
   
 ## ----end
 #blank plot:
@@ -1777,8 +1777,8 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/BLANK_cont.png"),
        units = "cm",
        dpi = 1000)
 
-########trying to restrict to 
-########
+########trying to restrict slabs to only the 95% quantiles
+
 
 
 
@@ -2592,7 +2592,7 @@ g.all.cont<- sp.em %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -3223,7 +3223,7 @@ g.all.cont <- hm.em %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black") +
+  ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -3261,6 +3261,136 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.all.contr.pdf"),
 
 ##For powerpoint:
 ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hm.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 1000)
+
+## ---- recruitment univariate hmNOAC figures
+
+hmNOAC.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brmNO_AC.rds"))
+hmNOAC.brm1 %>% ggemmeans(~Treatment) %>% plot
+
+
+newdata <- hmNOAC.brm1 %>% emmeans(~Treatment, type = "link") %>% 
+  gather_emmeans_draws() %>% 
+  mutate(Fit = exp(.value)) %>% 
+  as.data.frame
+head(newdata)
+
+# Reorder Treatment levels
+newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+
+
+g1 <- newdata %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = Fit,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab(expression(paste(italic("H. miniatus"), " abundance"))) +
+  theme_classic()
+
+
+hmNOAC.em <- hmNOAC.brm1 %>%
+  emmeans(~Treatment, type = "link") %>%
+  pairs() %>%
+  gather_emmeans_draws() %>%
+  mutate(Fit = exp(.value)) %>% as.data.frame()
+head(sp.em)
+
+hmNOAC.em_mod <- hmNOAC.em %>% 
+  filter(#filter to key contrasts
+    contrast %in% c("BH - W", "BQ - W", "BH - BQ", "BH - DM")) %>% 
+  mutate(contrast = fct_recode(contrast, #rename some levels of contrast
+                               "W - BH" = "BH - W", 
+                               "W - BQ" = "BQ - W", 
+                               "BH - BQ" = "BH - BQ",
+                               "BH - DM" = "BH - DM"),
+         Fit = if_else(#calculate inverse effect for the renamed levels
+           contrast %in% c("W - BH", "W - BQ"), 
+           1/Fit, 
+           Fit),
+         contrast = factor(contrast, #reorder contrast levels
+                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
+  )
+
+
+g2 <- hmNOAC.em_mod %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  stat_slab(aes(
+    x = Fit, 
+    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     n.breaks = 4,
+                     limits = c(0.5,3)
+  ) +
+  theme_classic() +
+  
+  labs(y = "Contrast")
+
+
+
+g.all.cont <- hmNOAC.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans()
+  ) +
+  theme_classic()
+g1 + g2
+
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.pdf"),
+       g1,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.contr.pdf"),
+       g2,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.pdf"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 5,
+       width = 16,
+       units = "cm",
+       dpi = 600)
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.all.contr.pdf"),
+       g.all.cont,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+
+##For powerpoint:
+ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hmNOAC.both.png"),
        g1 + theme(legend.position = "none") + g2,
        height = 10,
        width = 20,
@@ -3678,7 +3808,7 @@ g2<- sd.em_mod %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3, 1, 3, 9),
                      limits = c(0.05,16)
   ) +
   theme_classic() +
@@ -3699,7 +3829,7 @@ g.all.cont <- sd.em %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3, 1, 3, 9),
                      limits = c(0.05,16)
   ) +
   theme_classic()
@@ -4224,7 +4354,8 @@ g1 <- newdata %>% ggplot() +
     ))
   ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  ylab(expression(paste(italic("Petroscirtes sp."), " abundance"))) +
+  ylab(expression(atop( #makes 2 lines of text, 1 atop the other
+    italic("Petroscirtes sp."), paste(" abundance"))) )+
   theme_classic()
 
 
@@ -4258,7 +4389,7 @@ g2<- ps.em_mod %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3, 1, 3, 9),
                      limits = c(0.05,16)
   ) +
   theme_classic() +
@@ -4279,7 +4410,7 @@ g.all.cont <- ps.em %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3, 1, 3, 9),
                      limits = c(0.05,16)
   ) +
   theme_classic()
@@ -5526,11 +5657,62 @@ sf.brm1 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/s
 
 ## ----end
 
+## ----recruitment univariate sfNOAC brmsfit
+sf.form <- bf(abundance ~ Treatment
+              + (1|plotID),
+              family = poisson(link = "log") )
+
+priors <- prior(normal(-1, 1), class = "Intercept") +
+  prior(normal(0,3), class = "b") + 
+  prior(cauchy(0,0.5), class = "sd")  
+
+sf.brmNOAC <- brm(sf.form,
+               data = dat.sub,
+               prior = priors,
+               sample_prior = "yes", #sample priors and posteriors
+               iter = 10000, warmup = 2000,
+               control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
+               chains = 3, cores = 3, 
+               thin = 10,
+               seed = 123)
+
+sf.brmNOAC %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/sf.brmNO_AC.rds"))
+
+
+## ----end
+
 ##### Prior Checks =============================================================
 ## ----recruitment univariate sf brm1 prior check
 sf.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brm1.rds"))
 
 sf.brm1 %>% 
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '(^b|^prior).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'intercept' at the end
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains sf ('sderr' will be included)
+           str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
+           str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
+         Par = str_replace(key, 'b_', '')) %>% 
+  
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+
+## ----end
+
+## ----recruitment univariate sfNOAC brm prior check
+sf.brmNOAC <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brmNO_AC.rds"))
+
+sf.brmNOAC %>% 
   as_draws_df() %>% #get all the draws for everything estimated
   
   dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
@@ -5585,6 +5767,35 @@ sf.brm1%>% pp_check(type = 'dens_overlay', ndraws = 100)
 
 ## ----end
 
+## ----recruitment univariate sfNOAC brm MCMC
+sf.brmNOAC <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brmNO_AC.rds"))
+
+pars <- sf.brmNOAC %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^ar.*') %>% #that start with b, sf or ar
+  na.omit # omit the rest, resulting in an object of class 'omit'
+#wch
+##Trace Plots
+stan_trace(sf.brmNOAC$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(sf.brmNOAC$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(sf.brmNOAC$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(sf.brmNOAC$fit, pars = wch)
+
+##Density plot
+stan_dens(sf.brmNOAC$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+sf.brmNOAC%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+## ----end
+
 ##### DHARMA Residuals ==========================================================
 
 ## ---- recruitment univariate sf brm1 DHARMa
@@ -5609,11 +5820,33 @@ plot(resids)
 
 ## ----end
 
+# ---- recruitment univariate sf brm1 DHARMa
+
+#step 1. Draw out predictions
+preds <- sf.brmNOAC %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                       summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                       observedResponse = dat.sub %>% 
+                         filter(Species == "Siganus fuscescens") %>% 
+                         pull(abundance), #real response
+                       fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                       integerResponse = "TRUE" #is the response an integer? yes
+                       #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(resids)
+
+## ----end
+
 #### Model Investigation ========================================================
 #Frequentist
 ## ----recruitment univariate sf frequentist summary
 sf.glmmTMB.ac %>% summary()
-
+sf.glmmTMB2 %>% summary()
 sf.glmmTMB2 %>% r.squaredGLMM()
 ## ----end
 
@@ -5639,6 +5872,27 @@ sf.brm1 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 
 
 ## ----end
+## ---- recruitment univariate sf NO AC brm summary
+sf.brmNOAC$fit %>% tidyMCMC(pars = wch,
+                         estimate.method = "median",
+                         conf.int = TRUE,
+                         conf.method = "HPDinterval",
+                         rhat = TRUE,
+                         ess = TRUE)
+
+#"Marginal"
+sf.brmNOAC %>% brms::bayes_R2(re.form = NA, #or ~Treatment
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+# "Conditional"
+sf.brmNOAC %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+
+## ----end
+
 
 ## ---- recruitment univariate sf brm contrasts
 sf.cont.tbl <- sf.brm1%>%
@@ -5659,6 +5913,27 @@ sf.cont.tbl <- sf.brm1%>%
   )
 sf.cont.tbl
 ## ----end
+
+## ---- recruitment univariate sf NO AC brm contrasts
+sf.cont.tbl <- sf.brmNOAC%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  ) %>% 
+  ungroup() %>% 
+  mutate(evidence = case_when(
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
+    `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
+    `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+sf.cont.tbl
+## ----end
+
 write.csv(sf.cont.tbl, "clipboard")
 
 
@@ -5784,6 +6059,127 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sf.both.png"),
        width = 20,
        units = "cm",
        dpi = 1000)
+
+## ---- recruitment univariate sfNOAC figures
+
+sfNOAC.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brmNO_AC.rds"))
+sfNOAC.brm1 %>% ggemmeans(~Treatment) %>% plot
+
+
+newdata <- sfNOAC.brm1 %>% emmeans(~Treatment, type = "link") %>% 
+  gather_emmeans_draws() %>% 
+  mutate(Fit = exp(.value)) %>% 
+  as.data.frame
+head(newdata)
+
+# Reorder Treatment levels
+newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+
+
+g1 <- newdata %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = Fit,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab(expression(paste(italic("S. fuscescens"), " abundance"))) +
+  theme_classic()
+
+sfNOAC.em <- sfNOAC.brm1 %>%
+  emmeans(~Treatment, type = "link") %>%
+  pairs() %>%
+  gather_emmeans_draws() %>%
+  mutate(Fit = exp(.value)) %>% as.data.frame()
+#head(sp.em)
+
+#create modified contrast set containing only key contrastss
+sfNOAC.em_mod <- sfNOAC.em %>% 
+  filter(#filter to key contrasts
+    contrast %in% c("W - BH", "W - BQ", "BH - BQ", "BH - DM")) %>% 
+  mutate(contrast = factor(contrast, #reorder contrast levels
+                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
+  )
+
+
+g2<- sfNOAC.em_mod %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  stat_slab(aes(
+    x = Fit, 
+    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.25, 1, 4, 10),
+                     limits = c(0.05,16)
+  ) +
+  theme_classic() +
+  
+  labs(y = "Contrast")
+g1 + g2
+
+g.all.cont <- sfNOAC.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.25, 1, 4, 10),
+                     limits = c(0.05,16)
+  ) +
+  theme_classic()
+
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.pdf"),
+       g1,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.contr.pdf"),
+       g2,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.both.pdf"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 5,
+       width = 16,
+       units = "cm",
+       dpi = 600)
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.all.contr.pdf"),
+       g.all.cont,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+
+##For powerpoint:
+ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sfNOAC.both.png"),
+       g1 + theme(legend.position = "none") + g2,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 1000)
+
 
 
 ### Overall Size model ==========================================================
