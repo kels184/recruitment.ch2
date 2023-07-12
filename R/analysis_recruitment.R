@@ -2856,6 +2856,31 @@ hm.brm1 %>% hack_size.brmsfit() %>% saveRDS(file = paste0(DATA_PATH, "modelled/h
 #identical prior check,MCMC,Dharma residuals and summary
 ## ----end
 
+## ----recruitment univariate hm brmsfit NO AC
+hm.form <- bf(abundance ~ Treatment
+              + (1|plotID),
+              family = poisson(link = "log") )
+
+priors <- prior(normal(1.6,0.5), class = "Intercept") +
+  prior(normal(0,2), class = "b") + 
+  prior(cauchy(0,0.5), class = "sd") 
+
+hm.brm2 <- brm(hm.form,
+               data = common.abnd %>% 
+                 filter(Species == "Halichoeres miniatus"),
+               prior = priors,
+               sample_prior = "yes", #sample priors and posteriors
+               iter = 10000, warmup = 2000,
+               control = list(adapt_delta = 0.99), #devote more of warmup to step-length determination
+               chains = 3, cores = 3, 
+               thin = 10,
+               seed = 123)
+
+hm.brm2 %>% hack_size.brmsfit() %>% 
+  saveRDS(file = paste0(DATA_PATH, "modelled/hm.brmNO_AC.rds"))
+                                                          
+## ----end
+
  ##### Prior Checks =============================================================
 ## ----recruitment univariate hm brm1 prior check
 hm.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
@@ -2884,6 +2909,32 @@ hm.brm1 %>%
 
 ## ----end
 
+## ----recruitment univariate hm brm NO AC prior check
+hm.brmNOAC <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brmNO_AC.rds"))
+
+hm.brmNOAC %>% 
+  as_draws_df() %>% #get all the draws for everything estimated
+  
+  dplyr::select(!matches("^lp|^err|^r_|^\\.") ) %>% #remove variables starting with lp, err or r_ or .
+  #Note removing the '.' cols (.iteration, .draw and .chain) changed the class
+  
+  pivot_longer(everything(), names_to = 'key') %>% #make long, with variable names in a column called 'key'. Note 
+  
+  mutate(Type = ifelse(str_detect(key, 'prior'), 'Prior', 'Posterior'), #classify within new col 'Type' whether Prior or Posterior using str_detect
+         Class = case_when( #create column 'Class' to classify vars as:
+           str_detect(key, '(^b|^prior).*Intercept$') ~ 'Intercept', #intercept, if 'key' starts with b or prior followed by any character ('.') with 'Intercept' at the end
+           str_detect(key, 'b_Treatment.*|prior_b') ~ 'TREATMENT', #TREATMENT, if the string contains 'b_Treatment followed by any character ('.')
+           str_detect(key, 'sd_') ~ 'sd', #sd, if the string contains sd ('sderr' will be included)
+           str_detect(key, 'ar') ~ 'ar', #ar, if it contains ar
+           str_detect(key, 'sderr') ~ 'sderr'), #sderr, if it contains sderr
+         Par = str_replace(key, 'b_', '')) %>% 
+  
+  ggplot(aes(x = Type,  y = value, color = Par)) + #Plot with these overall aesthetics
+  stat_pointinterval(position = position_dodge(), show.legend = FALSE)+ #plot as stat_point intervals
+  facet_wrap(~Class,  scales = 'free') #separate plots by Class with each class having its own scales
+
+
+## ----end
   #####MCMC =====================================================================
 
 ## ----recruitment univariate hm brm1 MCMC
@@ -2915,6 +2966,35 @@ hm.brm1%>% pp_check(type = 'dens_overlay', ndraws = 100)
 
 ## ----end
 
+## ----recruitment univariate hm brm NO AC MCMC
+hm.brmNOAC <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brmNO_AC.rds"))
+
+pars <- hm.brmNOAC %>% get_variables()
+
+wch <- str_extract(pars, #get the names of the variables
+                   '^b_.*|^sd.*|^ar.*') %>% #that start with b, sd or ar
+  na.omit # omit the rest, resulting in an object of class 'omit'
+wch
+##Trace Plots
+stan_trace(hm.brmNOAC$fit, pars = wch)
+
+##Autocorrelation factor
+stan_ac(hm.brmNOAC$fit, pars = wch)
+
+##rhat - Scale reduction factor
+stan_rhat(hm.brmNOAC$fit, pars = wch)
+
+##ESS (effective sample size)
+stan_ess(hm.brmNOAC$fit, pars = wch)
+
+##Density plot
+stan_dens(hm.brmNOAC$fit, pars = wch, separate_chains = TRUE)
+
+##Density overlay
+hm.brmNOAC%>% pp_check(type = 'dens_overlay', ndraws = 100)
+
+## ----end
+
 ##### DHARMA Residuals ==========================================================
 
 ## ---- recruitment univariate hm brm1 DHARMA
@@ -2939,10 +3019,33 @@ plot(resids)
 
 ## ----end
 
+## ---- recruitment univariate hm brm NO AC DHARMA
+
+#step 1. Draw out predictions
+preds <- hm.brmNOAC %>% posterior_predict(ndraws = 250, #extract 250 posterior draws from the posterior model
+                                       summary = FALSE) #don't summarise - we want the whole distribution of them
+
+
+#Step 2 create DHARMA resids
+resids <- createDHARMa(simulatedResponse = t(preds), #provide with simulated predictions, transposed with t()
+                       observedResponse = common.abnd %>% 
+                         filter(Species == "Halichoeres miniatus") %>% 
+                         pull(abundance), #real response
+                       fittedPredictedResponse = apply(preds, 2, median), #for the fitted predicted response, use the median of preds (in the columns, the second argument of apply defines the MARGIN, 2 being columns for matrices)
+                       integerResponse = "TRUE" #is the response an integer? yes
+                       #, re.form = "NULL") #this argument not supported (neither in glmmTMB)
+)
+
+#Step 3 - plot!
+plot(resids)
+
+## ----end
+
 #### Model Investigation ========================================================
 #Frequentist
 ## ----recruitment univariate hm frequentist summary
 hm.glmmTMB.ac %>% summary()
+hm.glmmTMB2 %>% summary()
 
 hm.glmmTMB2 %>% r.squaredGLMM()
 ## ----end
@@ -2970,6 +3073,28 @@ hm.brm1 %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 
 ## ----end
 
+## ---- recruitment univariate hm brm NO AC summary
+hm.brmNOAC$fit %>% tidyMCMC(pars = wch,
+                         estimate.method = "median",
+                         conf.int = TRUE,
+                         conf.method = "HPDinterval",
+                         rhat = TRUE,
+                         ess = TRUE)
+
+#"Marginal"
+hm.brmNOAC %>% brms::bayes_R2(re.form = NA, #or ~Treatment
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+# "Conditional"
+hm.brmNOAC %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
+                           summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
+  median_hdci # get the hdci of the r2
+
+
+## ----end
+
+
 ## ---- recruitment univariate hm brm contrasts
 hm.cont.tbl <- hm.brm1%>%
   emmeans(~Treatment, type = 'link') %>% #link scale
@@ -2989,7 +3114,29 @@ hm.cont.tbl <- hm.brm1%>%
   )
 hm.cont.tbl
 ## ----end
+
+## ---- recruitment univariate hm brm NO ACcontrasts
+hm.cont.tbl <- hm.brmNOAC%>%
+  emmeans(~Treatment, type = 'link') %>% #link scale
+  pairs() %>% #pairwise comparison
+  gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
+  #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
+  summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
+            'P<' = sum(.value<0)/n(),
+  )  %>% 
+  ungroup() %>% 
+  mutate(evidence = case_when(
+    `P>` >= 0.99 | `P<` >= 0.99 ~ "very strong",
+    `P>` >= 0.95 |`P<` >= 0.95 ~ "strong",
+    `P>` >= 0.90 |`P<` >= 0.90 ~ "evidence",
+    TRUE ~ "no evidence"
+  )
+  )
+hm.cont.tbl
+## ----end
 write.csv(hm.cont.tbl, "clipboard")
+
+
 #### Summary figures =========================================================
 
 ## ---- recruitment univariate hm figures

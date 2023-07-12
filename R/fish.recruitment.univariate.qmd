@@ -460,16 +460,28 @@ After the refit incorporating autocorrelation, acf is reduced slightly on averag
 ```
 There were no divergent no divergent transitions with the increased adapt_delta. 11 with these (narrower) sd priors of cauchy(0,0.5).  17 divergent transitions with lower adapt delta and with wider sd priors (cauchy(0,1))
 
+```{r recruitment univariate hm brmsfit NO AC, results = 'markdown', eval = FALSE}
+```
+No divergent transitions
+
 ### Prior checks
 ```{r recruitment univariate hm brm1 prior check, results = 'markdown', eval = TRUE}
 ```
 
 priors look quite ok
 
+```{r recruitment univariate hm brm NO AC prior check, results = 'markdown', eval = TRUE}
+```
+
 ### MCMC
 ```{r recruitment univariate hm brm1 MCMC, results = 'markdown', eval = TRUE, cache = TRUE}
 ```
 sderr a bit autocorrelated at lag 1 before adjusting thin, which fixed the problem. One of the posteriors had a low sample size (~0.6) before thinning/adapt delta adjustment. stan_dens plot - sderr estimate wide. density overlay plot a funky shape
+
+
+```{r recruitment univariate hm brm NO AC MCMC, results = 'markdown', eval = TRUE, cache = TRUE}
+```
+All look fine
 
 
 ### DHARMA residuals
@@ -479,19 +491,50 @@ sderr a bit autocorrelated at lag 1 before adjusting thin, which fixed the probl
 
 Something is a bit strange here - different number of groups to Treatment. Underdispersion
 
+```{r recruitment univariate hm brm NO AC DHARMA, results = 'markdown', eval = TRUE}
+
+```
+Stunning
 
 
 ## Model Investigation
+```{r recruitment univariate hm frequentist summary, results = 'markdown', eval = TRUE}
+
+```
+
 ```{r recruitment univariate hm brm1 summary, results = 'markdown', eval = TRUE}
 
 ```
 The low ess var was sderr. ar estimate 0.5 (compare to frequentist of 0.89)
 
 Low proportion of variance explained (14 - 18 with the random intercept)
+
+```{r recruitment univariate hm brm NO AC summary, results = 'markdown', eval = TRUE}
+
+```
+Some evidence contrasts (BH -BQ, BH-DL) (same story as frequentist)
+Low proportion of variance explained (11.6 - 15.8% with the random intercept)
+
+
 ```{r recruitment univariate hm brm contrasts, results = 'markdown', eval = TRUE}
 
 ```
 
+```{r recruitment univariate hm brm NO AC contrasts, results = 'markdown', eval = TRUE}
+
+```
+   contrast    `P>`    `P<` evidence   
+   <chr>      <dbl>   <dbl> <chr>      
+ 1 BH - BQ  1       0       very strong
+ 2 BH - DL  0.992   0.00833 very strong
+ 3 BH - DM  0.797   0.203   no evidence
+ 4 BH - W   0.49    0.51    no evidence
+ 5 BQ - DL  0.0562  0.944   evidence   
+ 6 BQ - DM  0.00208 0.998   very strong
+ 7 BQ - W   0       1       very strong
+ 8 DL - DM  0.0446  0.955   strong     
+ 9 DL - W   0.00958 0.990   very strong
+10 DM - W   0.201   0.799   no evidence
 
 ## Summary Figures
 ```{r recruitment univariate hm figures, results = 'markdown', eval = TRUE}
