@@ -6766,7 +6766,8 @@ fish.wide.end <- fishalgaedata %>%
               values_from = abundance,
               values_fill = 0) %>% 
   mutate(plotID = paste0(Treatment, Replicate) )%>% 
-           column_to_rownames(var = "plotID")
+           column_to_rownames(var = "plotID") %>% 
+  data.frame() #thought having this here might change something, but it didn't
            
   View(fish.wide.end)
 ## ----end  
@@ -6775,17 +6776,18 @@ fish.wide.end <- fishalgaedata %>%
   
   
 ##  ----recruitment multivariate end mds
-  #distance matrix (for )
+  #distance matrix 
   fish.dist <- vegdist(wisconsin(fish.wide.end[,-c(1:3)]^0.25), "bray")
+
   ## mds
-  #fish.mds <- metaMDS(fish.dist, k=2, seed = 123)
   
   fish.dist.mds <- metaMDS(fish.dist, k= 2, seed = 123) # can't figure out how to extract scores
   fish.dist.mds
   
   #do mds on raw data (let it decide on standardisations)
   fish.mds <- metaMDS(fish.wide.end[,-c(1:3)], k = 2, seed = 123)
-  fish.mds
+  fish.mds$dist
+  
   
   #check stressplot:
   stressplot(fish.mds)
@@ -6793,7 +6795,12 @@ fish.wide.end <- fishalgaedata %>%
 
   
 ## ----recruitment multivariate end mds ggplot
+fish.mds.scores <-   fish.dist.mds %>% fortify()
+View(fish.mds.scores)
+
 fish.mds.scores <-   fish.mds %>% fortify()
+View(fish.mds.scores)
+
 library(ggrepel)  
 
 g <-
@@ -6819,6 +6826,10 @@ ggsave(filename = paste0(FIGS_PATH, "/nmds.end.png"),
        height = 5,
        width = 10,
        dpi = 100)
+
+##NB: Dissimilarity matrix used to make the NMDS is found in fish.mds$diss. The original order is not preserved
+## but its indices are at fish.mds$iidx
+
 
 ## ----recruitment multivariate end adonis
 #adonis to be performed on distance matrix (therefore might not match the mds done on raw data)
@@ -6894,16 +6905,22 @@ fish.dist <- vegdist(wisconsin(fish.no.0[,-c(1:3,5)]^0.25), "bray")
 
 
  ## mds
-fish.mds <- metaMDS(fish.dist, k=2, seed = 123)
+#fish.mds <- metaMDS(fish.dist, k=2, seed = 123, trymax = 500)
 #no convergence -- monoMDS stopping criteria:
-# 2: no. of iterations >= maxit - it reached 20 iterations
-# 18: stress ratio > sratmax
+# 61: no. of iterations >= maxit - it reached 500 iterations
+# 434: stress ratio > sratmax
+# 5: scale facotr of the gradient < sfgrmin
 stressplot(fish.mds)
 
 plot(fish.mds, type="text", display="sites" ) #something weird happening at row 258 - 1 lethrinus nebulosus, that's it
 
  ## rerun without row 258
-metaMDS(fish.no.0[-258,-c(1:3,5)]) %>% plot(type = "text", display = "sites")
+fish.mds <- metaMDS(fish.no.0[-258,-c(1:3,5)], seed = 123, trymax = 100) 
+#*** No convergence -- monoMDS stopping criteria:
+ # 36: no. of iterations >= maxit
+#59: stress ratio > sratmax
+#5: scale factor of the gradient < sfgrmin
+fish.mds %>% plot(type = "text", display = "sites")
 ##more sensible plot, higher stress and need more plotting to see if treatments had any influence
 
 
