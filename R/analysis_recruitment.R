@@ -3341,7 +3341,7 @@ g2 <- hmNOAC.em_mod %>%
   
   labs(y = "Contrast")
 
-
+g1 + g2
 
 g.all.cont <- hmNOAC.em %>%
   ggplot() +
@@ -3359,7 +3359,7 @@ g.all.cont <- hmNOAC.em %>%
                      trans = scales::log2_trans()
   ) +
   theme_classic()
-g1 + g2
+
 
 ## ----end
 
@@ -5965,7 +5965,7 @@ g1 <- newdata %>% ggplot() +
     ))
   ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  ylab(expression(paste(italic("S. fuscescens"), " abundance"))) +
+  ylab(expression(atop(italic("S. fuscescens"), paste("abundance")))) +
   theme_classic()
 
 sf.em <- sf.brm1 %>%
@@ -5998,12 +5998,13 @@ g2<- sf.em_mod %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3,1,3,9),
                      limits = c(0.05,16)
   ) +
   theme_classic() +
-  
   labs(y = "Contrast")
+
+
 g1 + g2
 
 g.all.cont <- sf.em %>%
@@ -6019,7 +6020,7 @@ g.all.cont <- sf.em %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3,1,3,9),
                      limits = c(0.05,16)
   ) +
   theme_classic()
