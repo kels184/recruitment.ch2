@@ -4842,7 +4842,7 @@ g1 <- newdata %>% ggplot() +
     ))
   ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  ylab(expression(paste(italic("P. tripunctatus"), " abundance"))) +
+  ylab(expression(atop(italic("P. tripunctatus"), paste("abundance")))) +
   scale_y_continuous(limits = c(0, 8)) +
   theme_classic()
 
@@ -4878,7 +4878,7 @@ g2<- pt.em_mod %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3, 1, 3, 9),
                      limits = c(0.05,16)
   ) +
   theme_classic() +
@@ -4899,7 +4899,7 @@ g.all.cont <- pt.em %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3, 1, 3, 9),
                      limits = c(0.05,16)
   ) +
   theme_classic()
@@ -5365,7 +5365,7 @@ g2<- la.em_mod %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3, 1, 3, 9),
                      limits = c(0.05,16)
   ) +
   theme_classic() +
@@ -5386,7 +5386,7 @@ g.all.cont <- la.em %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.5, 1, 2, 4, 8),
+                     breaks = c(0.1, 0.3, 1, 3, 9),
                      limits = c(0.05,16)
   ) +
   theme_classic()
