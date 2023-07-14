@@ -6941,11 +6941,10 @@ cont.list <- list(W.BH, W.BQ, BH.BQ, BH.DM)
 dist.list <- list()
 
 for(i in cont.list) {
-  dist.list[[i]] <- fish.dist %>% as.matrix() %>% 
-    as_tibble() %>% 
-    filter(rownames(.) %in% i) %>% 
-    select(all_of(i)) %>%
-    as.matrix()
+  dist.list[[i]] <- dist.tbl %>% 
+    select(all_of(i), Rows) %>%
+    filter(Rows %in% i) %>% column_to_rownames(var = 'Rows') %>% 
+    as.dist()
 }
 
 dist.tbl <- fish.dist %>% as.matrix() %>% 
@@ -6955,13 +6954,17 @@ dist.tbl <- dist.tbl %>% mutate(Rows = rownames(fish.wide.end))
 
 W.BH.mx<- dist.tbl %>% 
   select(all_of(W.BH), Rows) %>%
-  filter(Rows %in% W.BH) %>% column_to_rownames(var = 'Rows')# %>% 
- # as.matrix()
+  filter(Rows %in% W.BH) %>% column_to_rownames(var = 'Rows') %>% 
+ as.dist()
 W.BH.mx
 
 
-adonis2(W.BH.mx ~ Treatment, data = fish.wide.end %>% 
-                                     filter(rownames(.) %in% W.BH)) # this worked, but I'm not 100% sure it didn't do something to the data frame it shouldn't have (because it might not have known I gave it a dissimilarity matrix because I haven't changed its class yet)
+W.BH.adonis <- adonis2(W.BH.mx ~ Treatment, data = fish.wide.end %>% 
+                                     filter(rownames(.) %in% W.BH),
+                       method = "bray") #
+W.BH.adonis #strange, given the contrast in the test above. Negative SS, R2 and F values?
+
+
 
 
 ## ----end

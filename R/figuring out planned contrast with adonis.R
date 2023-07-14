@@ -51,10 +51,10 @@ test.mat <- dist.mat %>% as.matrix() %>%
   as_tibble() %>% #do this so tidy functions work
   filter(rownames(.) %in% wch) %>% #get only relevant rows
   select(all_of(wch)) %>%# select relevant columns
-  as.matrix() #turn it back into matrix
+  as.dist() #turn it back into a dist
 test.mat
 
-all.equal(test.mat,dis.mat %>% as.matrix)
+all.equal(test.mat %>% as.matrix,dis.mat %>% as.matrix)
 view(dis.mat %>% as.matrix)
 View(test.mat)
 
