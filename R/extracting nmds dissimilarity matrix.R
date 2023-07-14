@@ -185,5 +185,54 @@ data.g
 #Wisconsin double standardise the data in the other mds
 #
 
-#only difference I can see is the p value in the adonis anova tables - 0.03 for 
+#only 2 differences I can see: the p value in the adonis anova tables - 0.03 for 
 #the non dist model, 0.05 for the dist, even though everything else in the tables are the same
+#The mds on the data also performs halfchange scaling: " one axis unit means that community dissimilarity halves"
+#(see metaMDS help section 5. Scaling of the results)
+
+
+test <- metaMDS(fish.dist,
+                halfchange = TRUE, #force halfchange scaling
+                k = 2, autotransform = FALSE,
+                trymax= 20, seed = 123, distance = "bray")
+
+df3 <- data.frame(diss = test$diss,
+                 i = test$iidx,
+                 j = test$jidx)
+
+mx3 <- with(df3, matrix(ncol=max(j), nrow=max(i))) #make empty matrix
+mx3[as.matrix(df3[2:3])] <- df3$diss #fill with the diss values
+rownames(mx3) <- rownames(fish.wide.end) #give original rownames
+colnames(mx3) <- rownames(fish.wide.end)[1:24]
+mx3 <- as.dist(mx3)
+
+all.equal(mx3 %>% as.matrix(),mx2 %>% as.matrix()) ##TRUE!
+
+adonis2(mx3 ~ Treatment, data = fish.wide.end) ##same result as mx2
+
+?vegdist()
+
+
+
+#compare dispersion results:
+disp1 <- betadisper(fish.dist, group = fish.wide.end$Treatment)
+betadisper(mx, group = fish.wide.end$Treatment) #same as above
+disp2 <- betadisper(mx2, group = fish.wide.end$Treatment) #same as above
+disp3 <- betadisper(mx3, group = fish.wide.end$Treatment) #same as above
+
+#permutest(disp1, pairwise = TRUE, seed = 123)
+#permutest(disp2, pairwise = TRUE, seed = 123)
+#permutest(disp3, pairwise = TRUE, seed = 123)
+
+#3 (slightly) different results? however, could be due to randomness of permuting (different results each time)
+#try something that's not random:
+
+anova(disp1)
+anova(disp2)
+anova(disp3)
+#ok, all 3 are identical
+
+#for now I'm satisfied that they are similar enough that I could choose any - 
+# mx2 I'm choosing mx2 method (feed community data to metaMDS, don't have to 
+#then add species data back in and don't have to specify halfchange scaling)
+
