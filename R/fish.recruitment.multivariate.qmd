@@ -68,12 +68,12 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 
 ```
 on distance: Stress is at an acceptable level (0.14). 2 convergent solutions found
-on raw data. no convergent. stress 0.178
+
+
 # Plot MDS
 ```{r recruitment multivariate end mds ggplot, results = 'markdown', eval = TRUE}
 
 ```
-
 
 ```{r recruitment multivariate end adonis, results = 'markdown', eval = TRUE}
 
@@ -84,4 +84,4 @@ BH different to W and DL
 ```{r recruitment multivariate end disper, results = 'markdown', eval = TRUE}
 
 ```
-Dispersion among treatents look ok?? or W may be different to DL- permuted p value of 0.013 for their contrast
+Dispersion among treatments look ok?? or W may be different to DL- permuted p value of ~0.01 for their contrast

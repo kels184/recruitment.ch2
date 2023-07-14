@@ -6776,30 +6776,21 @@ fish.wide.end <- fishalgaedata %>%
   
   
 ##  ----recruitment multivariate end mds
-  #distance matrix 
-fish.dist <- vegdist(wisconsin(fish.wide.end[,-c(1:3)]^0.25), "bray")
 
-  ## mds
+  #do mds on wisconsin, fourth-root data (it will then also perform halfchange scaling)
+  #Species data will be included, can later extract diss matrix for adonis etc
+fish.mds <- metaMDS(wisconsin(fish.wide.end[,-c(1:3)]^0.25), k = 2, seed = 123)
+
   
-  fish.dist.mds <- metaMDS(fish.dist, k= 2, seed = 123) # can't figure out how to extract scores
-  fish.dist.mds
-  
-  #do mds on raw data (let it decide on standardisations)
-  fish.mds <- metaMDS(fish.wide.end[,-c(1:3)], k = 2, seed = 123)
-  fish.mds$dist
-  
-  
+fish.mds  
   #check stressplot:
   stressplot(fish.mds)
 ## ----end
 
   
 ## ----recruitment multivariate end mds ggplot
-scores <-   fish.dist.mds %>% fortify()
-View(fish.mds.scores)
-
-fish.mds.scores <-   fish.mds %>% fortify()
-View(fish.mds.scores)
+scores <-   fish.mds %>% fortify()
+scores
 
 library(ggrepel)  
 
@@ -6807,15 +6798,16 @@ g <-
   ggplot(data = NULL, aes(y=NMDS2, x=NMDS1)) +
   geom_hline(yintercept=0, linetype='dotted') +
   geom_vline(xintercept=0, linetype='dotted') +
-  geom_point(data=fish.mds.scores %>%
+  geom_point(data=scores %>%
                filter(Score=='sites'),
              aes(color=fish.wide.end$Treatment))  +#colour the points according to their Treatment
-  geom_text_repel(data=fish.mds.scores %>%
+  geom_text_repel(data=scores %>%
               filter(Score=='sites'),
             aes(label=Label,
                 color=fish.wide.end$Treatment), hjust=-0.2
             ) +
-  labs(color = "Treatment")
+  labs(color = "Treatment") +
+  theme_classic()
 g
 
 #probs needs some jitter/dodging but you can see some groupings (particularly w)
@@ -6830,11 +6822,26 @@ ggsave(filename = paste0(FIGS_PATH, "/nmds.end.png"),
 ##NB: Dissimilarity matrix used to make the NMDS is found in fish.mds$diss. The original order is not preserved
 ## but its indices are at fish.mds$iidx
 
+    ### Adonis===================================================================
 
 ## ----recruitment multivariate end adonis
-#adonis to be performed on distance matrix (therefore might not match the mds done on raw data)
-fish.adonis <- adonis2(fish.dist ~ Treatment, data = fish.wide.end)
+#adonis to be performed on diss matrix
+
+df2 <-  data.frame(diss = fish.mds$diss,
+                   i = fish.mds$iidx,
+                   j = fish.mds$jidx)
+
+
+mx2 <- with(df2, matrix(ncol=max(j), nrow=max(i))) #make empty matrix
+mx2[as.matrix(df2[2:3])] <- df2$diss #fill with the diss values
+rownames(mx2) <- rownames(fish.wide.end) #give original rownames
+colnames(mx2) <- rownames(fish.wide.end)[1:24]
+dist <- as.dist(mx2) #convert mx2 into a dist matrix object
+
+fish.adonis <- adonis2(dist ~ Treatment, data = fish.wide.end)
 fish.adonis
+
+
 #by levels
 
 treatment <- factor(fish.wide.end$Treatment, levels = c("BH", "BQ", "DL", "DM", "W"))
@@ -6847,6 +6854,21 @@ fish.adonis <- adonis2(fish.dist ~ BQ + DL + DM + W, data = mm,
                        permm = 9999)
 fish.adonis
 ## ----end
+
+ ### Dispersion test =============================================================
+## ----recruitment multivariate end disper
+fish.disp <- betadisper(dist, group = fish.wide.end$Treatment)
+
+boxplot(fish.disp)
+
+anova(fish.disp)
+
+permutest(fish.disp, pairwise = TRUE, seed = 123)
+
+plot(fish.disp)
+
+## ----end
+
   
 ## ----recruitment multivariate end pairwise
 
@@ -6856,7 +6878,7 @@ library(pairwiseAdonis)
 pair.mod<-pairwise.adonis(fish.dist,factors=fish.wide.end$Treatment)
 pair.mod
 
-##none are significantly different once adjusted for multiple comparisons
+##none are significantly different once adjusted for multiple comparisons (x 10, the number of comparisons)
 ## ----end
 
 
