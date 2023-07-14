@@ -6885,6 +6885,7 @@ pair.mod
 
 ## ----recruitment multivariate end disper
 fish.disp <- betadisper(fish.dist, group = fish.wide.end$Treatment)
+fish.disp
 
 boxplot(fish.disp)
 
@@ -6893,8 +6894,19 @@ anova(fish.disp)
 permutest(fish.disp, pairwise = TRUE)
 
 plot(fish.disp)
-## ----end
 
+library(ggordiplots)
+
+disp.plot <- gg_ordiplot(fish.disp, groups = fish.wide.end$Treatment) + theme_classic()
+disp.plot + coord_equal()
+disp.plot
+
+## ----end
+ggsave(filename = paste0(FIGS_PATH, "/dispplot.end.png"),
+       disp.plot,
+       height = 5,
+       width = 10,
+       dpi = 100)
 ##    
  ## create distance matrix
 #fish.dist <- vegdist(wisconsin(fish.wide[,-c(1:3,5)]^0.25), ## 4th root transformation, remove factors and 'empty' col
