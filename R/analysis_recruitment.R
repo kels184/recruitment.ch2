@@ -6783,13 +6783,23 @@ fish.mds <- metaMDS(wisconsin(fish.wide.end[,-c(1:3)]^0.25), k = 2, seed = 123)
 
   
 fish.mds  
-  #check stressplot:
+  #check shepard plot (dist vs diss):
   stressplot(fish.mds)
+  
+##stress isn't super high, but what is the effect of individual points?
+  
+gof <- goodness(fish.mds)  
+
+plot(fish.mds, display = "sites", type = "none")
+points(fish.mds, display = "sites",
+       cex = 2*gof/mean(gof)) #size individual points proportional to the gof relative to the mean of them all
+#no particular points that influential
 ## ----end
 
   
 ## ----recruitment multivariate end mds ggplot
-scores <-   fish.mds %>% fortify()
+scores <-   fish.mds %>% fortify() %>% 
+  full_join(fish.wide.end %>% rownames_to_column(var = "Label"))
 scores
 
 library(ggrepel)  
@@ -6800,24 +6810,32 @@ g <-
   geom_vline(xintercept=0, linetype='dotted') +
   geom_point(data=scores %>%
                filter(Score=='sites'),
-             aes(color=fish.wide.end$Treatment))  +#colour the points according to their Treatment
+             aes(color=Treatment))  +#colour the points according to their Treatment
   geom_text_repel(data=scores %>%
               filter(Score=='sites'),
             aes(label=Label,
-                color=fish.wide.end$Treatment), hjust=-0.2
+                color=Treatment), hjust=-0.2
             ) +
-  labs(color = "Treatment") +
+  
   theme_classic()
 g
 
+hull <- scores %>% 
+  filter(Score == "sites") %>% 
+  group_by(Treatment) %>% 
+  slice(chull(NMDS1, NMDS2)) #decides which points are inside the hull
+
+g <- g + geom_polygon(data = hull, aes(y = NMDS2, x = NMDS1, fill = Treatment), alpha = 0.2)
+g
 #probs needs some jitter/dodging but you can see some groupings (particularly w)
 ## ----end
   
 ggsave(filename = paste0(FIGS_PATH, "/nmds.end.png"),
        g,
        height = 5,
-       width = 10,
-       dpi = 100)
+       width = 8,
+       units = "cm",
+       dpi = 600)
 
 ##NB: Dissimilarity matrix used to make the NMDS is found in fish.mds$diss. The original order is not preserved
 ## but its indices are at fish.mds$iidx
@@ -6849,38 +6867,16 @@ mm <- model.matrix(~treatment) #predictor matrix
 colnames(mm) <-gsub("treatment","",colnames(mm)) #remove "treatment" from the start of each colname
 
 mm<- data.frame(mm)
-
+mm
 fish.adonis <- adonis2(fish.dist ~ BQ + DL + DM + W, data = mm,
-                       permm = 9999)
+                       permm = 999)
 fish.adonis
 ## ----end
 
- ### Dispersion test =============================================================
-## ----recruitment multivariate end disper
-fish.disp <- betadisper(dist, group = fish.wide.end$Treatment)
 
-boxplot(fish.disp)
 
-anova(fish.disp)
 
-permutest(fish.disp, pairwise = TRUE, seed = 123)
-
-plot(fish.disp)
-
-## ----end
-
-  
-## ----recruitment multivariate end pairwise
-
-##not sure how well I can trust this but
-install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis") 
-library(pairwiseAdonis)
-pair.mod<-pairwise.adonis(fish.dist,factors=fish.wide.end$Treatment)
-pair.mod
-
-##none are significantly different once adjusted for multiple comparisons (x 10, the number of comparisons)
-## ----end
-
+### Dispersion test =============================================================
 
 
 ## ----recruitment multivariate end disper
@@ -6897,16 +6893,80 @@ plot(fish.disp)
 
 library(ggordiplots)
 
-disp.plot <- gg_ordiplot(fish.disp, groups = fish.wide.end$Treatment) + theme_classic()
-disp.plot + coord_equal()
-disp.plot
+disp.plot <- gg_ordiplot(fish.disp, groups = fish.wide.end$Treatment,
+                         hull = TRUE, #add hulls
+                         label = TRUE, #add labels to centroids
+                         ellipse = FALSE, #remove ellipses
+                         plot = FALSE) #don't show plot (instead write the object)
+
+
+(disp.g <- disp.plot$plot + 
+    geom_hline(yintercept=0, linetype='dotted') +
+    geom_vline(xintercept=0, linetype='dotted') + #add some lines
+    scale_x_continuous(breaks = c(-.4,-.3,-.2,-.1,0,.1,.2,.3,.4), #adjust ticks
+                                               limits = c(-0.45,0.45) ) +
+    labs(color = "Treatment") + #change legend label
+    theme_classic())
+
 
 ## ----end
-ggsave(filename = paste0(FIGS_PATH, "/dispplot.end.png"),
-       disp.plot,
+ggsave(filename = paste0(FIGS_PATH, "/disp.plot.end.png"),
+       disp.g,
        height = 5,
-       width = 10,
-       dpi = 100)
+       width = 8,
+       units = "cm",
+       dpi = 600)
+
+
+
+
+
+## ----recruitment multivariate end key comparisons
+#4 comparisons - W-BH, W-BQ, BH-BQ, BH-DM
+W.BH <- c(paste0("W",1:5), paste0("BH", 1:5))
+W.BQ <- c(paste0("W",1:5), paste0("BQ", 1:5))
+BH.BQ <- c(paste0("BH", 1:5), paste0("BQ",1:5))
+BH.DM <- c(paste0("BH", 1:5), paste0("DM",1:5))
+
+W.BH.mat <- fish.dist %>% as.matrix() %>% 
+  as_tibble() %>% 
+  filter(rownames(.) %in% W.BH) %>% 
+  select(all_of(W.BH)) %>%
+  as.matrix()
+W.BH.mat
+
+#tried to quickly do this with a loop,but failed at the first hurdle:
+cont.list <- list(W.BH, W.BQ, BH.BQ, BH.DM)
+
+dist.list <- list()
+
+for(i in cont.list) {
+  dist.list[[i]] <- fish.dist %>% as.matrix() %>% 
+    as_tibble() %>% 
+    filter(rownames(.) %in% i) %>% 
+    select(all_of(i)) %>%
+    as.matrix()
+}
+
+dist.tbl <- fish.dist %>% as.matrix() %>% 
+  as_tibble()  #didn't retain row names 
+
+dist.tbl <- dist.tbl %>% mutate(Rows = rownames(fish.wide.end))
+
+W.BH.mx<- dist.tbl %>% 
+  select(all_of(W.BH), Rows) %>%
+  filter(Rows %in% W.BH) %>% column_to_rownames(var = 'Rows')# %>% 
+ # as.matrix()
+W.BH.mx
+
+
+adonis2(W.BH.mx ~ Treatment, data = fish.wide.end %>% 
+                                     filter(rownames(.) %in% W.BH)) # this worked, but I'm not 100% sure it didn't do something to the data frame it shouldn't have (because it might not have known I gave it a dissimilarity matrix because I haven't changed its class yet)
+
+
+## ----end
+
+
 ##    
  ## create distance matrix
 #fish.dist <- vegdist(wisconsin(fish.wide[,-c(1:3,5)]^0.25), ## 4th root transformation, remove factors and 'empty' col

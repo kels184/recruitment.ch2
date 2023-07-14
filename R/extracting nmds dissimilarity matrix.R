@@ -234,5 +234,5 @@ anova(disp3)
 
 #for now I'm satisfied that they are similar enough that I could choose any - 
 # mx2 I'm choosing mx2 method (feed community data to metaMDS, don't have to 
-#then add species data back in and don't have to specify halfchange scaling)
+#then add species data back in and don't have to specify halfchange scale)
 
