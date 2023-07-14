@@ -6777,7 +6777,7 @@ fish.wide.end <- fishalgaedata %>%
   
 ##  ----recruitment multivariate end mds
   #distance matrix 
-  fish.dist <- vegdist(wisconsin(fish.wide.end[,-c(1:3)]^0.25), "bray")
+fish.dist <- vegdist(wisconsin(fish.wide.end[,-c(1:3)]^0.25), "bray")
 
   ## mds
   
@@ -6795,7 +6795,7 @@ fish.wide.end <- fishalgaedata %>%
 
   
 ## ----recruitment multivariate end mds ggplot
-fish.mds.scores <-   fish.dist.mds %>% fortify()
+scores <-   fish.dist.mds %>% fortify()
 View(fish.mds.scores)
 
 fish.mds.scores <-   fish.mds %>% fortify()
@@ -6890,18 +6890,18 @@ plot(fish.disp)
 
 
 ### tried several methods to remove empty rows while keeping the factor cols, but so far this is unfortunately my best:
-wide.row.sums <- fish.wide %>% 
-  as.data.frame() %>% 
-  dplyr::select(is.numeric) %>% 
-  mutate(r.s = rowSums(.)) %>%  
-  select(r.s)
+#wide.row.sums <- fish.wide %>% 
+#  as.data.frame() %>% 
+#  dplyr::select(is.numeric) %>% 
+#  mutate(r.s = rowSums(.)) %>%  
+#  select(r.s)
 
-fish.no.0 <- fish.wide[which(wide.row.sums != 0), ]
+#fish.no.0 <- fish.wide[which(wide.row.sums != 0), ]
 
-fish.no.0 %>% glimpse()
+#fish.no.0 %>% glimpse()
 
 
-fish.dist <- vegdist(wisconsin(fish.no.0[,-c(1:3,5)]^0.25), "bray")
+#fish.dist <- vegdist(wisconsin(fish.no.0[,-c(1:3,5)]^0.25), "bray")
 
 
  ## mds
@@ -6910,35 +6910,44 @@ fish.dist <- vegdist(wisconsin(fish.no.0[,-c(1:3,5)]^0.25), "bray")
 # 61: no. of iterations >= maxit - it reached 500 iterations
 # 434: stress ratio > sratmax
 # 5: scale facotr of the gradient < sfgrmin
-stressplot(fish.mds)
 
-plot(fish.mds, type="text", display="sites" ) #something weird happening at row 258 - 1 lethrinus nebulosus, that's it
+
+#plot(fish.mds, type="text", display="sites" ) #something weird happening at row 258 - 1 lethrinus nebulosus, that's it
 
  ## rerun without row 258
-fish.mds <- metaMDS(fish.no.0[-258,-c(1:3,5)], seed = 123, trymax = 100) 
+#fish.mds <- metaMDS(fish.no.0[-258,-c(1:3,5)], seed = 123, trymax = 100) 
 #*** No convergence -- monoMDS stopping criteria:
  # 36: no. of iterations >= maxit
 #59: stress ratio > sratmax
 #5: scale factor of the gradient < sfgrmin
-fish.mds %>% plot(type = "text", display = "sites")
+#fish.mds %>% plot(type = "text", display = "sites")
 ##more sensible plot, higher stress and need more plotting to see if treatments had any influence
+
+
+## rerun without row 258 but use stepacross (noshare = TRUE)
+#fish.mds <- metaMDS(fish.no.0[-258,-c(1:3,5)], noshare = TRUE,
+#                    seed = 123, trymax = 50) 
+#*** No convergence -- monoMDS stopping criteria:
+#  6: no. of iterations >= maxit
+#43: stress ratio > sratmax
+#1: scale factor of the gradient < sfgrmin
 
 
  ### 3D, no row 258
 
-fish.dist <- vegdist(wisconsin(fish.no.0[-258,
-                                         -c(1:3,5)]^0.25), "bray") ##something about this messed up the mds and scores couldn't be obtained (ndim = 1)
-fish.mds <- metaMDS(fish.dist, k=3, 
-                    seed = 123)
+#fish.dist <- vegdist(wisconsin(fish.no.0[-258,
+ #                                        -c(1:3,5)]^0.25), "bray") ##something about this messed up the mds and scores couldn't be obtained (ndim = 1)
+#fish.mds <- metaMDS(fish.dist, k=3, 
+#                    seed = 123)
 #stress improvement below 0.2, no convergence
 
-fish.mds.scores <- fish.mds %>%
-  fortify() ## Error in rep("sites", nrow(df)) : invalid 'times' argument
+#fish.mds.scores <- fish.mds %>%
+#  fortify() ## Error in rep("sites", nrow(df)) : invalid 'times' argument
 
-scores(fish.mds, choices = 1:3, display = c("sites")) #this seemed to work, although 333 rows - shouldn't there be 446, the number of rows of fish.no.0 - 1?
+#scores(fish.mds, choices = 1:3, display = c("sites")) #this seemed to work, although 333 rows - shouldn't there be 446, the number of rows of fish.no.0 - 1?
 #also couldn't get "species" scores
 
-## ----end
+##stick with comparing composition on day 18 (^above)
 
    #Size Distribution Testing ===================================================
  

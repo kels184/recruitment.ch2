@@ -43,7 +43,7 @@ fish.dist
 
 ## mds
 
-fish.dist.mds <- metaMDS(fish.dist, k= 2, trymax = 500, seed = 123)
+fish.dist.mds <- metaMDS(fish.dist, k= 2, trymax = 20, seed = 123)
 fish.dist.mds
 fish.dist.mds$species
 fish.dist.mds$diss
@@ -92,8 +92,8 @@ adonis2(mx ~ Treatment, data = fish.wide.end) ## WORKS! output the same as adoni
 #distance matrix that is being used in the mds (e.g.if i choose to stick with the mds on data since fortify()) works 
 
 #mds on data, as opposed to distance matrix
-fish.mds <- metaMDS(fish.wide.end[,-c(1:3)]^0.25, k = 2, autotransform = FALSE,
-                    trymax= 500, seed = 123, distance = "bray")
+fish.mds <- metaMDS(wisconsin(fish.wide.end[,-c(1:3)]^0.25), k = 2, autotransform = FALSE,
+                    trymax= 20, seed = 123, distance = "bray")
 fish.mds
 fish.mds$species
 fish.mds$diss
@@ -116,11 +116,74 @@ adonis2(mx2 ~ Treatment, data = fish.wide.end) #similar, but not identical resul
 
 
 
-#alternatively I could still use the dist matrix, but add species data to the mds:
+#alternatively I could still use the dist matrix to create the nmds, but add species data to the mds:
 
 sppscores(fish.dist.mds) <- fish.wide.end[,-c(1:3)]^0.25 #add species data back in. Be sure to use same transformation
 
 scores <- fish.dist.mds %>% fortify()
-scores
-fish.dist.mds$species
+scores #works!
+fish.dist.mds$species #I can see species data!
 
+
+
+##Compare plots
+##from dist matrix
+dist.mds.scores <- scores
+
+dist.g <-
+  ggplot(data = NULL, aes(y=NMDS2, x=NMDS1)) +
+  geom_hline(yintercept=0, linetype='dotted') +
+  geom_vline(xintercept=0, linetype='dotted') +
+  geom_point(data=dist.mds.scores %>%
+               filter(Score=='sites'),
+             aes(color=fish.wide.end$Treatment))  +#colour the points according to their Treatment
+  geom_text_repel(data=dist.mds.scores %>%
+                    filter(Score=='sites'),
+                  aes(label=Label,
+                      color=fish.wide.end$Treatment), hjust=-0.2
+  )  +
+  geom_point(data=dist.mds.scores %>%
+               filter(Score=='species') ) +
+  geom_text_repel(data=dist.mds.scores %>%
+                    filter(Score=='species'),
+                  aes(label=Label )
+  ) +
+  labs(color = "Treatment")
+
+dist.g
+
+
+#from community data
+data.scores <- fish.mds %>% fortify()
+
+data.g <-
+  ggplot(data = NULL, aes(y=NMDS2, x=NMDS1)) +
+  geom_hline(yintercept=0, linetype='dotted') +
+  geom_vline(xintercept=0, linetype='dotted') +
+  geom_point(data=data.scores %>%
+               filter(Score=='sites'),
+             aes(color=fish.wide.end$Treatment))  +#colour the points according to their Treatment
+  geom_text_repel(data=data.scores %>%
+                    filter(Score=='sites'),
+                  aes(label=Label,
+                      color=fish.wide.end$Treatment), hjust=-0.2
+  ) +
+  geom_point(data=data.scores %>%
+               filter(Score=='species') ) +
+  geom_text_repel(data=data.scores %>%
+                    filter(Score=='species'),
+                  aes(label=Label )
+  ) +
+  labs(color = "Treatment")
+
+data.g
+
+
+#I'm satisfied that the two are similar enough that I could go with either. 
+
+#Initially thought stress was lower in dist version, but that was because I didn't 
+#Wisconsin double standardise the data in the other mds
+#
+
+#only difference I can see is the p value in the adonis anova tables - 0.03 for 
+#the non dist model, 0.05 for the dist, even though everything else in the tables are the same
