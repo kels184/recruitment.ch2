@@ -416,7 +416,7 @@ sp.abnd <- sp.abnd %>% left_join(days.observed) %>%
 
 sp.abnd %>% head(10)
 
-write_csv(sp.abnd, paste0(DATA_PATH, "summarised/species.abundance.csv") )
+write_csv(sp.abnd, paste0(TABS_PATH, "/species.abundance.csv") )
 
 ## ----end
 
@@ -6597,7 +6597,7 @@ combined_table <- bind_rows(tables)
 
 view(combined_table)
 
-write.csv(combined_table, paste0(DATA_PATH, "/summarised/cont.tbl.csv"))
+write.csv(combined_table, paste0(TABS_PATH, "/cont.tbl.csv"))
 
 ###combine em_mods tables 
 
