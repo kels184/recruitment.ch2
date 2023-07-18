@@ -1643,9 +1643,14 @@ newdata <- abnd.brm1b %>% emmeans(~Treatment, type = "link") %>%
   mutate(Fit = exp(.value)) %>% 
   as.data.frame
 
-# Reorder Treatment levels
-newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
 
+#RENAME TREATMENTS
+newdata$Treatment <- newdata$Treatment %>% case_match("W" ~ "D9BH", "BH"~ "D9BM", 
+                                                      "BQ" ~"D9BL", "DM" ~ "D5BH", 
+                                                      "DL" ~ "D3BH") %>% 
+  factor(levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH" )) # Factorise and Reorder Treatment levels
+
+newdata %>% glimpse()
 
 g1 <- newdata %>% ggplot() + 
   stat_slab(aes(
@@ -1667,6 +1672,18 @@ abnd.em <- abnd.brm1b %>%
   mutate(Fit = exp(.value)) %>% as.data.frame()
 head(abnd.em)
 
+##Rename treatment levels
+test <- abnd.em
+test$contrast <- abnd.em$contrast %>% 
+ str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                    "W" = "D9BH", 
+                               "BQ" ="D9BL", "DM" = "D5BH", 
+                               "DL" = "D3BH"))
+arrange(test, .draw) %>% head(10) #check it worked
+arrange(abnd.em, .draw) %>% head(10) #looks like it did
+
+
+
 #create modified contrast set containing only key contrastss
 abnd.em_mod <- abnd.em %>% 
   filter(#filter to key contrasts
@@ -1684,9 +1701,19 @@ abnd.em_mod <- abnd.em %>%
                            levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
          )
 
+abnd.em_mod %>% glimpse()
 
+test_mod <- abnd.em_mod 
+test_mod$contrast <- test_mod$contrast%>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH")) %>% 
+  factor()
 
-g2<- abnd.em_mod %>%
+test_mod$contrast %>% unique()
+
+g2<- test_mod %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
   stat_slab(aes(
@@ -1706,7 +1733,7 @@ g2<- abnd.em_mod %>%
   labs(y = "Contrast")
 g1 + g2
 
-g.all.cont <- abnd.em %>%
+g.all.cont <- test %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
   stat_slab(aes(
@@ -1728,7 +1755,7 @@ g.all.cont <- abnd.em %>%
 
 g3 <- ggplot() +
   scale_x_continuous(limits = c(0, 2), breaks = 1) +
-  scale_y_discrete(limits = c("BH - DM", "BH - BQ", "W - BQ", "W - BH")) +
+  scale_y_discrete(limits = c("D9BM - D5BH", "D9BM - D9BL", "D9BH - D9BL", "D9BH - D9BM")) +
   geom_vline(xintercept = 1, linetype = "dashed") +
   labs(x = "Effect", y = "Contrast") +
   theme_classic()
@@ -6967,6 +6994,10 @@ W.BH.adonis #strange, given the contrast in the test above. Negative SS, R2 and 
 
 
 
+## ----end
+
+## -----recruitment multivariate pairwise adonis
+pairwise.adonis(fish.dist, factors = fish.wide.end$Treatment)
 ## ----end
 
 
