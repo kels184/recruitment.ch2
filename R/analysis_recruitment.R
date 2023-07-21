@@ -1659,11 +1659,22 @@ g1 <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.25) + #adjust line thickness and colour
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab("Total abundance") +
-  theme_classic()
+  theme_classic() +
+  theme(text = element_text(colour = "black"), #make all font black
+        axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+        axis.title=element_text(size=10), #change font size of axis titles
+        legend.text=element_text(size=8), #change font size of legend text
+        legend.title=element_text(size=8), #change font size of legend title
+        legend.key.size = unit(0.25, 'line'), #change legend key size
+        axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+        axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth
+  )
 
+g1
 
 abnd.em <- abnd.brm1b %>%
   emmeans(~Treatment, type = "link") %>%
