@@ -2363,7 +2363,7 @@ plot(sp.resids)
    #### Model Investigation - Sp richness =======================================
    ##### Frequentist ============================================================
 ## ----recruitment univariate sp frequentist summary
-sp.glmmTMB.ac %>% summary()
+sp.glmmTMB.ac %>% summary(type = )
 sp.glmmTMB.ac %>% r.squaredGLMM() # will return error
 sp.glmmTMB2 %>% r.squaredGLMM()
 ## ----end
@@ -2371,15 +2371,15 @@ sp.glmmTMB2 %>% r.squaredGLMM()
 
     ##### Bayesian ==============================================================
 ## ----recruitment univariate sp bayesian summary
+sp.brm1f %>% emmeans(~Treatment, type = "response")
 
-#something is the matter here. why is 
 sp.brm1f$fit %>% tidyMCMC(pars = wch,
                           estimate.method = "median",
                           conf.int = TRUE,
                           conf.method = "HPDinterval",
                           rhat = TRUE,
                           ess = TRUE)
-#not giving a positive ar estimate???
+
 
 sp.brm1f %>% brms::bayes_R2(re.form = NA, #or ~Treatment
                               summary = FALSE) %>% #don't summarise - I want ALL the R-squareds
@@ -2396,6 +2396,10 @@ sp.brm1f %>% brms::bayes_R2(re.form = NULL, #or ~(1|plotID)
 
 ## ---- recruitment univariate sp all contrasts
 
+sp.brm1f%>%
+  emmeans(~Treatment, type = 'response') %>% #
+  pairs() #
+
 ##all (Tukey style) contrasts (exceedance)
 
 sp.cont.tbl <- sp.brm1f%>%
@@ -2404,7 +2408,7 @@ sp.cont.tbl <- sp.brm1f%>%
   gather_emmeans_draws() %>% #take all the draws for these comparisons, gather them (make long)
   #median_hdci(exp(.value)) #this would essentially give us the summary above. Nothing too special yet, but we have more control
   summarise('P>' = sum(.value>0)/n(), #exceedance probabilities
-            'P<' = sum(.value<0)/n(),
+            'P<' = sum(.value<0)/n()
   ) %>% 
   ungroup() %>% 
   mutate(evidence = case_when(
@@ -6868,10 +6872,10 @@ g
 #probs needs some jitter/dodging but you can see some groupings (particularly w)
 ## ----end
   
-ggsave(filename = paste0(FIGS_PATH, "/nmds.end.png"),
+ggsave(filename = paste0(FIGS_PATH, "/nmds.end.pdf"),
        g,
-       height = 5,
-       width = 8,
+       height = 10,
+       width = 16,
        units = "cm",
        dpi = 600)
 
@@ -6906,7 +6910,7 @@ colnames(mm) <-gsub("treatment","",colnames(mm)) #remove "treatment" from the st
 
 mm<- data.frame(mm)
 mm
-fish.adonis <- adonis2(fish.dist ~ BQ + DL + DM + W, data = mm,
+fish.adonis <- adonis2(dist ~ BQ + DL + DM + W, data = mm,
                        permm = 999)
 fish.adonis
 ## ----end
@@ -6918,7 +6922,7 @@ fish.adonis
 
 
 ## ----recruitment multivariate end disper
-fish.disp <- betadisper(fish.dist, group = fish.wide.end$Treatment)
+fish.disp <- betadisper(dist, group = fish.wide.end$Treatment)
 fish.disp
 
 boxplot(fish.disp)
@@ -6948,10 +6952,10 @@ disp.plot <- gg_ordiplot(fish.disp, groups = fish.wide.end$Treatment,
 
 
 ## ----end
-ggsave(filename = paste0(FIGS_PATH, "/disp.plot.end.png"),
+ggsave(filename = paste0(FIGS_PATH, "/disp.plot.end.pdf"),
        disp.g,
-       height = 5,
-       width = 8,
+       height = 10,
+       width = 16,
        units = "cm",
        dpi = 600)
 
