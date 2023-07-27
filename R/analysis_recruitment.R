@@ -1744,6 +1744,7 @@ g2<- test_mod %>%
   labs(y = "Contrast")
 g1 + g2
 
+
 g.all.cont <- test %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
@@ -1779,14 +1780,33 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.pdf"),
        width = 8,
        units = "cm",
        dpi = 600)
+
 ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.contr.pdf"),
        g2,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
+
 ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.pdf"),
-       g1 + theme(legend.position = "none") + g2,
+       g1 + theme(legend.position = "none",
+                  text = element_text(colour = "black"), #make all font black
+                  axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                  axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                  axis.title=element_text(size=10), #change font size of axis titles
+                  axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+                  axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+                  )
+       + g2 + theme(text = element_text(colour = "black"), #make all font black
+                    axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                    axis.title=element_text(size=10), #change font size of axis titles
+                    legend.text=element_text(size=8), #change font size of legend text
+                    legend.title=element_text(size=8), #change font size of legend title
+                    legend.justification=c(1,0), legend.position=c(1,0.1), #move legend to bottom right corner
+                    legend.key.size = unit(0.25, 'line'), #change legend key size
+                    axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+                    axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+       ),
        height = 5,
        width = 16,
        units = "cm",
@@ -6904,17 +6924,11 @@ fish.adonis
 
 #by levels
 
-treatment <- factor(fish.wide.end$Treatment, levels = c("BH", "BQ", "DL", "DM", "W"))
-mm <- model.matrix(~treatment) #predictor matrix
-colnames(mm) <-gsub("treatment","",colnames(mm)) #remove "treatment" from the start of each colname
-
-mm<- data.frame(mm)
-mm
-fish.adonis <- adonis2(dist ~ BQ + DL + DM + W, data = mm,
-                       permm = 999)
-fish.adonis
 ## ----end
 
+## -----recruitment multivariate pairwise adonis
+pairwise.adonis(fish.dist, factors = fish.wide.end$Treatment)
+## ----end
 
 
 
@@ -6962,7 +6976,7 @@ ggsave(filename = paste0(FIGS_PATH, "/disp.plot.end.pdf"),
 
 
 
-
+#this kinda failed:
 ## ----recruitment multivariate end key comparisons
 #4 comparisons - W-BH, W-BQ, BH-BQ, BH-DM
 W.BH <- c(paste0("W",1:5), paste0("BH", 1:5))
@@ -7011,9 +7025,6 @@ W.BH.adonis #strange, given the contrast in the test above. Negative SS, R2 and 
 
 ## ----end
 
-## -----recruitment multivariate pairwise adonis
-pairwise.adonis(fish.dist, factors = fish.wide.end$Treatment)
-## ----end
 
 
 ##    
