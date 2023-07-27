@@ -1752,7 +1752,11 @@ star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
 g2 <- g2 + geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
 
   
-  
+abnd.em$contrast <-  abnd.em$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH"))  
   
 g.all.cont <- test %>%
   ggplot() +
@@ -2684,29 +2688,15 @@ g2<- sp.em_mod %>%
 g1 + g2
 
 
-
-g2<- sp.em_mod %>%
-  ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  stat_slab(aes(
-    x = Fit, 
-    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
-    fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.8, 0.95),
-                                   labels = scales::percent_format()
-    ))
-  ), color = "black", size = 0.5) +
-  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  scale_x_continuous("Effect",
-                     trans = scales::log2_trans()
-  ) +
-  theme_classic() +
-  
-  labs(y = "Contrast")
+sp.em$contrast <-  sp.em$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH"))
 
 g.all.cont<- sp.em %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
   # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
   stat_slab(aes(
     x = Fit, y = contrast,
@@ -2714,13 +2704,12 @@ g.all.cont<- sp.em %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.25) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
   ) +
   theme_classic()
-g1 + g2
 
 ## ----end
 
@@ -3279,9 +3268,201 @@ write.csv(hm.cont.tbl, "clipboard")
 
 #### Summary figures =========================================================
 
+#####USE NOAC
+
+## ---- recruitment univariate hmNOAC figures
+
+hmNOAC.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brmNO_AC.rds"))
+hmNOAC.brm1 %>% ggemmeans(~Treatment) %>% plot
+
+
+newdata <- hmNOAC.brm1 %>% emmeans(~Treatment, type = "link") %>% 
+  gather_emmeans_draws() %>% 
+  mutate(Fit = exp(.value)) %>% 
+  as.data.frame
+head(newdata)
+
+
+#RENAME TREATMENTS
+newdata$Treatment <- newdata$Treatment %>% case_match("W" ~ "D9BH", "BH"~ "D9BM", 
+                                                      "BQ" ~"D9BL", "DM" ~ "D5BH", 
+                                                      "DL" ~ "D3BH") %>% 
+  factor(levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH" )) # Factorise and Reorder Treatment levels
+
+
+g1.hm <- newdata %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = Fit,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.25) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab(expression(paste(italic("H. miniatus"), " abundance"))) +
+  theme_classic() +
+  theme(
+        text = element_text(colour = "black"), #make all font black
+        axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+        axis.title=element_text(size=10), #change font size of axis titles
+        axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+        axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+  )
+g1.hm
+
+hmNOAC.em <- hmNOAC.brm1 %>%
+  emmeans(~Treatment, type = "link") %>%
+  pairs() %>%
+  gather_emmeans_draws() %>%
+  mutate(Fit = exp(.value)) %>% as.data.frame()
+
+hmNOAC.em_mod <- hmNOAC.em %>% 
+  filter(#filter to key contrasts
+    contrast %in% c("BH - W", "BQ - W", "BH - BQ", "BH - DM")) %>% 
+  mutate(contrast = fct_recode(contrast, #rename some levels of contrast
+                               "W-BH" = "BH - W", 
+                               "W-BQ" = "BQ - W", 
+                               "BH-BQ" = "BH - BQ",
+                               "BH-DM" = "BH - DM"),
+         Fit = if_else(#calculate inverse effect for the renamed levels
+           contrast %in% c("W-BH", "W-BQ"), 
+           1/Fit, 
+           Fit)
+  )
+
+hmNOAC.em_mod$contrast <-  hmNOAC.em_mod$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                                              "W" = "D9BH", 
+                                              "BQ" ="D9BL", "DM" = "D5BH", 
+                                              "DL" = "D3BH")) %>% 
+  factor( #factorise and reorder levels
+    levels = c("D9BM-D5BH", "D9BM-D9BL", "D9BH-D9BL", "D9BH-D9BM"))
+
+hmNOAC.em_mod$contrast %>% levels
+
+#add asterisks (stars)
+
+star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
+                      Fit = c(NA, 2.1,2.2,NA),
+                      stars = c(NA, "***", "***", NA))
+
+
+
+g2.hm <- hmNOAC.em_mod %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  stat_slab(aes(
+    x = Fit, 
+    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.25) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     n.breaks = 4,
+                     limits = c(0.5,3)
+  ) +
+  theme_classic() +
+  labs(y = "Contrast") +
+  geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars)) #add asterisks
+
+g1.hm + g2.hm
+
+
+hm.em$contrast <-  hm.em$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH"))
+
+g.all.hm <- hmNOAC.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed",linewidth = 0.25) +
+  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.25) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     n.breaks = 4,
+                     limits = c(0.5,3)
+  ) +
+  theme_classic()
+
+
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.pdf"),
+       g1.hm,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.contr.pdf"),
+       g2.hm,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.pdf"),
+       g1.hm + theme(legend.position = "none",
+                  text = element_text(colour = "black"), #make all font black
+                  axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                  axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                  axis.title=element_text(size=10), #change font size of axis titles
+                  axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+                  axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+       ) +
+         g2.hm + theme(text = element_text(colour = "black"), #make all font black
+                    axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                    axis.title=element_text(size=10), #change font size of axis titles
+                    legend.text=element_text(size=8), #change font size of legend text
+                    legend.title=element_text(size=8), #change font size of legend title
+                    legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+                    legend.key.size = unit(0.5, 'char'), #change legend key size
+                    legend.background = element_blank(), #remove legend background box
+                    axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+                    axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+         ),
+       height = 5,
+       width = 16,
+       units = "cm",
+       dpi = 600)
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.all.contr.pdf"),
+       g.all.hm,
+       height = 5,
+       width = 8,
+       units = "cm",
+       dpi = 600)
+
+##For powerpoint:
+ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hmNOAC.both.png"),
+       g1.hm + theme(legend.position = "none") + g2.hm,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 1000)
+
+#save as rdata files
+g1.hm %>% save(file = paste0(FIGS_PATH, "/Rdata/g.hm.Rdata"))
+g2.hm %>% save(file = paste0(FIGS_PATH, "/Rdata/g.hm.cont.Rdata"))
+g.all.hm %>% save(file = paste0(FIGS_PATH, "/Rdata/g.hm.all.Rdata"))
+
+#load(file = paste0(FIGS_PATH, "/Rdata/g.hm.cont.Rdata")) #doesn't seem to work as i hoped
+
 ## ---- recruitment univariate hm figures
 
-hm.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
+#hm.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
 hm.brm1 %>% ggemmeans(~Treatment) %>% plot
 
 
@@ -3291,8 +3472,11 @@ newdata <- hm.brm1 %>% emmeans(~Treatment, type = "link") %>%
   as.data.frame
 head(newdata)
 
-# Reorder Treatment levels
-newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+#RENAME TREATMENTS
+newdata$Treatment <- newdata$Treatment %>% case_match("W" ~ "D9BH", "BH"~ "D9BM", 
+                                                      "BQ" ~"D9BL", "DM" ~ "D5BH", 
+                                                      "DL" ~ "D3BH") %>% 
+  factor(levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH" )) # Factorise and Reorder Treatment levels
 
 
 g1 <- newdata %>% ggplot() + 
@@ -3302,11 +3486,19 @@ g1 <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.25) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab(expression(paste(italic("H. miniatus"), " abundance"))) +
-  theme_classic()
-
+  theme_classic() +
+ theme(legend.position = "none",
+      text = element_text(colour = "black"), #make all font black
+      axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+      axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+      axis.title=element_text(size=10), #change font size of axis titles
+      axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+      axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+)
+g1
 
 hm.em <- hm.brm1 %>%
   emmeans(~Treatment, type = "link") %>%
@@ -3318,23 +3510,39 @@ head(sp.em)
 hm.em_mod <- hm.em %>% 
   filter(#filter to key contrasts
     contrast %in% c("BH - W", "BQ - W", "BH - BQ", "BH - DM")) %>% 
-  mutate(contrast = fct_recode(contrast, #rename some levels of contrast
-                               "W - BH" = "BH - W", 
-                               "W - BQ" = "BQ - W", 
-                               "BH - BQ" = "BH - BQ",
-                               "BH - DM" = "BH - DM"),
-         Fit = if_else(#calculate inverse effect for the renamed levels
-           contrast %in% c("W - BH", "W - BQ"), 
-           1/Fit, 
-           Fit),
-         contrast = factor(contrast, #reorder contrast levels
-                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
-  )
+    mutate(contrast = fct_recode(contrast, #rename some levels of contrast
+                             "W-BH" = "BH - W", 
+                             "W-BQ" = "BQ - W", 
+                             "BH-BQ" = "BH - BQ",
+                             "BH-DM" = "BH - DM"),
+       Fit = if_else(#calculate inverse effect for the renamed levels
+         contrast %in% c("W-BH", "W-BQ"), 
+         1/Fit, 
+         Fit),
+       contrast = factor(contrast)
+)
+
+
+hm.em_mod$contrast <- hm.em_mod$contrast%>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH")) %>% 
+  factor( #factorise and reorder levels
+    levels = c("D9BM-D5BH", "D9BM-D9BL", "D9BH-D9BL", "D9BH-D9BM"))
+
+hm.em_mod$contrast %>% levels
+
+#add asterisks (stars)
+
+star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
+                      Fit = c(0.5, 2,4,2.7),
+                      stars = c("**", "**", "***", "***"))
 
 
 g2 <- hm.em_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
   stat_slab(aes(
     x = Fit, 
     y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
@@ -3342,7 +3550,7 @@ g2 <- hm.em_mod %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.25) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -3350,20 +3558,19 @@ g2 <- hm.em_mod %>%
   theme_classic() +
   
   labs(y = "Contrast")
-
+g2
 
 
 g.all.cont <- hm.em %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
   stat_slab(aes(
     x = Fit, y = contrast,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.25) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -3407,135 +3614,6 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hm.both.png"),
        units = "cm",
        dpi = 1000)
 
-## ---- recruitment univariate hmNOAC figures
-
-hmNOAC.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brmNO_AC.rds"))
-hmNOAC.brm1 %>% ggemmeans(~Treatment) %>% plot
-
-
-newdata <- hmNOAC.brm1 %>% emmeans(~Treatment, type = "link") %>% 
-  gather_emmeans_draws() %>% 
-  mutate(Fit = exp(.value)) %>% 
-  as.data.frame
-head(newdata)
-
-# Reorder Treatment levels
-newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
-
-
-g1 <- newdata %>% ggplot() + 
-  stat_slab(aes(
-    x = Treatment, y = Fit,
-    fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.8, 0.95),
-                                   labels = scales::percent_format()
-    ))
-  ), color = "black", size = 0.5) +
-  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  ylab(expression(paste(italic("H. miniatus"), " abundance"))) +
-  theme_classic()
-
-
-hmNOAC.em <- hmNOAC.brm1 %>%
-  emmeans(~Treatment, type = "link") %>%
-  pairs() %>%
-  gather_emmeans_draws() %>%
-  mutate(Fit = exp(.value)) %>% as.data.frame()
-head(sp.em)
-
-hmNOAC.em_mod <- hmNOAC.em %>% 
-  filter(#filter to key contrasts
-    contrast %in% c("BH - W", "BQ - W", "BH - BQ", "BH - DM")) %>% 
-  mutate(contrast = fct_recode(contrast, #rename some levels of contrast
-                               "W - BH" = "BH - W", 
-                               "W - BQ" = "BQ - W", 
-                               "BH - BQ" = "BH - BQ",
-                               "BH - DM" = "BH - DM"),
-         Fit = if_else(#calculate inverse effect for the renamed levels
-           contrast %in% c("W - BH", "W - BQ"), 
-           1/Fit, 
-           Fit),
-         contrast = factor(contrast, #reorder contrast levels
-                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
-  )
-
-
-g2 <- hmNOAC.em_mod %>%
-  ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  stat_slab(aes(
-    x = Fit, 
-    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
-    fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.8, 0.95),
-                                   labels = scales::percent_format()
-    ))
-  ), color = "black", size = 0.5) +
-  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  scale_x_continuous("Effect",
-                     trans = scales::log2_trans(),
-                     n.breaks = 4,
-                     limits = c(0.5,3)
-  ) +
-  theme_classic() +
-  
-  labs(y = "Contrast")
-
-g1 + g2
-
-g.all.cont <- hmNOAC.em %>%
-  ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
-  stat_slab(aes(
-    x = Fit, y = contrast,
-    fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.8, 0.95),
-                                   labels = scales::percent_format()
-    ))
-  ), color = "black", size = 0.5) +
-  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  scale_x_continuous("Effect",
-                     trans = scales::log2_trans()
-  ) +
-  theme_classic()
-
-
-## ----end
-
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.pdf"),
-       g1,
-       height = 5,
-       width = 8,
-       units = "cm",
-       dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.contr.pdf"),
-       g2,
-       height = 5,
-       width = 8,
-       units = "cm",
-       dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.pdf"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 5,
-       width = 16,
-       units = "cm",
-       dpi = 600)
-
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.all.contr.pdf"),
-       g.all.cont,
-       height = 5,
-       width = 8,
-       units = "cm",
-       dpi = 600)
-
-##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hmNOAC.both.png"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 10,
-       width = 20,
-       units = "cm",
-       dpi = 1000)
 
 ### Siganus doliatus abundance  =================================================
 
@@ -3899,11 +3977,14 @@ newdata <- sd.brm2 %>% emmeans(~Treatment, type = "link") %>%
   as.data.frame
 head(newdata)
 
-# Reorder Treatment levels
-newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+#RENAME TREATMENTS
+newdata$Treatment <- newdata$Treatment %>% case_match("W" ~ "D9BH", "BH"~ "D9BM", 
+                                                      "BQ" ~"D9BL", "DM" ~ "D5BH", 
+                                                      "DL" ~ "D3BH") %>% 
+  factor(levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH" )) # Factorise and Reorder Treatment levels
 
 
-g1 <- newdata %>% ggplot() + 
+g1.sd <- newdata %>% ggplot() + 
   stat_slab(aes(
     x = Treatment, y = Fit,
     fill = stat(ggdist::cut_cdf_qi(cdf,
@@ -3913,9 +3994,16 @@ g1 <- newdata %>% ggplot() +
   ), color = "black", size = 0.5) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab(expression(paste(italic("S. doliatus"), " abundance"))) +
-  theme_classic()
+  theme_classic() + 
+  theme(text = element_text(colour = "black"), #make all font black
+axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+axis.title=element_text(size=10), #change font size of axis titles
+axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+)
 
-
+g1.sd
 
 
 sd.em <- sd.brm2 %>%
@@ -3929,22 +4017,44 @@ sd.em <- sd.brm2 %>%
 sd.em_mod <- sd.em %>% 
   filter(#filter to key contrasts
     contrast %in% c("W - BH", "W - BQ", "BH - BQ", "BH - DM")) %>% 
-  mutate(contrast = factor(contrast, #reorder contrast levels
-                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
+
+  mutate(contrast = fct_recode(contrast, #rename (shorten)
+                               "W-BH" = "W - BH", 
+                               "W-BQ" = "W - BQ", 
+                               "BH-BQ" = "BH - BQ",
+                               "BH-DM" = "BH - DM"),
   )
 
+sd.em_mod$contrast <-  sd.em_mod$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH")) %>% 
+  factor( #factorise and reorder levels
+    levels = c("D9BM-D5BH", "D9BM-D9BL", "D9BH-D9BL", "D9BH-D9BM"))
 
-g2<- sd.em_mod %>%
+sd.em_mod$contrast %>% levels
+
+#add asterisks (stars)
+
+star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
+                      Fit = c(0.1, NA,15,12),
+                      stars = c("*", NA, "***", "***"))
+
+
+
+
+g2.sd <- sd.em_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
   stat_slab(aes(
     x = Fit, 
-    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    y = contrast, #reorder y axis (descending)
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.25) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
@@ -3952,20 +4062,27 @@ g2<- sd.em_mod %>%
                      limits = c(0.05,16)
   ) +
   theme_classic() +
-  
-  labs(y = "Contrast")
-g1 + g2
+  labs(y = "Contrast") + 
+  geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
+g1.sd + g2.sd
 
-g.all.cont <- sd.em %>%
+
+sd.em$contrast <-  sd.em$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH"))
+
+g.all.sd <- sd.em %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
   stat_slab(aes(
     x = Fit, y = contrast,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.25) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
@@ -3977,26 +4094,44 @@ g.all.cont <- sd.em %>%
 ## ----end
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.pdf"),
-       g1,
+       g1.sd,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.contr.pdf"),
-       g2,
+       g2.sd,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.pdf"),
-       g1 + theme(legend.position = "none") + g2,
+       g1.sd + theme(legend.position = "none",
+                     text = element_text(colour = "black"), #make all font black
+                     axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                     axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                     axis.title=element_text(size=10), #change font size of axis titles
+                     axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+                     axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+       ) +
+         g2.sd + theme(text = element_text(colour = "black"), #make all font black
+                       axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                       axis.title=element_text(size=10), #change font size of axis titles
+                       legend.text=element_text(size=8), #change font size of legend text
+                       legend.title=element_text(size=8), #change font size of legend title
+                       legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+                       legend.key.size = unit(0.5, 'char'), #change legend key size
+                       legend.background = element_blank(), #remove legend background box
+                       axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+                       axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+         ),
        height = 5,
        width = 16,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.all.contr.pdf"),
-       g.all.cont,
+       g.all.sd,
        height = 5,
        width = 8,
        units = "cm",
@@ -4004,7 +4139,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.all.contr.pdf"),
 
 ##For powerpoint:
 ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sd.both.png"),
-       g1 + theme(legend.position = "none") + g2,
+       g1.sd + theme(legend.position = "none") + g2.sd,
        height = 10,
        width = 20,
        units = "cm",
@@ -4481,23 +4616,35 @@ newdata <- ps.brm2 %>% emmeans(~Treatment, type = "link") %>%
   as.data.frame
 head(newdata)
 
-# Reorder Treatment levels
-newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+
+#RENAME TREATMENTS
+newdata$Treatment <- newdata$Treatment %>% case_match("W" ~ "D9BH", "BH"~ "D9BM", 
+                                                      "BQ" ~"D9BL", "DM" ~ "D5BH", 
+                                                      "DL" ~ "D3BH") %>% 
+  factor(levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH" )) # Factorise and Reorder Treatment levels
 
 
-g1 <- newdata %>% ggplot() + 
+g1.ps <- newdata %>% ggplot() + 
   stat_slab(aes(
     x = Treatment, y = Fit,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.25) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab(expression(atop( #makes 2 lines of text, 1 atop the other
     italic("Petroscirtes sp."), paste(" abundance"))) )+
-  theme_classic()
+  theme_classic() +
+  theme(text = element_text(colour = "black"), #make all font black
+        axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+        axis.title=element_text(size=10), #change font size of axis titles
+        axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
+        axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+  )
 
+g1.ps
 
 ps.em <- ps.brm2 %>%
   emmeans(~Treatment, type = "link") %>%
@@ -4510,22 +4657,45 @@ ps.em <- ps.brm2 %>%
 ps.em_mod <- ps.em %>% 
   filter(#filter to key contrasts
     contrast %in% c("W - BH", "W - BQ", "BH - BQ", "BH - DM")) %>% 
-  mutate(contrast = factor(contrast, #reorder contrast levels
-                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
+  mutate(contrast = fct_recode(contrast, #rename (shorten)
+                               "W-BH" = "W - BH", 
+                               "W-BQ" = "W - BQ", 
+                               "BH-BQ" = "BH - BQ",
+                               "BH-DM" = "BH - DM"),
   )
 
+ps.em_mod$contrast <-  ps.em_mod$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH")) %>% 
+  factor( #factorise and reorder levels
+    levels = c("D9BM-D5BH", "D9BM-D9BL", "D9BH-D9BL", "D9BH-D9BM"))
 
-g2<- ps.em_mod %>%
+ps.em_mod$contrast %>% levels
+
+#add asterisks (stars)
+
+star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
+                      Fit = c(0.1, NA,15,12),
+                      stars = c("*", NA, "***", "***"))
+
+
+
+
+
+
+g2.ps<- ps.em_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth =0.25) +
   stat_slab(aes(
     x = Fit, 
-    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    y = contrast),
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.25) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
@@ -4533,8 +4703,8 @@ g2<- ps.em_mod %>%
                      limits = c(0.05,16)
   ) +
   theme_classic() +
-  
-  labs(y = "Contrast")
+  labs(y = "Contrast") #+
+  #geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
 g1 + g2
 
 g.all.cont <- ps.em %>%
@@ -6080,9 +6250,10 @@ write.csv(sf.cont.tbl, "clipboard")
 
 #### Summary figures =========================================================
 
+####USE NOAC
 ## ---- recruitment univariate sf figures
 
-sf.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brm1.rds"))
+#sf.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brm1.rds"))
 sf.brm1 %>% ggemmeans(~Treatment) %>% plot
 
 
