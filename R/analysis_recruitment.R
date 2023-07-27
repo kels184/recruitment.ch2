@@ -1676,6 +1676,7 @@ g1 <- newdata %>% ggplot() +
 
 g1
 
+
 abnd.em <- abnd.brm1b %>%
   emmeans(~Treatment, type = "link") %>%
   pairs() %>%
