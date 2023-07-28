@@ -1659,7 +1659,7 @@ g1 <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) + #adjust line thickness and colour
+  ), color = "black", size = 0.3) + #adjust line thickness and colour
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab("Total abundance") +
   theme_classic() +
@@ -1668,8 +1668,8 @@ g1 <- newdata %>% ggplot() +
         axis.text=element_text(size=8, colour = "black"), #change font size of axis text
         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
         axis.title=element_text(size=10), #change font size of axis titles
-        axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-        axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+        axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+        axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
 )
 
 g1
@@ -1725,7 +1725,7 @@ test_mod$contrast %>% levels
 
 g2<- test_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, 
     y = contrast, #reorder y axis (descending)
@@ -1733,7 +1733,7 @@ g2<- test_mod %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -1760,14 +1760,14 @@ abnd.em$contrast <-  abnd.em$contrast %>%
   
 g.all.cont <- test %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, y = contrast,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -1807,8 +1807,8 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.eps"),
                   axis.text=element_text(size=8, colour = "black"), #change font size of axis text
                   axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
                   axis.title=element_text(size=10), #change font size of axis titles
-                  axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-                  axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+                  axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                  axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
                   ) +
        g2 + theme(text = element_text(colour = "black"), #make all font black
                     axis.text=element_text(size=8, colour = "black"), #change font size of axis text
@@ -1818,8 +1818,8 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.eps"),
                     legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
                     legend.key.size = unit(0.5, 'char'), #change legend key size
                     legend.background = element_blank(), #remove legend background box
-                    axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-                    axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+                    axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                    axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
        ) ,
        height = 5,
        width = 16,
@@ -2612,7 +2612,7 @@ g1 <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab("Species Richness") +
   theme_classic() + 
@@ -2621,8 +2621,8 @@ g1 <- newdata %>% ggplot() +
         axis.text=element_text(size=8, colour = "black"), #change font size of axis text
         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
         axis.title=element_text(size=10), #change font size of axis titles
-        axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-        axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+        axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+        axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
   )
 
 
@@ -2668,7 +2668,7 @@ star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
 
 g2<- sp.em_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, 
     y = contrast, #reorder y axis (descending)
@@ -2676,7 +2676,7 @@ g2<- sp.em_mod %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -2696,7 +2696,7 @@ sp.em$contrast <-  sp.em$contrast %>%
 
 g.all.cont<- sp.em %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
   stat_slab(aes(
     x = Fit, y = contrast,
@@ -2704,7 +2704,7 @@ g.all.cont<- sp.em %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -2731,8 +2731,8 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.both.eps"),
                         axis.text=element_text(size=8, colour = "black"), #change font size of axis text
                         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
                         axis.title=element_text(size=10), #change font size of axis titles
-                        axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-                        axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+                        axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                        axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
        ) +
          g2 + theme(text = element_text(colour = "black"), #make all font black
                     axis.text=element_text(size=8, colour = "black"), #change font size of axis text
@@ -2742,8 +2742,8 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.both.eps"),
                     legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
                     legend.key.size = unit(0.5, 'char'), #change legend key size
                     legend.background = element_blank(), #remove legend background box
-                    axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-                    axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+                    axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                    axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
          ),
        height = 5,
        width = 16,
@@ -3297,7 +3297,7 @@ g1.hm <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab(expression(paste(italic("H. miniatus"), " abundance"))) +
   theme_classic() +
@@ -3306,8 +3306,8 @@ g1.hm <- newdata %>% ggplot() +
         axis.text=element_text(size=8, colour = "black"), #change font size of axis text
         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
         axis.title=element_text(size=10), #change font size of axis titles
-        axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-        axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+        axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+        axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
   )
 g1.hm
 
@@ -3351,7 +3351,7 @@ star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
 
 g2.hm <- hmNOAC.em_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, 
     y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
@@ -3359,7 +3359,7 @@ g2.hm <- hmNOAC.em_mod %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
@@ -3381,7 +3381,7 @@ hm.em$contrast <-  hm.em$contrast %>%
 
 g.all.hm <- hmNOAC.em %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed",linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed",linewidth = 0.3) +
   # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
   stat_slab(aes(
     x = Fit, y = contrast,
@@ -3389,7 +3389,7 @@ g.all.hm <- hmNOAC.em %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
@@ -3419,8 +3419,8 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.eps"),
                   axis.text=element_text(size=8, colour = "black"), #change font size of axis text
                   axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
                   axis.title=element_text(size=10), #change font size of axis titles
-                  axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-                  axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+                  axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                  axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
        ) +
          g2.hm + theme(text = element_text(colour = "black"), #make all font black
                     axis.text=element_text(size=8, colour = "black"), #change font size of axis text
@@ -3430,8 +3430,8 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.eps"),
                     legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
                     legend.key.size = unit(0.5, 'char'), #change legend key size
                     legend.background = element_blank(), #remove legend background box
-                    axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-                    axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+                    axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                    axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
          ),
        height = 5,
        width = 16,
@@ -3486,7 +3486,7 @@ g1 <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab(expression(paste(italic("H. miniatus"), " abundance"))) +
   theme_classic() +
@@ -3495,8 +3495,8 @@ g1 <- newdata %>% ggplot() +
       axis.text=element_text(size=8, colour = "black"), #change font size of axis text
       axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
       axis.title=element_text(size=10), #change font size of axis titles
-      axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-      axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+      axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+      axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
 )
 g1
 
@@ -3542,7 +3542,7 @@ star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
 
 g2 <- hm.em_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, 
     y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
@@ -3550,7 +3550,7 @@ g2 <- hm.em_mod %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -3563,14 +3563,14 @@ g2
 
 g.all.cont <- hm.em %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, y = contrast,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans()
@@ -3999,8 +3999,8 @@ g1.sd <- newdata %>% ggplot() +
 axis.text=element_text(size=8, colour = "black"), #change font size of axis text
 axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
 axis.title=element_text(size=10), #change font size of axis titles
-axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
 )
 
 g1.sd
@@ -4046,7 +4046,7 @@ star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
 
 g2.sd <- sd.em_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, 
     y = contrast, #reorder y axis (descending)
@@ -4054,7 +4054,7 @@ g2.sd <- sd.em_mod %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
@@ -4075,14 +4075,14 @@ sd.em$contrast <-  sd.em$contrast %>%
 
 g.all.sd <- sd.em %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, y = contrast,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
@@ -4111,8 +4111,8 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.eps"),
                      axis.text=element_text(size=8, colour = "black"), #change font size of axis text
                      axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
                      axis.title=element_text(size=10), #change font size of axis titles
-                     axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-                     axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+                     axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                     axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
        ) +
          g2.sd + theme(text = element_text(colour = "black"), #make all font black
                        axis.text=element_text(size=8, colour = "black"), #change font size of axis text
@@ -4122,8 +4122,8 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.eps"),
                        legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
                        legend.key.size = unit(0.5, 'char'), #change legend key size
                        legend.background = element_blank(), #remove legend background box
-                       axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-                       axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+                       axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                       axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
          ),
        height = 5,
        width = 16,
@@ -4631,7 +4631,7 @@ g1.ps <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab(expression(atop( #makes 2 lines of text, 1 atop the other
     italic("Petroscirtes sp."), paste(" abundance"))) )+
@@ -4640,8 +4640,8 @@ g1.ps <- newdata %>% ggplot() +
         axis.text=element_text(size=8, colour = "black"), #change font size of axis text
         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
         axis.title=element_text(size=10), #change font size of axis titles
-        axis.line = element_line(linewidth = 0.25), #adjust axis-line thickness
-        axis.ticks= element_line(linewidth = 0.25) #adjust tick linewidth) 
+        axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+        axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
   )
 
 g1.ps
@@ -4687,7 +4687,7 @@ star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
 
 g2.ps<- ps.em_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth =0.25) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth =0.3) +
   stat_slab(aes(
     x = Fit, 
     y = contrast),
@@ -4695,7 +4695,7 @@ g2.ps<- ps.em_mod %>%
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.25) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
@@ -6430,7 +6430,7 @@ g2<- sfNOAC.em_mod %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.25, 1, 4, 10),
+                     breaks = c(0.1, 0.3, 1, 4, 10),
                      limits = c(0.05,16)
   ) +
   theme_classic() +
@@ -6451,7 +6451,7 @@ g.all.cont <- sfNOAC.em %>%
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.25, 1, 4, 10),
+                     breaks = c(0.1, 0.3, 1, 4, 10),
                      limits = c(0.05,16)
   ) +
   theme_classic()
@@ -6872,14 +6872,14 @@ size.brm2%>%
   emmeans(~Treatment, type = 'link') %>% #link scale
   pairs() %>% #pairwise comparison
   gather_emmeans_draws() %>% 
-  summarise('P>0.25cm' = sum(.value>0.08)/n(), #exceedance probabilities
-         'P<-0.25cm' = sum(.value<-.08)/n(),
+  summarise('P>0.3cm' = sum(.value>0.08)/n(), #exceedance probabilities
+         'P<-0.3cm' = sum(.value<-.08)/n(),
   ) %>% 
   ungroup() %>% 
   mutate(exc.evidence = case_when(
-    `P>0.25cm` >= 0.99 | `P<-0.25cm` >= 0.99 ~ "very strong",
-    `P>0.25cm` >= 0.95 |`P<-0.25cm` >= 0.95 ~ "strong",
-    `P>0.25cm` >= 0.90 |`P<-0.25cm` >= 0.90 ~ "evidence",
+    `P>0.3cm` >= 0.99 | `P<-0.3cm` >= 0.99 ~ "very strong",
+    `P>0.3cm` >= 0.95 |`P<-0.3cm` >= 0.95 ~ "strong",
+    `P>0.3cm` >= 0.90 |`P<-0.3cm` >= 0.90 ~ "evidence",
     TRUE ~ "no evidence"
   )
   )
