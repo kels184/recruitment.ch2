@@ -152,18 +152,18 @@ g.plot.wt
 ggsave(filename = paste0(FIGS_PATH, "/Alg.len.png"),
        g.len,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/Alg.wt.png"),
        g.wt,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.eps"),
        g.plot.wt,
        width = 8.4,
-       height = 5,
+       height = 6,
        units = "cm",
        dpi = 600)
 
@@ -212,7 +212,7 @@ g.fish.abnd1
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish1.png"),
        g.fish.abnd1,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ## ----end
@@ -237,7 +237,7 @@ g.fish.abnd.time
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
        g.fish.abnd.time,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 fishdata %>% 
@@ -285,7 +285,7 @@ g.alg.fish.abnd
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.abnd.png"),
        g.alg.fish.abnd,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ## ----end
@@ -318,7 +318,7 @@ g.sp.richness
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp1.png"),
        g.sp.richness,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ## ----end
@@ -350,7 +350,7 @@ g.sp.time
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
        g.sp.time,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 
@@ -382,7 +382,7 @@ g.alg.fish.sp
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.sp.png"),
        g.alg.fish.sp,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ## ----end
@@ -468,7 +468,7 @@ g.common.abnd
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.png"),
        g.common.abnd,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ## ---- fish EDA common species2
@@ -496,7 +496,7 @@ g.common.abnd.time
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.time.png"),
        g.common.abnd.time,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ## ----fish EDA common species3
@@ -522,7 +522,7 @@ g.common.abnd.alg
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.alg.png"),
        g.common.abnd.alg,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ## ----end
@@ -565,7 +565,7 @@ g
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.size.trt.png"),
        g,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 #size hist by treatment (all fish) (dens overlay) #(not rendered)#
@@ -664,32 +664,32 @@ g.sf
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.hm.size.trt.png"),
        g.hm,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.ps.size.trt.png"),
        g.ps,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sd.size.trt.png"),
        g.sd,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.pt.size.trt.png"),
        g.pt,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.la.size.trt.png"),
        g.la,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sf.size.trt.png"),
        g.sf,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 
@@ -839,12 +839,12 @@ g2
 
 ggsave(filename = paste0(FIGS_PATH, "/DM.hump.abund.png"),
        g1,
-       height = 5,
+       height = 6,
        width= 10)
 
 ggsave(filename = paste0(FIGS_PATH, "/DM.hump.sp.png"),
        g2,
-       height = 5,
+       height = 6,
        width= 10)
 
 
@@ -1075,7 +1075,7 @@ g.all <- ggplot(ac, aes(x = lag, y = ac)) +
 ggsave(filename = paste0(FIGS_PATH, "/acf.abundance.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.abundance.all.png"),
@@ -1151,7 +1151,7 @@ g.all
 ggsave(filename = paste0(FIGS_PATH, "/acf.abndAC.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.abndAC.all.png"),
@@ -1494,7 +1494,7 @@ g.all
 ## ----end
 ggsave(filename = paste0(FIGS_PATH, "/acf.abndBRM.av.png"),
        g.av,
-       height = 5,
+       height = 6,
        width = 17.4,
        dpi = 100)
 
@@ -1802,18 +1802,18 @@ g3 <- ggplot() +
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.eps"),
        g1,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.contr.eps"),
        g2,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
-library(gridExtra)
+#library(gridExtra)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.eps"),
        grid.arrange(g1 + theme(legend.position = "none",
@@ -1851,7 +1851,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.eps"),
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.all.contr.eps"),
        g.all.cont,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -1997,7 +1997,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.sp.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sp.all.png"),
@@ -2066,7 +2066,7 @@ average.ac <- ac %>%
 ggsave(filename = paste0(FIGS_PATH, "/acf.spAC.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.spAC.all.png"),
@@ -2628,7 +2628,7 @@ newdata$Treatment <- newdata$Treatment %>% case_match("W" ~ "D9BH", "BH"~ "D9BM"
   factor(levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH" )) # Factorise and Reorder Treatment levels
 
 
-g1 <- newdata %>% ggplot() + 
+g1.sp <- newdata %>% ggplot() + 
   stat_slab(aes(
     x = Treatment, y = Fit,
     fill = stat(ggdist::cut_cdf_qi(cdf,
@@ -2689,7 +2689,7 @@ star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
                       Fit = c(0.5, 2,4,2.7),
                       stars = c("**", "**", "***", "***"))
 
-g2<- sp.em_mod %>%
+g2.sp<- sp.em_mod %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
@@ -2708,7 +2708,7 @@ g2<- sp.em_mod %>%
   labs(y = "Contrast") + 
   geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars)) #add asterisks
 
-g1 + g2
+grid.arrange(g1.sp, g2.sp)
 
 
 sp.em$contrast <-  sp.em$contrast %>% 
@@ -2717,7 +2717,7 @@ sp.em$contrast <-  sp.em$contrast %>%
                      "BQ" ="D9BL", "DM" = "D5BH", 
                      "DL" = "D3BH"))
 
-g.all.cont<- sp.em %>%
+g.sp.all<- sp.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
@@ -2737,52 +2737,62 @@ g.all.cont<- sp.em %>%
 ## ----end
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.eps"),
-       g1,
-       height = 5,
+       g1.sp,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.contr.eps"),
-       g2,
-       height = 5,
+       g2.sp,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.both.eps"),
-       g1 + theme(legend.position = "none",
-                        text = element_text(colour = "black"), #make all font black
-                        axis.text=element_text(size=8, colour = "black"), #change font size of axis text
-                        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
-                        axis.title=element_text(size=10), #change font size of axis titles
-                        axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
-                        axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       grid.arrange(g1.sp + theme(legend.position = "none",
+                               text = element_text(colour = "black"), #make all font black
+                               axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                               axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                               axis.title=element_text(size=10), #change font size of axis titles
+                               axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                               axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
        ) +
-         g2 + theme(text = element_text(colour = "black"), #make all font black
-                    axis.text=element_text(size=8, colour = "black"), #change font size of axis text
-                    axis.title=element_text(size=10), #change font size of axis titles
-                    legend.text=element_text(size=8), #change font size of legend text
-                    legend.title=element_text(size=8), #change font size of legend title
-                    legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
-                    legend.key.size = unit(0.5, 'char'), #change legend key size
-                    legend.background = element_blank(), #remove legend background box
-                    axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
-                    axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
-         ),
-       height = 5,
-       width = 17.4,
+         labs(tag = "a") + #add plot tag a
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) ,
+       g2.sp + theme(text = element_text(colour = "black"), #make all font black
+                  axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                  axis.title=element_text(size=10), #change font size of axis titles
+                  legend.text=element_text(size=8), #change font size of legend text
+                  legend.title=element_text(size=8), #change font size of legend title
+                  legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+                  legend.key.size = unit(0.5, 'char'), #change legend key size
+                  legend.background = element_blank(), #remove legend background box
+                  axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                  axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       )   + 
+         labs(tag = "b") + #add plot tag b
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) 
+       ),
+       height = 12,
+       width = 8.4,
        units = "cm",
        dpi = 600)
 
+
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.all.contr.eps"),
-       g.all.cont,
-       height = 5,
+       g.sp.all,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 
 ##For powerpoint:
 ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sp.both.png"),
-       g1 + theme(legend.position = "none") + g2,
+       g1.sp + theme(legend.position = "none") + g2.sp,
        height = 10,
        width = 20,
        units = "cm",
@@ -2869,7 +2879,7 @@ average.ac <- ac %>%
 ggsave(filename = paste0(FIGS_PATH, "/acf.hm.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.hm.all.png"),
@@ -2934,7 +2944,7 @@ average.ac <- ac %>%
 ggsave(filename = paste0(FIGS_PATH, "/acf.hmAC.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.hmAC.all.png"),
@@ -3426,13 +3436,13 @@ g.all.hm <- hmNOAC.em %>%
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.eps"),
        g1.hm,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.contr.eps"),
        g2.hm,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -3456,14 +3466,14 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.eps"),
                     axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
                     axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
          ),
-       height = 5,
+       height = 6,
        width = 17.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.all.contr.eps"),
        g.all.hm,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -3605,26 +3615,26 @@ g1 + g2
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.eps"),
        g1,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.contr.eps"),
        g2,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.both.eps"),
        g1 + theme(legend.position = "none") + g2,
-       height = 5,
+       height = 6,
        width = 17.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.all.contr.eps"),
        g.all.cont,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -3717,7 +3727,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.sd.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sd.all.png"),
@@ -3780,7 +3790,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.sdAC.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sdAC.all.png"),
@@ -4118,13 +4128,13 @@ g.all.sd <- sd.em %>%
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.eps"),
        g1.sd,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.contr.eps"),
        g2.sd,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -4148,14 +4158,14 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.eps"),
                        axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
                        axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
          ),
-       height = 5,
+       height = 6,
        width = 17.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.all.contr.eps"),
        g.all.sd,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -4247,7 +4257,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.ps.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.ps.all.png"),
@@ -4311,7 +4321,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.psAC.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.psAC.all.png"),
@@ -4752,26 +4762,26 @@ g.all.cont <- ps.em %>%
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.eps"),
        g1,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.contr.eps"),
        g2,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.both.eps"),
        g1 + theme(legend.position = "none") + g2,
-       height = 5,
+       height = 6,
        width = 17.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.all.contr.eps"),
        g.all.cont,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -4871,7 +4881,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.pt.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.pt.all.png"),
@@ -4941,7 +4951,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.ptAC.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.ptAC.all.png"),
@@ -5241,26 +5251,26 @@ g.all.cont <- pt.em %>%
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.eps"),
        g1,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.contr.eps"),
        g2,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.both.eps"),
        g1 + theme(legend.position = "none") + g2,
-       height = 5,
+       height = 6,
        width = 17.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.all.contr.eps"),
        g.all.cont,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -5361,7 +5371,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.la.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.la.all.png"),
@@ -5427,7 +5437,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.laAC.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.laAC.all.png"),
@@ -5728,26 +5738,26 @@ g.all.cont <- la.em %>%
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.la.eps"),
        g1,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.la.contr.eps"),
        g2,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.la.both.eps"),
        g1 + theme(legend.position = "none") + g2,
-       height = 5,
+       height = 6,
        width = 17.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.la.all.contr.eps"),
        g.all.cont,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -5846,7 +5856,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.sf.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sf.all.png"),
@@ -5916,7 +5926,7 @@ ac %>% filter(lag != 0) %>% #how many times is the cutoff exceeded
 ggsave(filename = paste0(FIGS_PATH, "/acf.sfAC.av.png"),
        g.av,
        width = 17.4,
-       height = 5,
+       height = 6,
        dpi = 100)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sfAC.all.png"),
@@ -6363,26 +6373,26 @@ g.all.cont <- sf.em %>%
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.eps"),
        g1,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.contr.eps"),
        g2,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.both.eps"),
        g1 + theme(legend.position = "none") + g2,
-       height = 5,
+       height = 6,
        width = 17.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.all.contr.eps"),
        g.all.cont,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
@@ -6483,26 +6493,26 @@ g.all.cont <- sfNOAC.em %>%
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.eps"),
        g1,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.contr.eps"),
        g2,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.both.eps"),
        g1 + theme(legend.position = "none") + g2,
-       height = 5,
+       height = 6,
        width = 17.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.all.contr.eps"),
        g.all.cont,
-       height = 5,
+       height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
