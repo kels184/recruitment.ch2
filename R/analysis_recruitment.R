@@ -160,7 +160,7 @@ ggsave(filename = paste0(FIGS_PATH, "/Alg.wt.png"),
        height = 5,
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.eps"),
        g.plot.wt,
        width = 8,
        height = 5,
@@ -1787,21 +1787,21 @@ g3 <- ggplot() +
 
   
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.eps"),
        g1,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.contr.eps"),
        g2,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.eps"),
        g1 + theme(legend.position = "none",
                   text = element_text(colour = "black"), #make all font black
                   axis.text=element_text(size=8, colour = "black"), #change font size of axis text
@@ -1826,7 +1826,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.pdf"),
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.all.contr.eps"),
        g.all.cont,
        height = 5,
        width = 8,
@@ -2713,19 +2713,19 @@ g.all.cont<- sp.em %>%
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.eps"),
        g1,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.contr.eps"),
        g2,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.both.eps"),
        g1 + theme(legend.position = "none",
                         text = element_text(colour = "black"), #make all font black
                         axis.text=element_text(size=8, colour = "black"), #change font size of axis text
@@ -2750,7 +2750,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.both.pdf"),
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.all.contr.eps"),
        g.all.cont,
        height = 5,
        width = 8,
@@ -3401,19 +3401,19 @@ g.all.hm <- hmNOAC.em %>%
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.eps"),
        g1.hm,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.contr.eps"),
        g2.hm,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.eps"),
        g1.hm + theme(legend.position = "none",
                   text = element_text(colour = "black"), #make all font black
                   axis.text=element_text(size=8, colour = "black"), #change font size of axis text
@@ -3438,7 +3438,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.pdf"),
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.all.contr.eps"),
        g.all.hm,
        height = 5,
        width = 8,
@@ -3580,26 +3580,26 @@ g1 + g2
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.eps"),
        g1,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.contr.eps"),
        g2,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.both.eps"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
        width = 16,
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.all.contr.eps"),
        g.all.cont,
        height = 5,
        width = 8,
@@ -4093,19 +4093,19 @@ g.all.sd <- sd.em %>%
   
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.eps"),
        g1.sd,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.contr.eps"),
        g2.sd,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.eps"),
        g1.sd + theme(legend.position = "none",
                      text = element_text(colour = "black"), #make all font black
                      axis.text=element_text(size=8, colour = "black"), #change font size of axis text
@@ -4130,7 +4130,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.pdf"),
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.all.contr.eps"),
        g.all.sd,
        height = 5,
        width = 8,
@@ -4727,26 +4727,26 @@ g.all.cont <- ps.em %>%
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.eps"),
        g1,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.contr.eps"),
        g2,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.both.eps"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
        width = 16,
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.all.contr.eps"),
        g.all.cont,
        height = 5,
        width = 8,
@@ -5216,26 +5216,26 @@ g.all.cont <- pt.em %>%
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.eps"),
        g1,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.contr.eps"),
        g2,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.both.eps"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
        width = 16,
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.all.contr.eps"),
        g.all.cont,
        height = 5,
        width = 8,
@@ -5703,26 +5703,26 @@ g.all.cont <- la.em %>%
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.la.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.la.eps"),
        g1,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.la.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.la.contr.eps"),
        g2,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.la.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.la.both.eps"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
        width = 16,
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.la.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.la.all.contr.eps"),
        g.all.cont,
        height = 5,
        width = 8,
@@ -6338,26 +6338,26 @@ g.all.cont <- sf.em %>%
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.eps"),
        g1,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.contr.eps"),
        g2,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.both.eps"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
        width = 16,
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.all.contr.eps"),
        g.all.cont,
        height = 5,
        width = 8,
@@ -6458,26 +6458,26 @@ g.all.cont <- sfNOAC.em %>%
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.eps"),
        g1,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.contr.eps"),
        g2,
        height = 5,
        width = 8,
        units = "cm",
        dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.both.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.both.eps"),
        g1 + theme(legend.position = "none") + g2,
        height = 5,
        width = 16,
        units = "cm",
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.all.contr.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.all.contr.eps"),
        g.all.cont,
        height = 5,
        width = 8,
@@ -7141,7 +7141,7 @@ g
 #probs needs some jitter/dodging but you can see some groupings (particularly w)
 ## ----end
   
-ggsave(filename = paste0(FIGS_PATH, "/nmds.end.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/nmds.end.eps"),
        g,
        height = 10,
        width = 16,
@@ -7215,7 +7215,7 @@ disp.plot <- gg_ordiplot(fish.disp, groups = fish.wide.end$Treatment,
 
 
 ## ----end
-ggsave(filename = paste0(FIGS_PATH, "/disp.plot.end.pdf"),
+ggsave(filename = paste0(FIGS_PATH, "/disp.plot.end.eps"),
        disp.g,
        height = 10,
        width = 16,
