@@ -4835,7 +4835,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.all.contr.eps"),
 
 ##For powerpoint:
 ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.ps.both.png"),
-       g1 + theme(legend.position = "none") + g2,
+       g1.ps + theme(legend.position = "none") + g2.ps,
        height = 10,
        width = 20,
        units = "cm",
@@ -5772,21 +5772,34 @@ newdata <- la.brm1 %>% emmeans(~Treatment, type = "link") %>%
   mutate(Fit = exp(.value)) %>% 
   as.data.frame
 head(newdata)
-# Reorder Treatment levels
-newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
+
+#RENAME TREATMENTS
+newdata$Treatment <- newdata$Treatment %>% case_match("W" ~ "D9BH", "BH"~ "D9BM", 
+                                                      "BQ" ~"D9BL", "DM" ~ "D5BH", 
+                                                      "DL" ~ "D3BH") %>% 
+  factor(levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH" )) # Factorise and Reorder Treatment levels
 
 
-g1 <- newdata %>% ggplot() + 
+g1.la <- newdata %>% ggplot() + 
   stat_slab(aes(
     x = Treatment, y = Fit,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab(expression(paste(italic("L. atkinsoni"), " abundance"))) +
-  theme_classic()
+  theme_classic() +
+  theme(text = element_text(colour = "black"), #make all font black
+        axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+        axis.title=element_text(size=10), #change font size of axis titles
+        axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+        axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+  )
+
+g1.la
 
 
 la.em <- la.brm1 %>%
@@ -5801,22 +5814,42 @@ la.em <- la.brm1 %>%
 la.em_mod <- la.em %>% 
   filter(#filter to key contrasts
     contrast %in% c("W - BH", "W - BQ", "BH - BQ", "BH - DM")) %>% 
-  mutate(contrast = factor(contrast, #reorder contrast levels
-                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
+  mutate(contrast = fct_recode(contrast, #rename (shorten)
+                               "W-BH" = "W - BH", 
+                               "W-BQ" = "W - BQ", 
+                               "BH-BQ" = "BH - BQ",
+                               "BH-DM" = "BH - DM"),
   )
 
+la.em_mod$contrast <-  la.em_mod$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH")) %>% 
+  factor( #factorise and reorder levels
+    levels = c("D9BM-D5BH", "D9BM-D9BL", "D9BH-D9BL", "D9BH-D9BM"))
 
-g2<- la.em_mod %>%
+la.em_mod$contrast %>% levels
+
+#add asterisks (stars)
+
+star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
+                      Fit = c(NA, NA,12,6),
+                      stars = c(NA, NA, "**", "*"))
+
+
+
+g2.la<- la.em_mod %>%
   ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, 
-    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    y = contrast, #reorder y axis (descending)
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
@@ -5824,11 +5857,18 @@ g2<- la.em_mod %>%
                      limits = c(0.05,16)
   ) +
   theme_classic() +
-  
-  labs(y = "Contrast")
-g1 + g2
+  labs(y = "Contrast") + 
+  geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
+g1.la + g2.la
 
-g.all.cont <- la.em %>%
+
+la.em$contrast <- la.em$contrast %>%  
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH"))
+
+g.la.all <- la.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
   stat_slab(aes(
@@ -5849,26 +5889,53 @@ g.all.cont <- la.em %>%
 ## ----end
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.la.eps"),
-       g1,
+       g1.la,
        height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.la.contr.eps"),
-       g2,
+       g2.la,
        height = 6,
        width = 8.4,
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.la.both.eps"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 6,
-       width = 17.4,
+       grid.arrange(g1.la + theme(legend.position = "none",
+                                  text = element_text(colour = "black"), #make all font black
+                                  axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                                  axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                                  axis.title=element_text(size=10), #change font size of axis titles
+                                  axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                                  axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       ) +
+         labs(tag = "a") + #add plot tag a
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) ,
+       g2.la + theme(text = element_text(colour = "black"), #make all font black
+                     axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                     axis.title=element_text(size=10), #change font size of axis titles
+                     legend.text=element_text(size=8), #change font size of legend text
+                     legend.title=element_text(size=8), #change font size of legend title
+                     legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+                     legend.key.size = unit(0.5, 'char'), #change legend key size
+                     legend.background = element_blank(), #remove legend background box
+                     axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                     axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       )   + 
+         labs(tag = "b") + #add plot tag b
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) 
+       ),
+       height = 12,
+       width = 8.4,
        units = "cm",
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.la.all.contr.eps"),
-       g.all.cont,
+       g.la.all,
        height = 6,
        width = 8.4,
        units = "cm",
@@ -5876,7 +5943,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.la.all.contr.eps"),
 
 ##For powerpoint:
 ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.la.both.png"),
-       g1 + theme(legend.position = "none") + g2,
+       g1.la + theme(legend.position = "none") + g2.la,
        height = 10,
        width = 20,
        units = "cm",
