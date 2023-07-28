@@ -3446,28 +3446,38 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.contr.eps"),
        width = 8.4,
        units = "cm",
        dpi = 600)
+
 ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.eps"),
-       g1.hm + theme(legend.position = "none",
-                  text = element_text(colour = "black"), #make all font black
-                  axis.text=element_text(size=8, colour = "black"), #change font size of axis text
-                  axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
-                  axis.title=element_text(size=10), #change font size of axis titles
-                  axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
-                  axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       grid.arrange(g1.hm + theme(legend.position = "none",
+                                  text = element_text(colour = "black"), #make all font black
+                                  axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                                  axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                                  axis.title=element_text(size=10), #change font size of axis titles
+                                  axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                                  axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
        ) +
-         g2.hm + theme(text = element_text(colour = "black"), #make all font black
-                    axis.text=element_text(size=8, colour = "black"), #change font size of axis text
-                    axis.title=element_text(size=10), #change font size of axis titles
-                    legend.text=element_text(size=8), #change font size of legend text
-                    legend.title=element_text(size=8), #change font size of legend title
-                    legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
-                    legend.key.size = unit(0.5, 'char'), #change legend key size
-                    legend.background = element_blank(), #remove legend background box
-                    axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
-                    axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
-         ),
-       height = 6,
-       width = 17.4,
+         labs(tag = "a") + #add plot tag a
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) ,
+       g2.hm + theme(text = element_text(colour = "black"), #make all font black
+                     axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                     axis.title=element_text(size=10), #change font size of axis titles
+                     legend.text=element_text(size=8), #change font size of legend text
+                     legend.title=element_text(size=8), #change font size of legend title
+                     legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+                     legend.key.size = unit(0.5, 'char'), #change legend key size
+                     legend.background = element_blank(), #remove legend background box
+                     axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                     axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       )   + 
+         labs(tag = "b") + #add plot tag b
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) 
+       ),
+       height = 12,
+       width = 8.4,
        units = "cm",
        dpi = 600)
 
@@ -3486,12 +3496,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hmNOAC.both.png"),
        units = "cm",
        dpi = 1000)
 
-#save as rdata files
-g1.hm %>% save(file = paste0(FIGS_PATH, "/Rdata/g.hm.Rdata"))
-g2.hm %>% save(file = paste0(FIGS_PATH, "/Rdata/g.hm.cont.Rdata"))
-g.all.hm %>% save(file = paste0(FIGS_PATH, "/Rdata/g.hm.all.Rdata"))
 
-#load(file = paste0(FIGS_PATH, "/Rdata/g.hm.cont.Rdata")) #doesn't seem to work as i hoped
 
 ## ---- recruitment univariate hm figures
 
@@ -4139,29 +4144,39 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.contr.eps"),
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.eps"),
-       g1.sd + theme(legend.position = "none",
-                     text = element_text(colour = "black"), #make all font black
+       grid.arrange(g1.sd + theme(legend.position = "none",
+                                  text = element_text(colour = "black"), #make all font black
+                                  axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                                  axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                                  axis.title=element_text(size=10), #change font size of axis titles
+                                  axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                                  axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       ) +
+         labs(tag = "a") + #add plot tag a
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) ,
+       g2.sd + theme(text = element_text(colour = "black"), #make all font black
                      axis.text=element_text(size=8, colour = "black"), #change font size of axis text
-                     axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
                      axis.title=element_text(size=10), #change font size of axis titles
+                     legend.text=element_text(size=8), #change font size of legend text
+                     legend.title=element_text(size=8), #change font size of legend title
+                     legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+                     legend.key.size = unit(0.5, 'char'), #change legend key size
+                     legend.background = element_blank(), #remove legend background box
                      axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
                      axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
-       ) +
-         g2.sd + theme(text = element_text(colour = "black"), #make all font black
-                       axis.text=element_text(size=8, colour = "black"), #change font size of axis text
-                       axis.title=element_text(size=10), #change font size of axis titles
-                       legend.text=element_text(size=8), #change font size of legend text
-                       legend.title=element_text(size=8), #change font size of legend title
-                       legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
-                       legend.key.size = unit(0.5, 'char'), #change legend key size
-                       legend.background = element_blank(), #remove legend background box
-                       axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
-                       axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
-         ),
-       height = 6,
-       width = 17.4,
+       )   + 
+         labs(tag = "b") + #add plot tag b
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) 
+       ),
+       height = 12,
+       width = 8.4,
        units = "cm",
        dpi = 600)
+
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.all.contr.eps"),
        g.all.sd,
@@ -4711,7 +4726,7 @@ ps.em_mod$contrast %>% levels
 
 star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
                       Fit = c(0.1, NA,15,12),
-                      stars = c("*", NA, "***", "***"))
+                      stars = c(NA, NA, "***", "***"))
 
 
 
@@ -4723,7 +4738,7 @@ g2.ps<- ps.em_mod %>%
   geom_vline(xintercept = 1, linetype = "dashed", linewidth =0.3) +
   stat_slab(aes(
     x = Fit, 
-    y = contrast),
+    y = contrast,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
@@ -4736,9 +4751,9 @@ g2.ps<- ps.em_mod %>%
                      limits = c(0.05,16)
   ) +
   theme_classic() +
-  labs(y = "Contrast") #+
-  #geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
-g1 + g2
+  labs(y = "Contrast") + 
+  geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
+g1.ps + g2.ps
 
 g.all.cont <- ps.em %>%
   ggplot() +
@@ -4773,11 +4788,39 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.contr.eps"),
        units = "cm",
        dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.both.eps"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 6,
-       width = 17.4,
+       grid.arrange(g1.ps + theme(legend.position = "none",
+                                  text = element_text(colour = "black"), #make all font black
+                                  axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                                  axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                                  axis.title=element_text(size=10), #change font size of axis titles
+                                  axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                                  axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       ) +
+         labs(tag = "a") + #add plot tag a
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) ,
+       g2.ps + theme(text = element_text(colour = "black"), #make all font black
+                     axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                     axis.title=element_text(size=10), #change font size of axis titles
+                     legend.text=element_text(size=8), #change font size of legend text
+                     legend.title=element_text(size=8), #change font size of legend title
+                     legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+                     legend.key.size = unit(0.5, 'char'), #change legend key size
+                     legend.background = element_blank(), #remove legend background box
+                     axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                     axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       )   + 
+         labs(tag = "b") + #add plot tag b
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) 
+       ),
+       height = 12,
+       width = 8.4,
        units = "cm",
        dpi = 600)
+
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.all.contr.eps"),
        g.all.cont,
