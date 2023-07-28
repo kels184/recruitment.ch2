@@ -4029,7 +4029,7 @@ g1.sd <- newdata %>% ggplot() +
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
     ))
-  ), color = "black", size = 0.5) +
+  ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab(expression(paste(italic("S. doliatus"), " abundance"))) +
   theme_classic() + 
@@ -6463,6 +6463,195 @@ write.csv(sf.cont.tbl, "clipboard")
 #### Summary figures =========================================================
 
 ####USE NOAC
+
+## ---- recruitment univariate sfNOAC figures
+
+sfNOAC.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brmNO_AC.rds"))
+sfNOAC.brm1 %>% ggemmeans(~Treatment) %>% plot
+
+
+newdata <- sfNOAC.brm1 %>% emmeans(~Treatment, type = "link") %>% 
+  gather_emmeans_draws() %>% 
+  mutate(Fit = exp(.value)) %>% 
+  as.data.frame
+head(newdata)
+
+#RENAME TREATMENTS
+newdata$Treatment <- newdata$Treatment %>% case_match("W" ~ "D9BH", "BH"~ "D9BM", 
+                                                      "BQ" ~"D9BL", "DM" ~ "D5BH", 
+                                                      "DL" ~ "D3BH") %>% 
+  factor(levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH" )) # Factorise and Reorder Treatment levels
+
+
+g1.sf <- newdata %>% ggplot() + 
+  stat_slab(aes(
+    x = Treatment, y = Fit,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.3) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  ylab(expression(paste(italic("S. fuscescens"), " abundance"))) +
+  theme_classic() + 
+  theme(text = element_text(colour = "black"), #make all font black
+        axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+        axis.title=element_text(size=10), #change font size of axis titles
+        axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+        axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+  )
+g1.sf
+
+
+sfNOAC.em <- sfNOAC.brm1 %>%
+  emmeans(~Treatment, type = "link") %>%
+  pairs() %>%
+  gather_emmeans_draws() %>%
+  mutate(Fit = exp(.value)) %>% as.data.frame()
+#head(sp.em)
+
+#create modified contrast set containing only key contrastss
+sfNOAC.em_mod <- sfNOAC.em %>% 
+  filter(#filter to key contrasts
+    contrast %in% c("W - BH", "W - BQ", "BH - BQ", "BH - DM")) %>% 
+  mutate(contrast = fct_recode(contrast, #rename (shorten)
+                               "W-BH" = "W - BH", 
+                               "W-BQ" = "W - BQ", 
+                               "BH-BQ" = "BH - BQ",
+                               "BH-DM" = "BH - DM"),
+  )
+
+sfNOAC.em_mod$contrast <-  sfNOAC.em_mod$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH")) %>% 
+  factor( #factorise and reorder levels
+    levels = c("D9BM-D5BH", "D9BM-D9BL", "D9BH-D9BL", "D9BH-D9BM"))
+
+sfNOAC.em_mod$contrast %>% levels
+
+#add asterisks (stars)
+
+star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
+                      Fit = c(0.075,NA ,17,11),
+                      stars = c("**", NA, "**", "**"))
+
+
+
+
+g2.sf<- sfNOAC.em_mod %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
+  stat_slab(aes(
+    x = Fit, 
+    y = contrast, #reorder y axis (descending)
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.3) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.3, 1, 3, 9, 20),
+                     limits = c(0.05,20)
+  ) +
+  theme_classic() +
+  labs(y = "Contrast") + 
+  geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
+g1.sf + g2.sf
+
+sfNOAC.em$contrast <- sfNOAC.em$contrast %>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH"))
+
+g.sf.all <- sfNOAC.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.3, 1, 3,9,20),
+                     limits = c(0.05,20)
+  ) +
+  theme_classic()
+
+## ----end
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.eps"),
+       g1.sf,
+       height = 6,
+       width = 8.4,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.contr.eps"),
+       g2.sf,
+       height = 6,
+       width = 8.4,
+       units = "cm",
+       dpi = 600)
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.both.eps"),
+       grid.arrange(g1.sf + theme(legend.position = "none",
+                                  text = element_text(colour = "black"), #make all font black
+                                  axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                                  axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                                  axis.title=element_text(size=10), #change font size of axis titles
+                                  axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                                  axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       ) +
+         labs(tag = "a") + #add plot tag a
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) ,
+       g2.sf + theme(text = element_text(colour = "black"), #make all font black
+                     axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                     axis.title=element_text(size=10), #change font size of axis titles
+                     legend.text=element_text(size=8), #change font size of legend text
+                     legend.title=element_text(size=8), #change font size of legend title
+                     legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+                     legend.key.size = unit(0.5, 'char'), #change legend key size
+                     legend.background = element_blank(), #remove legend background box
+                     axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                     axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+       )   + 
+         labs(tag = "b") + #add plot tag b
+         theme(plot.tag = element_text(size = 10, 
+                                       face = "bold"), 
+               plot.tag.position = c(0,1)) 
+       ),
+       height = 12,
+       width = 8.4,
+       units = "cm",
+       dpi = 600)
+
+ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.all.contr.eps"),
+       g.sf.all,
+       height = 6,
+       width = 8.4,
+       units = "cm",
+       dpi = 600)
+
+##For powerpoint:
+ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sfNOAC.both.png"),
+       g1.sf + theme(legend.position = "none") + g2.sf,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 1000)
+
+
+#Don't use
 ## ---- recruitment univariate sf figures
 
 #sf.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brm1.rds"))
@@ -6584,125 +6773,6 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sf.both.png"),
        units = "cm",
        dpi = 1000)
 
-## ---- recruitment univariate sfNOAC figures
-
-sfNOAC.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brmNO_AC.rds"))
-sfNOAC.brm1 %>% ggemmeans(~Treatment) %>% plot
-
-
-newdata <- sfNOAC.brm1 %>% emmeans(~Treatment, type = "link") %>% 
-  gather_emmeans_draws() %>% 
-  mutate(Fit = exp(.value)) %>% 
-  as.data.frame
-head(newdata)
-
-# Reorder Treatment levels
-newdata$Treatment <- factor(newdata$Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))
-
-
-g1 <- newdata %>% ggplot() + 
-  stat_slab(aes(
-    x = Treatment, y = Fit,
-    fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.8, 0.95),
-                                   labels = scales::percent_format()
-    ))
-  ), color = "black", size = 0.5) +
-  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  ylab(expression(paste(italic("S. fuscescens"), " abundance"))) +
-  theme_classic()
-
-sfNOAC.em <- sfNOAC.brm1 %>%
-  emmeans(~Treatment, type = "link") %>%
-  pairs() %>%
-  gather_emmeans_draws() %>%
-  mutate(Fit = exp(.value)) %>% as.data.frame()
-#head(sp.em)
-
-#create modified contrast set containing only key contrastss
-sfNOAC.em_mod <- sfNOAC.em %>% 
-  filter(#filter to key contrasts
-    contrast %in% c("W - BH", "W - BQ", "BH - BQ", "BH - DM")) %>% 
-  mutate(contrast = factor(contrast, #reorder contrast levels
-                           levels = c("W - BH", "W - BQ", "BH - BQ", "BH - DM"))
-  )
-
-
-g2<- sfNOAC.em_mod %>%
-  ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  stat_slab(aes(
-    x = Fit, 
-    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
-    fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.8, 0.95),
-                                   labels = scales::percent_format()
-    ))
-  ), color = "black", size = 0.5) +
-  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  scale_x_continuous("Effect",
-                     trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.3, 1, 4, 10),
-                     limits = c(0.05,16)
-  ) +
-  theme_classic() +
-  
-  labs(y = "Contrast")
-g1 + g2
-
-g.all.cont <- sfNOAC.em %>%
-  ggplot() +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  stat_slab(aes(
-    x = Fit, y = contrast,
-    fill = stat(ggdist::cut_cdf_qi(cdf,
-                                   .width = c(0.5, 0.8, 0.95),
-                                   labels = scales::percent_format()
-    ))
-  ), color = "black", size = 0.5) +
-  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
-  scale_x_continuous("Effect",
-                     trans = scales::log2_trans(),
-                     breaks = c(0.1, 0.3, 1, 4, 10),
-                     limits = c(0.05,16)
-  ) +
-  theme_classic()
-
-## ----end
-
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.eps"),
-       g1,
-       height = 6,
-       width = 8.4,
-       units = "cm",
-       dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.contr.eps"),
-       g2,
-       height = 6,
-       width = 8.4,
-       units = "cm",
-       dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.both.eps"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 6,
-       width = 17.4,
-       units = "cm",
-       dpi = 600)
-
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.all.contr.eps"),
-       g.all.cont,
-       height = 6,
-       width = 8.4,
-       units = "cm",
-       dpi = 600)
-
-##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sfNOAC.both.png"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 10,
-       width = 20,
-       units = "cm",
-       dpi = 1000)
 
 
 
@@ -7121,6 +7191,132 @@ combined_table <- bind_rows(tables)
 view(combined_table)
 
 write.csv(combined_table, paste0(TABS_PATH, "/cont.tbl.csv"))
+
+
+
+
+
+
+### Combined Figure =============================================================
+
+#used chatgpt to help generate this code
+
+# Get the names of objects in the current environment that match the pattern
+g1_fig_names <- ls(pattern = "^g1\\.") #starts with g1. 
+g1_fig_names <- g1_fig_names[!grepl("sp", g1_fig_names)]#but not containing sp
+g2_fig_names <- ls(pattern = "^g2\\.") #starts with g2
+g2_fig_names <- g2_fig_names[!grepl("sp", g2_fig_names)]
+
+# Specify the order of objects
+order <- c("hm", "ps", "pt", "sd", "la", "sf")
+
+# Identify the object names matching the patterns
+g1_fig_names_ordered <- g1_fig_names[match(order, substr(g1_fig_names, 4, 5))]
+
+g1_figures <- lapply(g1_fig_names_ordered, get)  # Extract the figures associated with g1_fig_names
+
+
+g2_fig_names_ordered <- g2_fig_names[match(order, substr(g2_fig_names, 4, 5))]
+
+g2_figures <- lapply(g2_fig_names_ordered, get)  # Extract the figures associated with g2_fig_names
+
+
+
+
+# Function to get every second letter (a, c, e, ...)
+get_custom_letter1 <- function(i) {
+  letters[(i - 1) * 2 + 1]
+}
+get_custom_letter1(2)
+
+# Function to get every other letter (b, d, f, ...)
+get_custom_letter2 <- function(i) {
+  letters[(i - 1) * 2 + 2]
+}
+get_custom_letter2(6)
+
+# Apply formatting to the g1 figures (remove legend and add labels)
+g1_figures <- lapply(seq_along(g1_figures), function(i) {
+  g1_figures[[i]] + theme(legend.position = "none", #no legends
+                                text = element_text(colour = "black"), #make all font black
+                                axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                                axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                                axis.title=element_text(size=10), #change font size of axis titles
+                          axis.title.y = element_blank(), #remove y axis title --- be sure you know which is which!
+                                axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                                axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+  ) +
+    labs(y = "Abundance", tag = get_custom_letter1(i)) + # Use every second letter for labels (a, c, e, ...)
+    theme(plot.tag = element_text(size = 10, #format tag letters
+                                  face = "bold") )# +
+    #ylab("Abundance") #didn't work with the element_blank above
+})
+
+# Apply formatting to the g2 figures (remove legend from all but the last, format last legend, add labels)
+g2_figures <- lapply(seq_along(g2_figures), function(i) {
+  if (i < length(g2_figures)) {
+    g2_figures[[i]] + theme(legend.position = "none",
+                            text = element_text(colour = "black"), #make all font black
+                            axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                            axis.title=element_text(size=10), #change font size of axis titles
+                            axis.title.x = element_blank(), #remove axis title
+                            axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                            axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+                            ) + 
+                              labs(tag = get_custom_letter2(i)) + # Use every second letter for labels (b, d, f, ...)
+                              theme(plot.tag = element_text(size = 10, 
+                                                            face = "bold"), 
+                                    plot.tag.position = c(0,1)) 
+  } else {
+    # Format the last legend here (e.g., change position, title, etc.)
+    g2_figures[[i]] + theme(text = element_text(colour = "black"), #make all font black
+                            axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                            axis.title=element_text(size=10), #change font size of axis titles
+                            legend.text=element_text(size=8), #change font size of legend text
+                            legend.title=element_text(size=8), #change font size of legend title
+                            legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+                            legend.key.size = unit(0.5, 'char'), #change legend key size
+                            legend.background = element_blank(), #remove legend background box
+                            axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                            axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+    )   + 
+      labs(tag = get_custom_letter2(i) ) + # Use every second letter for labels (b, d, f, ...)
+      theme(plot.tag = element_text(size = 10, 
+                                    face = "bold"), 
+            plot.tag.position = c(0,1)) 
+  } 
+})
+
+
+
+# Combine the figures side by side using arrangeGrob
+combined_figures <- grid.arrange(
+  g1_figures[[1]], g2_figures[[1]],
+  g1_figures[[2]], g2_figures[[2]],
+  g1_figures[[3]], g2_figures[[3]],
+  g1_figures[[4]], g2_figures[[4]],
+  g1_figures[[5]], g2_figures[[5]],
+  g1_figures[[6]],  g2_figures[[6]],
+  ncol = 2,
+  widths = c(1, 1)  # Adjust the widths of columns as needed
+)
+
+combined_figures
+
+
+
+##SAVE the object
+
+ggsave(filename = paste0(FIGS_PATH, "/combined.both.eps"),
+      combined_figures,
+      width = 17.4,
+      height = 23.4,
+      units = "cm",
+      dpi = 600 )
+
+
+
+#next task - make y axis titles abundance for the g1s
 
 ###combine em_mods tables 
 
