@@ -6466,11 +6466,11 @@ write.csv(sf.cont.tbl, "clipboard")
 
 ## ---- recruitment univariate sfNOAC figures
 
-sfNOAC.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brmNO_AC.rds"))
-sfNOAC.brm1 %>% ggemmeans(~Treatment) %>% plot
+sf.brmNOAC <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brmNO_AC.rds"))
+sf.brmNOAC %>% ggemmeans(~Treatment) %>% plot
 
 
-newdata <- sfNOAC.brm1 %>% emmeans(~Treatment, type = "link") %>% 
+newdata <- sf.brmNOAC %>% emmeans(~Treatment, type = "link") %>% 
   gather_emmeans_draws() %>% 
   mutate(Fit = exp(.value)) %>% 
   as.data.frame
@@ -6504,7 +6504,7 @@ g1.sf <- newdata %>% ggplot() +
 g1.sf
 
 
-sfNOAC.em <- sfNOAC.brm1 %>%
+sfNOAC.em <- sf.brmNOAC %>%
   emmeans(~Treatment, type = "link") %>%
   pairs() %>%
   gather_emmeans_draws() %>%
@@ -7515,11 +7515,23 @@ points(fish.mds, display = "sites",
 #no particular points that influential
 ## ----end
 
+### Envfit (Species Vectors) ==========================================================
+
+## ----recruitment multivariate end envfit
+end.env <- envfit(fish.mds, fish.wide.end[,-c(1:3)]^0.25, seed = 123, perm = 999)
+end.env
+
+## ----end
+
+
+### Plot NMDS ======================================================================
   
 ## ----recruitment multivariate end mds ggplot
 scores <-   fish.mds %>% fortify() %>% 
   full_join(fish.wide.end %>% rownames_to_column(var = "Label"))
 scores
+
+
 
 library(ggrepel)  
 
@@ -7547,6 +7559,18 @@ hull <- scores %>%
 g <- g + geom_polygon(data = hull, aes(y = NMDS2, x = NMDS1, fill = Treatment), alpha = 0.2)
 g
 #probs needs some jitter/dodging but you can see some groupings (particularly w)
+
+
+env.scores <- end.env %>% fortify()
+env.scores
+
+g + 
+  geom_segment(data=env.scores,
+               aes(y=0, x=0, yend=PC2, xend=PC1),
+               arrow=arrow(length=unit(0.3,'lines')), color='blue') +
+  geom_text(data=env.scores,
+            aes(y=PC2*1.1, x=PC1*1.1, label=Label), color='blue')
+
 ## ----end
   
 ggsave(filename = paste0(FIGS_PATH, "/nmds.end.eps"),
@@ -7629,6 +7653,7 @@ ggsave(filename = paste0(FIGS_PATH, "/disp.plot.end.eps"),
        width = 17.4,
        units = "cm",
        dpi = 600)
+
 
 
 

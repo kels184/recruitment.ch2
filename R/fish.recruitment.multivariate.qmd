@@ -70,16 +70,23 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 on distance: Stress is at an acceptable level (0.14). 2 convergent solutions found
 
 
-# Plot MDS
-```{r recruitment multivariate end mds ggplot, results = 'markdown', eval = TRUE}
-
-```
 
 ```{r recruitment multivariate end adonis, results = 'markdown', eval = TRUE}
 
 ```
 significant adonis result, but this could be driven by differences in dispersion
 BH different to W and DL
+
+```{r recruitment multivariate end envfit, results = 'markdown', eval = TRUE}
+
+```
+Petroscirtes, P.T, SD, LA, Steth strig and steth interrupta and SF significant. Lethrinus variegatus p = 0.057
+
+# Plot MDS
+```{r recruitment multivariate end mds ggplot, results = 'markdown', eval = TRUE}
+
+```
+
 
 ```{r recruitment multivariate end disper, results = 'markdown', eval = TRUE}
 

@@ -261,3 +261,4 @@ hack_size.stanreg <- function(x) {
 }
 
 ## ----end
+
