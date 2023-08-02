@@ -207,6 +207,7 @@ g.fish.abnd1 <-fishdata %>%
           panel.grid = element_blank()
     ) +
     theme_bw()
+## ----end
 
 g.fish.abnd1
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish1.png"),
@@ -215,7 +216,6 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish1.png"),
        height = 6,
        dpi = 100)
 
-## ----end
   #### Total abundance over time: ===============================================
 
 ## ---- fish EDA abundance time
@@ -254,7 +254,7 @@ fishdata %>%
         panel.grid = element_blank()
   ) +
   theme_bw()
-
+## ----end
 
    #### Total Abundance vs algal biomass ========================================
 
@@ -314,14 +314,14 @@ g.sp.richness <- fishdata %>%
   theme_bw()
 
 g.sp.richness
-
+## ----end
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp1.png"),
        g.sp.richness,
        width = 17.4,
        height = 6,
        dpi = 100)
 
-## ----end
+
 
    #### Species richness over time: =============================================
 
@@ -344,7 +344,7 @@ g.sp.time <- fishdata %>%
   theme_bw()
 
 g.sp.time
-
+## ----end
 
 
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
@@ -352,6 +352,9 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
        width = 17.4,
        height = 6,
        dpi = 100)
+
+
+#Combine species richne
 
 
  #### Species richness vs algal biomass =========================================
