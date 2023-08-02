@@ -70,13 +70,14 @@ knitr::read_chunk('../R/analysis_recruitment.R')
 on distance: Stress is at an acceptable level (0.14). 2 convergent solutions found
 
 
-
+#Adonis
 ```{r recruitment multivariate end adonis, results = 'markdown', eval = TRUE}
 
 ```
 significant adonis result, but this could be driven by differences in dispersion
 BH different to W and DL
 
+# EnvFit - Species vectors
 ```{r recruitment multivariate end envfit, results = 'markdown', eval = TRUE}
 
 ```

@@ -262,3 +262,24 @@ hack_size.stanreg <- function(x) {
 
 ## ----end
 
+## ---- abbreviate species function
+#generated using chatgpt
+abbreviate_species_names <- function(species_vector) {
+  abbreviation_vector <- character(length(species_vector))
+  
+  for (i in seq_along(species_vector)) {
+    name_parts <- unlist(strsplit(as.character(species_vector[i]), split = "\\."))
+    
+    if (length(name_parts) == 2) {
+      genus <- substr(name_parts[1], 1, 3)
+      species <- tolower(substr(name_parts[2], 1, 3))
+      abbreviation_vector[i] <- paste(genus, species, sep = ".")
+    } else {
+      abbreviation_vector[i] <- species_vector[i]
+    }
+  }
+  
+  return(abbreviation_vector)
+}
+
+## ----end

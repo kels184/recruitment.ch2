@@ -7242,7 +7242,7 @@ g1_figures <- lapply(seq_along(g1_figures), function(i) {
                                 axis.text=element_text(size=8, colour = "black"), #change font size of axis text
                                 axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
                                 axis.title=element_text(size=10), #change font size of axis titles
-                          axis.title.y = element_blank(), #remove y axis title --- be sure you know which is which!
+                        #  axis.title.y = element_blank(), #remove y axis title --- be sure you know which is which!
                                 axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
                                 axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
   ) +
@@ -7301,7 +7301,7 @@ combined_figures <- grid.arrange(
   widths = c(1, 1)  # Adjust the widths of columns as needed
 )
 
-combined_figures
+combined_figures %>% class()
 
 
 
@@ -7545,7 +7545,7 @@ g <-
   geom_text_repel(data=scores %>%
               filter(Score=='sites'),
             aes(label=Label,
-                color=Treatment), hjust=-0.2
+                color=Treatment), hjust=-0.2, show.legend = FALSE
             ) +
   
   theme_classic()
@@ -7556,8 +7556,8 @@ hull <- scores %>%
   group_by(Treatment) %>% 
   slice(chull(NMDS1, NMDS2)) #decides which points are inside the hull
 
-g <- g + geom_polygon(data = hull, aes(y = NMDS2, x = NMDS1, fill = Treatment), alpha = 0.2)
-g
+g.hull <- g + geom_polygon(data = hull, aes(y = NMDS2, x = NMDS1, fill = Treatment), alpha = 0.2)
+g.hull
 #probs needs some jitter/dodging but you can see some groupings (particularly w)
 
 
@@ -7565,21 +7565,47 @@ env.scores <- end.env %>% fortify()
 env.scores
 
 g + 
-  geom_segment(data=env.scores,
-               aes(y=0, x=0, yend=PC2, xend=PC1),
-               arrow=arrow(length=unit(0.3,'lines')), color='blue') +
-  geom_text(data=env.scores,
-            aes(y=PC2*1.1, x=PC1*1.1, label=Label), color='blue')
+  geom_segment(data=env.scores %>% filter(abs(NMDS1) > 0.4 |
+                                            abs(NMDS2) > 0.4),
+               aes(y=0, x=0, yend=NMDS2, xend=NMDS1),
+               arrow=arrow(length=unit(0.3,'lines')), color='black') +
+  geom_text(data=env.scores %>% filter(abs(NMDS1) > 0.4 |
+                                         abs(NMDS2) > 0.4),
+            aes(y=NMDS2*1.1, x=NMDS1*1.1, label=Label), color='black')
 
+#adjust text positions and code
+env.text <- env.scores %>% filter(abs(NMDS1) > 0.4 |
+                                    abs(NMDS2) > 0.4) %>% 
+  mutate('y'=NMDS2*1.1, 'x'=NMDS1*1.1,
+         Label = abbreviate_species_names(Label)) #abbreviate species, see functions.r
+
+env.text[8,6] <- 0.6
+        
+g.vec <- g.hull + 
+  geom_segment(data=env.scores %>% filter(abs(NMDS1) > 0.4 |
+                                            abs(NMDS2) > 0.4),
+               aes(y=0, x=0, yend=NMDS2, xend=NMDS1),
+               arrow=arrow(length=unit(0.3,'lines')), color='black') +
+  geom_text(data=env.text,
+            aes(y=y, x=x, label=Label), color='black') +
+  theme(legend.key.size = unit(0.3, "cm"),
+        legend.position = c(0.95,0.2),
+        legend.direction = "vertical")
+
+g.vec
 ## ----end
   
-ggsave(filename = paste0(FIGS_PATH, "/nmds.end.eps"),
-       g,
+ggsave(filename = paste0(FIGS_PATH, "/nmds.end.eps"), #had trouble with semi-transparency
+       print(g.vec),
        height = 10,
        width = 17.4,
        units = "cm",
-       dpi = 600)
+       fallback_resolution = 600,
+       device = cairo_eps) 
 
+
+#powerpoint save:
+library('ReporteRs') # not working
 ##NB: Dissimilarity matrix used to make the NMDS is found in fish.mds$diss. The original order is not preserved
 ## but its indices are at fish.mds$iidx
 
