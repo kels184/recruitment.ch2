@@ -1787,7 +1787,7 @@ g2<- test_mod %>%
 #add asterisks (stars)
 
 star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
-                      Fit = c(0.5, 2.5,4,2.5),
+                      Fit = c(0.5, 2.5,4.5,2.5),
                       stars = c("*", "***", "***", "***"))
 
 g2 <- g2 + geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
@@ -1912,6 +1912,8 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/BLANK_cont.png"),
        units = "cm",
        dpi = 6000)
 
+
+
 ########trying to restrict slabs to only the 95% quantiles
 
 
@@ -1952,7 +1954,6 @@ g1 <- newdata_filtered %>% ggplot() +
 g1
 
 
-#####
 #####not working so far
 
 
@@ -2838,6 +2839,69 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sp.both.png"),
        units = "cm",
        dpi = 6000)
 
+
+#Combined Abundance and Sp Richness Figure
+abnd.both  <- g1 + theme(legend.position = "none",
+                                      text = element_text(colour = "black"), #make all font black
+                                      axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                                      axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                                      axis.title.x=element_blank(), #change font size of axis titles
+                                      axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                                      axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+) +
+  labs(tag = "a") + #add plot tag a
+  theme(plot.tag = element_text(size = 10, 
+                                face = "bold"), 
+        plot.tag.position = c(0,1)) +
+g2 + theme(text = element_text(colour = "black"), #make all font black
+           axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+           axis.title=element_blank(), #remove axis title
+           legend.position="none", #remove legend
+           axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+           axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+)   + 
+  labs(tag = "b") + #add plot tag b
+  theme(plot.tag = element_text(size = 10, 
+                                face = "bold"), 
+        plot.tag.position = c(0,1)) 
+abnd.both
+
+sp.both <- g1.sp + theme(legend.position = "none",
+                         text = element_text(colour = "black"), #make all font black
+                         axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                         axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                         axis.title=element_text(size=10), #change font size of axis titles
+                         axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                         axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+) +
+  labs(tag = "c") + #add plot tag a
+  theme(plot.tag = element_text(size = 10, 
+                                face = "bold"), 
+        plot.tag.position = c(0,1)) +
+g2.sp + theme(text = element_text(colour = "black"), #make all font black
+              axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+              axis.title=element_text(size=10), #change font size of axis titles
+              legend.text=element_text(size=8), #change font size of legend text
+              legend.title=element_text(size=8), #change font size of legend title
+              legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
+              legend.key.size = unit(0.5, 'char'), #change legend key size
+              legend.background = element_blank(), #remove legend background box
+              axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+              axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+)   + 
+  labs(tag = "d") + #add plot tag b
+  theme(plot.tag = element_text(size = 10, 
+                                face = "bold"), 
+        plot.tag.position = c(0,1)) 
+
+abnd.both/sp.both
+
+ggsave(filename = paste0(FIGS_PATH, "/Abnd.Sp.Both.eps"),
+       abnd.both/sp.both,
+       height = 12,
+       width = 17.4,
+       units = "cm",
+       dpi = 600)
 
   ### Halichoeres miniatus abundance=============================================
 
