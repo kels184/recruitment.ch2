@@ -173,7 +173,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/Alg.plot.wt.png"),
        width = 20,
        height = 10,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 
 
@@ -214,47 +214,47 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish1.png"),
        g.fish.abnd1,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
   #### Total abundance over time: ===============================================
 
 ## ---- fish EDA abundance time
-g.fish.abnd.time <-fishdata %>% 
-  group_by(Treatment, Replicate, Date) %>% 
-  summarise(abundance = sum(count)) %>% 
-  ggplot() + aes(y = abundance, x = Date, colour = Treatment) +
+dat <- fishdata %>% 
+  mutate(Day = Date %>% factor %>% as.numeric() )   %>% 
+  group_by(Treatment, Replicate, Day) %>% 
+  reframe(sp.richness = if_else(Species != "empty", 
+                                true = length(unique(Species)), 
+                                false = 0),
+          abundance = sum(count)
+  ) %>%  distinct() 
+dat$Treatment <- dat$Treatment %>%   fct_recode( D9BM = "BH", #this one first so BH in D9BH etc don't change
+                                                 D9BH = "W", 
+                                                 D9BL = "BQ", D5BH = "DM", 
+                                                 D3BH = "DL") 
+
+g.abnd.time <- ggplot(dat) + aes(y = abundance, x = Day, colour = Treatment) +
   geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
   geom_smooth() +
-  ylab(expression("Fish Abundance") ) +
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12),
         panel.grid = element_blank()
   ) +
-  theme_bw()
+  ylab(expression("Total Abundance") )+
+  theme_classic()
 
-g.fish.abnd.time
+g.abnd.time <- g.abnd.time + theme(legend.justification = c(0.1,0.9), legend.position = c(0.1,0.9),
+                                   legend.key.size = unit(0.3, "cm"))  #for some reason ggplot only allowed legend editing here
+
+g.abnd.time
+
+## ----end
+
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish2.png"),
-       g.fish.abnd.time,
+       g.abnd.time,
        width = 17.4,
        height = 6,
-       dpi = 100)
-
-fishdata %>% 
-  group_by(Treatment, Replicate, Date) %>% 
-  summarise(abundance = sum(count)) %>% 
-  ggplot() + aes(y = abundance, x = Date ) +
-  #geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
-  geom_line() +
-  facet_wrap(~interaction(Treatment,Replicate) )+
-  ylab(expression("Fish Abundance") ) +
-  theme(family = "calibri", text = element_text( size = 8, color = "black"),
-        axis.text = element_text(size = 10),
-        axis.title = element_text(size = 12),
-        panel.grid = element_blank()
-  ) +
-  theme_bw()
-## ----end
+       dpi = 600)
 
    #### Total Abundance vs algal biomass ========================================
 
@@ -286,7 +286,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.abnd.png"),
        g.alg.fish.abnd,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ## ----end
 
@@ -319,29 +319,26 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp1.png"),
        g.sp.richness,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 
 
    #### Species richness over time: =============================================
 
 ## ---- fish EDA richness vs time
-g.sp.time <- fishdata %>% 
-  group_by(Treatment, Replicate, Date) %>% 
-  summarise(sp.richness = if_else(Species != "empty", 
-                                  true = length(unique(Species)), 
-                                  false = 0) 
-  ) %>%  distinct() %>% 
-  ggplot() + aes(y = sp.richness, x = Date, colour = Treatment) +
+
+g.sp.time <- ggplot(dat) + aes(y = sp.richness, x = Day, colour = Treatment) +
   geom_point(position = position_jitterdodge(jitter.width = 0.02, dodge.width = 0.9), alpha = 1) +
   geom_smooth() +
-  ylab(expression("Species Richness") ) +
   theme(family = "calibri", text = element_text( size = 8, color = "black"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12),
         panel.grid = element_blank()
   ) +
-  theme_bw()
+  ylab(expression("Species Richness") )+
+  theme_classic()
+
+g.sp.time + theme(legend.position = "none") 
 
 g.sp.time
 ## ----end
@@ -351,10 +348,50 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sp2.png"),
        g.sp.time,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 
-#Combine species richne
+#Combine species richness and abund/time into one figure
+
+#ggsave(filename = paste0(FIGS_PATH, "/Abnd.Sp.Time.eps"),
+#       (g.abnd.time + theme(axis.title.x = element_blank()))/
+#         g.sp.time + theme(legend.position = "none"),
+#       width = 17.4,
+#       height = 12,
+#       dpi = 600)
+##eps does not supprt semi transparency
+
+library(officer) #for MS office
+library(rvg)
+
+#first convert object to class with rvg 'dml'
+
+p <- (g.abnd.time + theme(axis.title.x = element_blank(),
+                          legend.position = "none") + labs( tag = "a") + #add plot tag a
+        theme(plot.tag = element_text(size = 10, 
+                                      face = "bold"), 
+              plot.tag.position = c(0,1)))/
+  g.sp.time + theme(legend.position = "bottom",
+                    legend.key.size = unit(0.3, "cm")) + 
+  labs( tag = "b") + #add plot tag a
+  theme(plot.tag = element_text(size = 10, 
+                                face = "bold"), 
+        plot.tag.position = c(0,1))
+
+p_dml <- rvg::dml(ggobj = p)
+
+# initialize PowerPoint slide
+officer::read_pptx() %>%
+  # add slide
+officer::add_slide() %>%
+  # specify object and location of object
+officer::ph_with(p_dml, ph_location(width = 6.8, #width in inches (~174mm)
+                                    height = 5.9 # height inches (~15 cm
+                                    )) %>%
+  # export slide
+base::print(
+  target = paste0(FIGS_PATH, "/Abnd.Sp.Time.pptx")
+  )
 
 
  #### Species richness vs algal biomass =========================================
@@ -386,7 +423,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.alg.sp.png"),
        g.alg.fish.sp,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ## ----end
 
@@ -472,7 +509,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.png"),
        g.common.abnd,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ## ---- fish EDA common species2
 ## plot abundance over time
@@ -500,7 +537,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.time.png"),
        g.common.abnd.time,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ## ----fish EDA common species3
 ## plot abundance vs algal biomass
@@ -526,7 +563,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.common.alg.png"),
        g.common.abnd.alg,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ## ----end
 
@@ -569,7 +606,7 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.size.trt.png"),
        g,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 #size hist by treatment (all fish) (dens overlay) #(not rendered)#
 fishalgaedata %>% ggplot(aes(x = Length)) +
@@ -668,32 +705,32 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.hm.size.trt.png"),
        g.hm,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.ps.size.trt.png"),
        g.ps,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sd.size.trt.png"),
        g.sd,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.pt.size.trt.png"),
        g.pt,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.la.size.trt.png"),
        g.la,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.sf.size.trt.png"),
        g.sf,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 
 ## ----fish EDA sizes2 over time
@@ -765,18 +802,18 @@ ggsave(filename = paste0(FIGS_PATH, "/EDAfish.all.length.date.png"),
        all.length.date,
        width = 40,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.petro.length.date.png"),
        petro.length.date,
        width = 40,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 ggsave(filename = paste0(FIGS_PATH, "/EDAfish.doli.length.date.png"),
        doli.length.date,
        width = 40,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 #### Temporal Patterns in more detail ===========================================
 
@@ -913,7 +950,7 @@ g
  #                        g,
   #                       height = 10,
    #                      width = 17.4,
-    #                     dpi = 100 )
+    #                     dpi = 600 )
 
 ##---- fish EDA temporal hump look at raw data for those DMS
 dm.dat.wide %>% View()
@@ -951,7 +988,7 @@ ggsave(filename = paste0(FIGS_PATH, "/4commonDMhump.png"),
        g.dm,
        width = 15,
        height = 15,
-       dpi = 100)
+       dpi = 600)
 
 ## Univariate modelling ========================================================
 
@@ -1079,13 +1116,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.abundance.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.abundance.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 
 ##### Temporal autocorrelation refit ================================================
@@ -1155,13 +1192,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.abndAC.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.abndAC.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 
 
@@ -1499,7 +1536,7 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.abndBRM.av.png"),
        g.av,
        height = 6,
        width = 17.4,
-       dpi = 100)
+       dpi = 600)
 
 
 
@@ -1507,7 +1544,7 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.abndBRM.all.png"),
        g.all,
        height = 15,
        width = 15,
-       dpi = 100)
+       dpi = 600)
 
    #### Model investigation =====================================================
    ##### Frequentist ============================================================
@@ -1865,7 +1902,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.abund.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 
 ggsave(filename = paste0(FIGS_PATH, "/ppt/BLANK_cont.png"),
@@ -1873,7 +1910,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/BLANK_cont.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 ########trying to restrict slabs to only the 95% quantiles
 
@@ -2001,13 +2038,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.sp.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sp.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 ## ----recruitment univariate sp refit autocor
 
@@ -2070,13 +2107,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.spAC.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.spAC.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
    #### Partial Plot ============================================================
 ## ---- recruitment univariate sp partial
@@ -2799,7 +2836,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sp.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 
   ### Halichoeres miniatus abundance=============================================
@@ -2883,13 +2920,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.hm.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.hm.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 ## ----recruitment univariate hm refit revalidate
 
@@ -2948,13 +2985,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.hmAC.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.hmAC.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 #### Partial ====================================================================
 
 ## ----recruitment univariate hm partial
@@ -3497,7 +3534,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hmNOAC.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 
 
@@ -3653,7 +3690,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hm.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 
 ### Siganus doliatus abundance  =================================================
@@ -3736,13 +3773,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.sd.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sd.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 ## ----recruitment univariate sd refit revalidate
 
@@ -3799,13 +3836,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.sdAC.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sdAC.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 #### Partial ====================================================================
 
@@ -4194,7 +4231,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sd.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 ### Petroscirtes sp. abundance  =================================================
 
@@ -4276,13 +4313,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.ps.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.ps.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 
 
@@ -4340,13 +4377,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.psAC.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.psAC.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 #### Partial ====================================================================
 
 ## ----recruitment univariate ps partial
@@ -4842,7 +4879,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.ps.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 ### Pomacentrus tripunctatus abundance  =========================================
 
@@ -4932,13 +4969,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.pt.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.pt.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 
 
@@ -5002,13 +5039,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.ptAC.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.ptAC.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 #### Partial ====================================================================
 
@@ -5396,7 +5433,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.pt.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 
 ### Lethrinus atkinsoni abundance  =========================================
@@ -5487,13 +5524,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.la.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.la.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 
 ## ----recruitment univariate la refit revalidate
@@ -5553,13 +5590,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.laAC.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.laAC.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 
 
@@ -5950,7 +5987,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.la.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 
 
@@ -6039,13 +6076,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.sf.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sf.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 
 
@@ -6109,13 +6146,13 @@ ggsave(filename = paste0(FIGS_PATH, "/acf.sfAC.av.png"),
        g.av,
        width = 17.4,
        height = 6,
-       dpi = 100)
+       dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/acf.sfAC.all.png"),
        g.all,
        width = 17.4,
        height = 23.4,
-       dpi = 100)
+       dpi = 600)
 
 
 
@@ -6651,7 +6688,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sfNOAC.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 
 #Don't use
@@ -6774,7 +6811,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sf.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 1000)
+       dpi = 6000)
 
 
 

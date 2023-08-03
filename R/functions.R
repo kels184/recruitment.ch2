@@ -60,6 +60,8 @@ library(butcher) #file size hacking
 library(bayesplot) #for bayesian diagnostics
 library(ggrepel)
 library(gridExtra) #multi panel grids
+library(officer) #for MS office
+library(rvg)
 ## ----end
 
 ## ---- preparePaths
