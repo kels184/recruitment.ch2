@@ -7571,8 +7571,13 @@ scores <-   fish.mds %>% fortify() %>%
   full_join(fish.wide.end %>% rownames_to_column(var = "Label"))
 scores
 
+scores$Label <- scores$Label%>% 
+  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                     "W" = "D9BH", 
+                     "BQ" ="D9BL", "DM" = "D5BH", 
+                     "DL" = "D3BH")) %>% factor()
 
-
+scores %>% glimpse
 library(ggrepel)  
 
 g <-
@@ -7582,11 +7587,11 @@ g <-
   geom_point(data=scores %>%
                filter(Score=='sites'),
              aes(color=Treatment))  +#colour the points according to their Treatment
-  geom_text_repel(data=scores %>%
-              filter(Score=='sites'),
-            aes(label=Label,
-                color=Treatment), hjust=-0.2, show.legend = FALSE
-            ) +
+#  geom_text_repel(data=scores %>%
+#              filter(Score=='sites'),
+#            aes(label=Label,
+#                color=Treatment), hjust=-0.2, show.legend = FALSE
+#            ) +
   
   theme_classic()
 g
