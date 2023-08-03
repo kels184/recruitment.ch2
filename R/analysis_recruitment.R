@@ -7635,12 +7635,16 @@ scores <-   fish.mds %>% fortify() %>%
   full_join(fish.wide.end %>% rownames_to_column(var = "Label"))
 scores
 
-scores$Label <- scores$Label%>% 
-  str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+scores <- scores%>% mutate(
+  Label = Label %>% str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
                      "W" = "D9BH", 
                      "BQ" ="D9BL", "DM" = "D5BH", 
-                     "DL" = "D3BH")) %>% factor()
-
+                     "DL" = "D3BH")) %>% factor(),
+  Treatment = Treatment %>% str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                                               "W" = "D9BH", 
+                                               "BQ" ="D9BL", "DM" = "D5BH", 
+                                               "DL" = "D3BH")) %>% factor()
+)
 scores %>% glimpse
 library(ggrepel)  
 
@@ -7688,7 +7692,9 @@ env.text <- env.scores %>% filter(abs(NMDS1) > 0.4 |
   mutate('y'=NMDS2*1.1, 'x'=NMDS1*1.1,
          Label = abbreviate_species_names(Label)) #abbreviate species, see functions.r
 
-env.text[8,6] <- 0.6
+env.text[8,6] <- 0.6 #move Siganus fuscescens label
+env.text[6,5] <- 0.5 #move Ste strig label
+env.text[6,6] <- 0.56 #move Ste strig label
         
 g.vec <- g.hull + 
   geom_segment(data=env.scores %>% filter(abs(NMDS1) > 0.4 |
