@@ -7645,10 +7645,21 @@ ggsave(filename = paste0(FIGS_PATH, "/nmds.end.eps"), #had trouble with semi-tra
 
 
 #powerpoint save:
-library('ReporteRs') # not working
-##NB: Dissimilarity matrix used to make the NMDS is found in fish.mds$diss. The original order is not preserved
-## but its indices are at fish.mds$iidx
 
+p_dml <- rvg::dml(ggobj = g.vec)
+
+# initialize PowerPoint slide
+officer::read_pptx() %>%
+  # add slide
+  officer::add_slide() %>%
+  # specify object and location of object
+  officer::ph_with(p_dml, ph_location(width = 6.8, #width in inches (~174mm)
+                                      height = 3.9 # height inches (~15 cm
+  )) %>%
+  # export slide
+  base::print(
+    target = paste0(FIGS_PATH, "/NMDS.end.pptx")
+  )
     ### Adonis===================================================================
 
 ## ----recruitment multivariate end adonis
