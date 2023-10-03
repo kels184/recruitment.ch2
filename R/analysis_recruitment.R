@@ -3502,7 +3502,7 @@ g2.hm <- hmNOAC.em_mod %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      n.breaks = 4,
-                     limits = c(0.5,3)
+                     ) +   coord_cartesian(xlim = c(0.5,3) #replace scale lims with coord system limits 
   ) +
   theme_classic() +
   labs(y = "Contrast") +
@@ -3532,7 +3532,7 @@ g.hm.all <- hmNOAC.em %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      n.breaks = 4,
-                     limits = c(0.5,3)
+                     ) +   coord_cartesian(xlim = c(0.5,3) #replace scale lims with coord system limits 
   ) +
   theme_classic()
 
@@ -4169,7 +4169,7 @@ g2.sd <- sd.em_mod %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9),
-                     limits = c(0.05,16)
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
   ) +
   theme_classic() +
   labs(y = "Contrast") + 
@@ -4197,7 +4197,7 @@ g.sd.all <- sd.em %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9),
-                     limits = c(0.05,16)
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
   ) +
   theme_classic()
   
@@ -4816,7 +4816,7 @@ g2.ps<- ps.em_mod %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9),
-                     limits = c(0.05,16)
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
   ) +
   theme_classic() +
   labs(y = "Contrast") + 
@@ -4831,7 +4831,7 @@ ps.em$contrast <-  ps.em$contrast %>%
                      "DL" = "D3BH"))
 
 
-g.ps.all <- ps.em %>%
+g.pt. <- ps.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
   stat_slab(aes(
@@ -4845,9 +4845,8 @@ g.ps.all <- ps.em %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9),
-                     # limits = c(0.05,16) #remove x axis limits  
-                     ) +   #replace with coordinate system limits   
-  coord_cartesian(xlim = c(0.05,16)) +
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
+  ) +
   theme_classic()
 
 ## ----end
@@ -5310,7 +5309,7 @@ g1.pt <- newdata %>% ggplot() +
   ), color = "black", size = 0.3) +
   scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
   ylab(expression(atop(italic("P. tripunctatus"), paste("abundance")))) +
-  scale_y_continuous(limits = c(0, 8)) +
+  coord_cartesian(ylim = c(0, 8)) + #coordinate limit, not axis
   theme_classic() +
   theme(text = element_text(colour = "black"), #make all font black
         axis.text=element_text(size=8, colour = "black"), #change font size of axis text
@@ -5354,7 +5353,7 @@ pt.em_mod$contrast %>% levels
 #add asterisks (stars)
 
 star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
-                      Fit = c(0.05, NA,18,17),
+                      Fit = c(0.05, NA,20,18),
                       stars = c("**", NA, "**", "**"))
 
 g2.pt<- pt.em_mod %>%
@@ -5372,7 +5371,7 @@ g2.pt<- pt.em_mod %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9),
-                     limits = c(0.05,18)
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
   ) +
   theme_classic() +
   labs(y = "Contrast") + 
@@ -5400,7 +5399,7 @@ pt.em$contrast <-  pt.em$contrast %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9),
-                     limits = c(0.05,16)
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
   ) +
   theme_classic()
 
@@ -5927,7 +5926,7 @@ g2.la<- la.em_mod %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9),
-                     limits = c(0.05,16)
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
   ) +
   theme_classic() +
   labs(y = "Contrast") + 
@@ -5955,7 +5954,7 @@ g.la.all <- la.em %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9),
-                     limits = c(0.05,16)
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
   ) +
   theme_classic()
 
@@ -5973,7 +5972,7 @@ g.la.all <- la.em %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9)
-#                     limits = c(0.05,16) #remove x axis limits
+#                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits  #remove x axis limits
   ) +
   #replace with coordinate system limits
   coord_cartesian(xlim = c(0.05,16)) +
@@ -6648,7 +6647,7 @@ g2.sf<- sfNOAC.em_mod %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9, 20),
-                     limits = c(0.05,20)
+                     ) +   coord_cartesian(xlim = c(0.05,20) #replace scale lims with coord system limits 
   ) +
   theme_classic() +
   labs(y = "Contrast") + 
@@ -6675,7 +6674,7 @@ g.sf.all <- sfNOAC.em %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3,9,20),
-                     limits = c(0.05,20)
+                     ) +   coord_cartesian(xlim = c(0.05,20) #replace scale lims with coord system limits 
   ) +
   theme_classic()
 
@@ -6803,7 +6802,7 @@ g2<- sf.em_mod %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3,1,3,9),
-                     limits = c(0.05,16)
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
   ) +
   theme_classic() +
   labs(y = "Contrast")
@@ -6825,7 +6824,7 @@ g.all.cont2 <- sf.em %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3,1,3,9),
-                     limits = c(0.05,16)
+                     ) +   coord_cartesian(xlim = c(0.05,16) #replace scale lims with coord system limits 
   ) +
   theme_classic()
 
@@ -7377,18 +7376,62 @@ ggsave(filename = paste0(FIGS_PATH, "/combined.both.eps"),
 #### Combine all contr figures ===================================================
 
 # Get the names of objects in the current environment that match the pattern
-g1_fig_names <- ls(pattern = "^g1\\.") #starts with g1. 
-g1_fig_names <- g1_fig_names[!grepl("sp", g1_fig_names)]#but not containing sp
+g.all_fig_names <- ls(pattern = "^g\\..*\\.all$") #starts with g., ends with .all
 
 
 # Specify the order of objects
-order <- c("abnd","sp", "hm", "ps", "pt", "sd", "la", "sf")
+order <- c("ab","sp", "hm", "ps", "pt", "sd", "la", "sf")
 
 # Identify the object names matching the patterns
-g1_fig_names_ordered <- g1_fig_names[match(order, substr(g1_fig_names, 4, 5))]
+g.all_fig_names_ordered <- g.all_fig_names[match(order, substr(g.all_fig_names,
+                                                               3, 4))] #3rd and 4th positions of the string
 
-g1_figures <- lapply(g1_fig_names_ordered, get)  # Extract the figures associated with g1_fig_names
+g.all_figures <- lapply(g.all_fig_names_ordered, get)  # Extract the figures associated with g1_fig_names
 
+# Apply formatting to the g1 figures (remove legend and add labels)
+g.all_figures <- lapply(seq_along(g.all_figures), function(i) {
+  g.all_figures[[i]] + theme(legend.position = "none", #no legends
+                          text = element_text(colour = "black"), #make all font black
+                          axis.text=element_text(size=8, colour = "black"), #change font size of axis text
+                          axis.title=element_text(size=10), #change font size of axis titles
+                          axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
+                          axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
+  ) +
+    labs(y = "Contrast", tag = letters[i] ) + # Use every second letter for labels (a, c, e, ...)
+    theme(plot.tag = element_text(size = 10, #format tag letters
+                                  face = "bold") )# +
+  #ylab("Abundance") #didn't work with the element_blank above
+})
+
+#have a look
+g.all_figures[1]
+g.all_figures[2]
+
+#combine the all contrast figures:
+combined_all.figures <- grid.arrange(
+  g.all_figures[[1]],
+  g.all_figures[[2]], 
+  g.all_figures[[3]], 
+  g.all_figures[[4]],
+  g.all_figures[[5]], 
+  g.all_figures[[6]], 
+  g.all_figures[[7]],
+  g.all_figures[[8]],
+  ncol = 2,
+  widths = c(1, 1)  # Adjust the widths of columns as needed
+)
+combined_figures %>% class()
+
+
+
+##SAVE the object
+
+ggsave(filename = paste0(FIGS_PATH, "/combined.all.cont.eps"),
+       combined_all.figures,
+       width = 17.4,
+       height = 23.4,
+       units = "cm",
+       dpi = 600 )
 
 
 ### Algae plot biomass ========================================================
