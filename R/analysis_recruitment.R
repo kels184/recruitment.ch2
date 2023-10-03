@@ -168,7 +168,7 @@ ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.eps"),
        dpi = 600)
 
 #ppt
-ggsave(filename = paste0(FIGS_PATH, "/ppt/Alg.plot.wt.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.Alg.plot.wt.png"),
        g.plot.wt,
        width = 20,
        height = 10,
@@ -1897,7 +1897,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.all.contr.eps"),
        dpi = 600)
 
 ##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.abund.both.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.bayes.abund.both.png"),
        g1 + theme(legend.position = "none") + g2,
        height = 10,
        width = 20,
@@ -1905,7 +1905,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.abund.both.png"),
        dpi = 6000)
 
 
-ggsave(filename = paste0(FIGS_PATH, "/ppt/BLANK_cont.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.BLANK_cont.png"),
        g3,
        height = 10,
        width = 20,
@@ -2833,7 +2833,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sp.all.contr.eps"),
        dpi = 600)
 
 ##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sp.both.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.bayes.sp.both.png"),
        g1.sp + theme(legend.position = "none") + g2.sp,
        height = 10,
        width = 20,
@@ -3594,14 +3594,19 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.all.contr.eps"),
        dpi = 600)
 
 ##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hmNOAC.both.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.bayes.hmNOAC.both.png"),
        g1.hm + theme(legend.position = "none") + g2.hm,
        height = 10,
        width = 20,
        units = "cm",
        dpi = 600)
 
-
+ggsave(filename = paste0(FIGS_PATH, "/test.png"),
+       g1.hm + theme(legend.position = "none") + g2.hm,
+       height = 10,
+       width = 20,
+       units = "cm",
+       dpi = 600)
 
 ## ---- recruitment univariate hm figures
 #USE NOAC Instead
@@ -4258,12 +4263,12 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.all.contr.eps"),
        dpi = 600)
 
 ##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sd.both.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.bayes.sd.both.png"),
        g1.sd + theme(legend.position = "none") + g2.sd,
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 6000)
+       dpi = 600)
 
 ### Petroscirtes sp. abundance  =================================================
 
@@ -4906,12 +4911,12 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.ps.all.contr.eps"),
        dpi = 600)
 
 ##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.ps.both.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.bayes.ps.both.png"),
        g1.ps + theme(legend.position = "none") + g2.ps,
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 6000)
+       dpi = 600)
 
 ### Pomacentrus tripunctatus abundance  =========================================
 
@@ -5460,12 +5465,12 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.pt.all.contr.eps"),
        dpi = 600)
 
 ##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.pt.both.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.bayes.pt.both.png"),
        g1.pt + theme(legend.position = "none") + g2.pt,
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 6000)
+       dpi = 600)
 
 
 ### Lethrinus atkinsoni abundance  =========================================
@@ -6033,12 +6038,12 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.la.all.contr.eps"),
        dpi = 600)
 
 ##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.la.both.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.bayes.la.both.png"),
        g1.la + theme(legend.position = "none") + g2.la,
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 6000)
+       dpi = 600)
 
 
 
@@ -6734,12 +6739,12 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sfNOAC.all.contr.eps"),
        dpi = 600)
 
 ##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sfNOAC.both.png"),
+ggsave(filename = paste0(FIGS_PATH, "/big.bayes.sfNOAC.both.png"),
        g1.sf + theme(legend.position = "none") + g2.sf,
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 6000)
+       dpi = 600)
 
 
 #Don't use
