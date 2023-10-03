@@ -5358,7 +5358,7 @@ pt.em_mod$contrast %>% levels
 #add asterisks (stars)
 
 star.df <- data.frame(contrast = seq(1.25, 4.25, 1),
-                      Fit = c(0.05, NA,20,18),
+                      Fit = c(0.05, NA,19,18),
                       stars = c("**", NA, "**", "**"))
 
 g2.pt<- pt.em_mod %>%
