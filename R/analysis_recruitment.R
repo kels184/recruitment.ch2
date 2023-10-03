@@ -3491,7 +3491,7 @@ g2.hm <- hmNOAC.em_mod %>%
   geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
     x = Fit, 
-    y = reorder(contrast, desc(contrast)), #reorder y axis (descending)
+    y = contrast,
     fill = stat(ggdist::cut_cdf_qi(cdf,
                                    .width = c(0.5, 0.8, 0.95),
                                    labels = scales::percent_format()
@@ -3598,7 +3598,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hmNOAC.both.png"),
        height = 10,
        width = 20,
        units = "cm",
-       dpi = 6000)
+       dpi = 600)
 
 
 
@@ -7420,9 +7420,9 @@ ggsave(filename = paste0(FIGS_PATH, "/combined.both.eps"),
 
 
 
-#next task - make y axis titles abundance for the g1s
 
-###combine em_mods tables 
+
+#### combine all contr figures ===================================================
 
 ### Algae plot biomass ========================================================
 dat<- algaedata %>% 
@@ -7631,11 +7631,11 @@ end.env
 ### Plot NMDS ======================================================================
   
 ## ----recruitment multivariate end mds ggplot
-scores <-   fish.mds %>% fortify() %>% 
+scores.1 <-   fish.mds %>% fortify() %>% 
   full_join(fish.wide.end %>% rownames_to_column(var = "Label"))
-scores
+scores.1
 
-scores <- scores%>% mutate(
+scores.2 <- scores.1%>% mutate(
   Label = Label %>% str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
                      "W" = "D9BH", 
                      "BQ" ="D9BL", "DM" = "D5BH", 
@@ -7645,8 +7645,14 @@ scores <- scores%>% mutate(
                                                "BQ" ="D9BL", "DM" = "D5BH", 
                                                "DL" = "D3BH")) %>% factor()
 )
+scores.2$Treatment %>% levels
+
+scores <- scores.2 %>% #reorder the levels to match univariate graphs
+  mutate(Treatment = factor(Treatment, levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH")) 
+  )
+scores$Treatment %>% levels
+
 scores %>% glimpse
-library(ggrepel)  
 
 g <-
   ggplot(data = NULL, aes(y=NMDS2, x=NMDS1)) +

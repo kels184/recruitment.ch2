@@ -58,7 +58,7 @@ library(vegan) #multivariate analysis
 library(ggvegan) #multivariate plotting
 library(butcher) #file size hacking
 library(bayesplot) #for bayesian diagnostics
-library(ggrepel)
+library(ggrepel) #repelling object in ggplot
 library(gridExtra) #multi panel grids
 library(officer) #for MS office
 library(rvg)
