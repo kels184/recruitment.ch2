@@ -1811,7 +1811,7 @@ abnd.em$contrast <-  abnd.em$contrast %>%
                      "BQ" ="D9BL", "DM" = "D5BH", 
                      "DL" = "D3BH"))  
   
-g.all.cont <- abnd.em %>%
+g.abnd.all <- test %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
@@ -1890,7 +1890,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.both.eps"),
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.abund.all.contr.eps"),
-       g.all.cont,
+       g.abnd.all,
        height = 6,
        width = 8.4,
        units = "cm",
@@ -2758,7 +2758,8 @@ sp.em$contrast <-  sp.em$contrast %>%
                      "BQ" ="D9BL", "DM" = "D5BH", 
                      "DL" = "D3BH"))
 
-g.sp.all<- sp.em %>%
+
+g.sp.all <- sp.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
@@ -3510,13 +3511,13 @@ g2.hm <- hmNOAC.em_mod %>%
 g1.hm + g2.hm
 
 
-hm.em$contrast <-  hm.em$contrast %>% 
+hmNOAC.em$contrast <-  hmNOAC.em$contrast %>% 
   str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
                      "W" = "D9BH", 
                      "BQ" ="D9BL", "DM" = "D5BH", 
                      "DL" = "D3BH"))
 
-g.all.hm <- hmNOAC.em %>%
+g.hm.all <- hmNOAC.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed",linewidth = 0.3) +
   # geom_vline(xintercept = 1.5, alpha=0.3, linetype = 'dashed') +
@@ -3586,7 +3587,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.both.eps"),
        dpi = 600)
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.hmNOAC.all.contr.eps"),
-       g.all.hm,
+       g.hm.all,
        height = 6,
        width = 8.4,
        units = "cm",
@@ -3603,7 +3604,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hmNOAC.both.png"),
 
 
 ## ---- recruitment univariate hm figures
-
+#USE NOAC Instead
 #hm.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/hm.brm1.rds"))
 hm.brm1 %>% ggemmeans(~Treatment) %>% plot
 
@@ -3703,7 +3704,7 @@ g2 <- hm.em_mod %>%
 g2
 
 
-g.all.cont <- hm.em %>%
+g.all.hm2 <- hm.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
@@ -3722,39 +3723,6 @@ g1 + g2
 
 ## ----end
 
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.eps"),
-       g1,
-       height = 6,
-       width = 8.4,
-       units = "cm",
-       dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.contr.eps"),
-       g2,
-       height = 6,
-       width = 8.4,
-       units = "cm",
-       dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.both.eps"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 6,
-       width = 17.4,
-       units = "cm",
-       dpi = 600)
-
-ggsave(filename = paste0(FIGS_PATH, "/bayes.hm.all.contr.eps"),
-       g.all.cont,
-       height = 6,
-       width = 8.4,
-       units = "cm",
-       dpi = 600)
-
-##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.hm.both.png"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 10,
-       width = 20,
-       units = "cm",
-       dpi = 6000)
 
 
 ### Siganus doliatus abundance  =================================================
@@ -4215,7 +4183,7 @@ sd.em$contrast <-  sd.em$contrast %>%
                      "BQ" ="D9BL", "DM" = "D5BH", 
                      "DL" = "D3BH"))
 
-g.all.sd <- sd.em %>%
+g.sd.all <- sd.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3) +
   stat_slab(aes(
@@ -4283,7 +4251,7 @@ ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.both.eps"),
 
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.sd.all.contr.eps"),
-       g.all.sd,
+       g.sd.all,
        height = 6,
        width = 8.4,
        units = "cm",
@@ -5990,6 +5958,25 @@ g.la.all <- la.em %>%
   ) +
   theme_classic()
 
+g.la.all <- la.em %>%
+  ggplot() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  stat_slab(aes(
+    x = Fit, y = contrast,
+    fill = stat(ggdist::cut_cdf_qi(cdf,
+                                   .width = c(0.5, 0.8, 0.95),
+                                   labels = scales::percent_format()
+    ))
+  ), color = "black", size = 0.5) +
+  scale_fill_brewer("Interval", direction = -1, na.translate = FALSE) +
+  scale_x_continuous("Effect",
+                     trans = scales::log2_trans(),
+                     breaks = c(0.1, 0.3, 1, 3, 9)
+#                     limits = c(0.05,16) #remove x axis limits
+  ) +
+  #replace with coordinate system limits
+  coord_cartesian(xlim = c(0.05,16)) +
+  theme_classic()
 ## ----end
 
 ggsave(filename = paste0(FIGS_PATH, "/bayes.la.eps"),
@@ -6757,7 +6744,7 @@ ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sfNOAC.both.png"),
 
 #Don't use
 ## ---- recruitment univariate sf figures
-
+#USE NO AC instead
 #sf.brm1 <- readRDS(file = paste0(DATA_PATH, "modelled/sf.brm1.rds"))
 sf.brm1 %>% ggemmeans(~Treatment) %>% plot
 
@@ -6823,7 +6810,7 @@ g2<- sf.em_mod %>%
 
 g1 + g2
 
-g.all.cont <- sf.em %>%
+g.all.cont2 <- sf.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
   stat_slab(aes(
@@ -6842,42 +6829,6 @@ g.all.cont <- sf.em %>%
   theme_classic()
 
 ## ----end
-
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.eps"),
-       g1,
-       height = 6,
-       width = 8.4,
-       units = "cm",
-       dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.contr.eps"),
-       g2,
-       height = 6,
-       width = 8.4,
-       units = "cm",
-       dpi = 600)
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.both.eps"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 6,
-       width = 17.4,
-       units = "cm",
-       dpi = 600)
-
-ggsave(filename = paste0(FIGS_PATH, "/bayes.sf.all.contr.eps"),
-       g.all.cont,
-       height = 6,
-       width = 8.4,
-       units = "cm",
-       dpi = 600)
-
-##For powerpoint:
-ggsave(filename = paste0(FIGS_PATH, "/ppt/bayes.sf.both.png"),
-       g1 + theme(legend.position = "none") + g2,
-       height = 10,
-       width = 20,
-       units = "cm",
-       dpi = 6000)
-
-
 
 
 ### Overall Size model ==========================================================
@@ -7422,7 +7373,22 @@ ggsave(filename = paste0(FIGS_PATH, "/combined.both.eps"),
 
 
 
-#### combine all contr figures ===================================================
+#### Combine all contr figures ===================================================
+
+# Get the names of objects in the current environment that match the pattern
+g1_fig_names <- ls(pattern = "^g1\\.") #starts with g1. 
+g1_fig_names <- g1_fig_names[!grepl("sp", g1_fig_names)]#but not containing sp
+
+
+# Specify the order of objects
+order <- c("abnd","sp", "hm", "ps", "pt", "sd", "la", "sf")
+
+# Identify the object names matching the patterns
+g1_fig_names_ordered <- g1_fig_names[match(order, substr(g1_fig_names, 4, 5))]
+
+g1_figures <- lapply(g1_fig_names_ordered, get)  # Extract the figures associated with g1_fig_names
+
+
 
 ### Algae plot biomass ========================================================
 dat<- algaedata %>% 
