@@ -4845,8 +4845,9 @@ g.ps.all <- ps.em %>%
   scale_x_continuous("Effect",
                      trans = scales::log2_trans(),
                      breaks = c(0.1, 0.3, 1, 3, 9),
-                     limits = c(0.05,16)
-  ) +
+                     # limits = c(0.05,16) #remove x axis limits  
+                     ) +   #replace with coordinate system limits   
+  coord_cartesian(xlim = c(0.05,16)) +
   theme_classic()
 
 ## ----end
