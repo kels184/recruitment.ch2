@@ -460,6 +460,21 @@ write_csv(sp.abnd, paste0(TABS_PATH, "/species.abundance.csv") )
 
 ## ----end
 
+##### Common species table
+
+## ---- fish EDA commonness table
+sp.abnd <- read_csv(paste0(TABS_PATH, "/species.abundance.csv")) %>% 
+  mutate(Species = factor(Species))
+sp.abnd %>% View()
+
+sp.abnd.fam <- sp.abnd %>% inner_join(.,fishdata %>% select(Species, Family)) %>%  
+  distinct() %>% ##remove rows with duplicate values%>% 
+  filter(!Species == "empty")
+View(sp.abnd.fam)
+
+write_csv(sp.abnd.fam, paste0(TABS_PATH, "/species.abundance.fam.csv") )
+## ----end
+
 #### Common species patterns =====================================================
 
 ## ---- fish EDA common species1
@@ -3515,7 +3530,13 @@ hmNOAC.em$contrast <-  hmNOAC.em$contrast %>%
   str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
                      "W" = "D9BH", 
                      "BQ" ="D9BL", "DM" = "D5BH", 
-                     "DL" = "D3BH"))
+                     "DL" = "D3BH")) %>% factor # #make sure "contrast" is factor
+
+# Reorder levels of "contrast" in "em_mod" objects to match "hmNOAC.em_mod"
+
+# Get the levels of "contrast" in "hmNOAC.em_mod" data frame
+correct_levels <- levels(hmNOAC.em$contrast)
+
 
 g.hm.all <- hmNOAC.em %>%
   ggplot() +
@@ -4181,12 +4202,23 @@ g2.sd <- sd.em_mod %>%
   geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
 g1.sd + g2.sd
 
+sd.em$contrast %>% factor %>% levels
 
 sd.em$contrast <-  sd.em$contrast %>% 
   str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
                      "W" = "D9BH", 
                      "BQ" ="D9BL", "DM" = "D5BH", 
-                     "DL" = "D3BH"))
+                     "DL" = "D3BH")) %>% factor
+
+sd.em$contrast %>% levels
+                       
+#make sure "contrast" is factor first
+# Reorder levels of "contrast" in "ps.em_mod" based on the correct levels (line 3522)
+sd.em$contrast <- factor(sd.em$contrast, levels = correct_levels)
+
+sd.em$contrast %>% levels
+               
+#plot and check:
 
 g.sd.all <- sd.em %>%
   ggplot() +
@@ -4798,6 +4830,14 @@ ps.em_mod$contrast <-  ps.em_mod$contrast %>%
     levels = c("D9BM-D5BH", "D9BM-D9BL", "D9BH-D9BL", "D9BH-D9BM"))
 
 ps.em_mod$contrast %>% levels
+
+# Reorder levels of "contrast" in "ps.em" to match "hmNOAC.em"
+
+# Get the levels of "contrast" in "hmNOAC.em_mod" data frame
+correct_levels <- levels(hmNOAC.em$contrast)
+
+# Reorder levels of "contrast" in "ps.em_mod" based on the correct levels
+ps.em$contrast <- factor(ps.em$contrast, levels = correct_levels)
 
 #add asterisks (stars)
 
