@@ -106,9 +106,27 @@ algae.sum %>%
 
 ## ----end
 
+## ---- recruitment algae height test
+alg.length.glmmTMB1 <- glmmTMB(Length ~ Treatment, # no random intercept model
+                         data = algaedata,
+                         family = gaussian(link = "identity"),
+                         REML = TRUE)
+resid <- simulateResiduals(alg.length.glmmTMB1, plot = TRUE) #residuals fine
+
+alg.length.glmmTMB1 %>% summary()
+alg.length.glmmTMB1 %>% TukeyHSD()
+
+## ----end
 
 ## ---- recruitment algae summary figures
-g.len <- ggplot(algaedata) + aes(y = Length, x = Treatment) + 
+#convert Treatment labels:
+dat <- algaedata %>% 
+  mutate(Treatment = Treatment %>% str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
+                                                      "W" = "D9BH", 
+                                                      "BQ" ="D9BL", "DM" = "D5BH", 
+                                                      "DL" = "D3BH")) %>% factor(),)
+
+g.len <- ggplot(dat) + aes(y = Length, x = Treatment) + 
   geom_point(alpha = 0.1) +
   geom_violin(fill = NA) +
   labs(y = "Length (cm)") +
@@ -121,7 +139,7 @@ g.len <- ggplot(algaedata) + aes(y = Length, x = Treatment) +
 
 g.len  
 
-g.wt <- ggplot(algaedata) + aes(y = Weight, x = Treatment) +
+g.wt <- ggplot(dat) + aes(y = Weight, x = Treatment) +
   geom_point(alpha = 0.1) + 
   geom_violin(fill = NA) +
   labs(y = "Biomass (g wet wt)") +
@@ -134,8 +152,8 @@ g.wt <- ggplot(algaedata) + aes(y = Weight, x = Treatment) +
 g.wt
 
 
-g.plot.wt <- algaedata %>% #reorder Treatment
-  mutate(Treatment = factor(Treatment, levels = c("W", "BH", "BQ", "DM", "DL"))) %>% 
+g.plot.wt <- dat %>% #reorder Treatment
+  mutate(Treatment = factor(Treatment, levels = c("D9BH", "D9BM", "D9BL", "D5BH", "D3BH"))) %>% 
   group_by(Treatment,Replicate) %>% ## first create a vector with the 
   summarise(plot.weight = sum(Weight)) %>% ## total biomass of each plot
   ggplot() + 
@@ -143,7 +161,7 @@ g.plot.wt <- algaedata %>% #reorder Treatment
   geom_point(alpha = 0.1) + 
   geom_violin(fill = NA) +
   theme_classic() +
-  ylab(expression("Plot Biomass (g wet wt)") )
+  ylab(expression("Patch Biomass (g wet wt)") )
 
 
 g.plot.wt
@@ -160,7 +178,7 @@ ggsave(filename = paste0(FIGS_PATH, "/Alg.wt.png"),
        height = 6,
        dpi = 600)
 
-ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.eps"),
+ggsave(filename = paste0(FIGS_PATH, "/Alg.plot.wt.png"),
        g.plot.wt,
        width = 8.4,
        height = 6,
@@ -173,7 +191,7 @@ ggsave(filename = paste0(FIGS_PATH, "/big.Alg.plot.wt.png"),
        width = 20,
        height = 10,
        units = "cm",
-       dpi = 6000)
+       dpi = 600)
 
 
 
