@@ -7908,7 +7908,7 @@ library(ggordiplots)
 
 disp.plot <- gg_ordiplot(fish.disp, groups = fish.wide.end$Treatment,
                          hull = TRUE, #add hulls
-                         label = TRUE, #add labels to centroids
+                         label = FALSE, #don't add labels to centroids
                          ellipse = FALSE, #remove ellipses
                          plot = FALSE) #don't show plot (instead write the object)
 
@@ -7920,8 +7920,10 @@ labels <- c(BH = "D9BM", W = "D9BH", BQ ="D9BL", DM = "D5BH", DL = "D3BH")
     geom_vline(xintercept=0, linetype='dotted') + #add some lines
     scale_x_continuous(breaks = c(-.4,-.3,-.2,-.1,0,.1,.2,.3,.4), #adjust ticks
                                                limits = c(-0.45,0.45) ) +
+    
     labs(color = "Treatment") + #change legend label
-    scale_colour_discrete(labels = labels) + #change labels
+    scale_colour_discrete(breaks = c("W", "BH", "BQ", "DM", "DL"), #change legend order
+                          labels = labels) + #rename labels+ 
     theme_classic())
 
 
