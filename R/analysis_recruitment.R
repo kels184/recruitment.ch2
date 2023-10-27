@@ -7902,6 +7902,8 @@ permutest(fish.disp, pairwise = TRUE)
 
 plot(fish.disp)
 
+
+
 library(ggordiplots)
 
 disp.plot <- gg_ordiplot(fish.disp, groups = fish.wide.end$Treatment,
@@ -7910,6 +7912,8 @@ disp.plot <- gg_ordiplot(fish.disp, groups = fish.wide.end$Treatment,
                          ellipse = FALSE, #remove ellipses
                          plot = FALSE) #don't show plot (instead write the object)
 
+#replacement labels:
+labels <- c(BH = "D9BM", W = "D9BH", BQ ="D9BL", DM = "D5BH", DL = "D3BH")
 
 (disp.g <- disp.plot$plot + 
     geom_hline(yintercept=0, linetype='dotted') +
@@ -7917,6 +7921,7 @@ disp.plot <- gg_ordiplot(fish.disp, groups = fish.wide.end$Treatment,
     scale_x_continuous(breaks = c(-.4,-.3,-.2,-.1,0,.1,.2,.3,.4), #adjust ticks
                                                limits = c(-0.45,0.45) ) +
     labs(color = "Treatment") + #change legend label
+    scale_colour_discrete(labels = labels) + #change labels
     theme_classic())
 
 
