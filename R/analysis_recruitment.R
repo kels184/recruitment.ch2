@@ -4121,7 +4121,9 @@ write.csv(sd.cont.tbl, "clipboard")
 
 ## ---- recruitment univariate sd figures
 
-sd.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm2.rds"))
+
+
+sd.em$contrast %>% factor %>% levelssd.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm2.rds"))
 sd.brm2 %>% ggemmeans(~Treatment) %>% plot
 
 
@@ -4219,8 +4221,6 @@ g2.sd <- sd.em_mod %>%
   labs(y = "Contrast") + 
   geom_text(data = star.df, aes(y = contrast, x = Fit, label = stars))
 g1.sd + g2.sd
-
-sd.em$contrast %>% factor %>% levels
 
 sd.em$contrast <-  sd.em$contrast %>% 
   str_replace_all(c( "BH"= "D9BM", #this one first so BH in D9BH etc don't change
@@ -7342,16 +7342,16 @@ g2_figures <- lapply(g2_fig_names_ordered, get)  # Extract the figures associate
 
 
 # Function to get every second letter (a, c, e, ...)
-get_custom_letter1 <- function(i) {
-  letters[(i - 1) * 2 + 1]
-}
-get_custom_letter1(2)
+#get_custom_letter1 <- function(i) {
+#  letters[(i - 1) * 2 + 1]
+#}
+#get_custom_letter1(2)
 
 # Function to get every other letter (b, d, f, ...)
-get_custom_letter2 <- function(i) {
-  letters[(i - 1) * 2 + 2]
-}
-get_custom_letter2(6)
+#get_custom_letter2 <- function(i) {
+#  letters[(i - 1) * 2 + 2]
+#}
+#get_custom_letter2(6)
 
 # Apply formatting to the g1 figures (remove legend and add labels)
 g1_figures <- lapply(seq_along(g1_figures), function(i) {
@@ -7363,12 +7363,64 @@ g1_figures <- lapply(seq_along(g1_figures), function(i) {
                         #  axis.title.y = element_blank(), #remove y axis title --- be sure you know which is which!
                                 axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
                                 axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
-  ) +
-    labs(y = "Abundance", tag = get_custom_letter1(i)) + # Use every second letter for labels (a, c, e, ...)
-    theme(plot.tag = element_text(size = 10, #format tag letters
-                                  face = "bold") )# +
+  ) #+
+#    labs(y = "Abundance", tag = get_custom_letter1(i)) + # Use every second letter for labels (a, c, e, ...)
+ #   theme(plot.tag = element_text(size = 10, #format tag letters
+  #                                face = "bold") )# +
     #ylab("Abundance") #didn't work with the element_blank above
 })
+
+#Give each G1 figure it's species as an annotation, make Abundance the axis title
+
+g1_figures[[1]] <-  
+  g1_figures[[1]] + 
+  theme(axis.title.x = element_blank() ) + #remove x axis title
+  labs(y = "Abundance") + # set ylab
+     annotate("text", label = "Halichoeres miniatus", #add annotation text
+              x = 0.5, y = g1_figures[[1]]$data$Fit %>% max(), hjust = "inward", #position, 
+              size = 10/.pt, # size, divide by .pt
+              fontface = "italic")
+
+g1_figures[[2]] <-  g1_figures[[2]] + 
+  theme(axis.title.x = element_blank() ) + #remove x axis title
+  labs(y = "Abundance") + # set ylab
+  annotate("text", label = "Petroscirtes sp.", #add annotation text
+           x = 0.5, y = g1_figures[[2]]$data$Fit %>% max()*1.05, hjust = "inward", #position,
+           size = 10/.pt, # size, divide by .pt
+           fontface = "italic")
+
+g1_figures[[3]] <-  g1_figures[[3]] + 
+  theme(axis.title.x = element_blank() ) + #remove x axis title
+  labs(y = "Abundance") + # set ylab
+  annotate("text", label = "Pomacentrus tripunctatus", #add annotation text
+           x = 0.5, y = 8, hjust = "inward", #position,
+           size = 10/.pt, # size, divide by .pt
+           fontface = "italic")
+
+g1_figures[[4]] <-  g1_figures[[4]] + 
+  theme(axis.title.x = element_blank() ) + #remove x axis title
+  labs(y = "Abundance") + # set ylab
+  annotate("text", label = "Siganus doliatus", #add annotation text
+           x = 0.5, y = 6.5,hjust = "inward", #position, 
+           size = 10/.pt, # size, divide by .pt
+           fontface = "italic")
+
+g1_figures[[5]] <-  g1_figures[[5]] + 
+  theme(axis.title.x = element_blank() ) + #remove x axis title
+  labs(y = "Abundance") + # set ylab
+  annotate("text", label = "Lethrinus atkinsoni", #add annotation text
+           x = 0.5, y = 2, hjust = "inward", #position, 
+           size = 10/.pt, # size, divide by .pt
+           fontface = "italic")
+
+g1_figures[[6]] <-  g1_figures[[6]] + 
+  #theme(axis.title.x = element_blank() ) + #keep x axis title
+  labs(y = "Abundance") + # set ylab
+  annotate("text", label = "Siganus fuscescens", #add annotation text
+           x = 0.5, y = 1.8, hjust = "inward", #position, 
+           size = 10/.pt, # size, divide by .pt
+           fontface = "italic")
+
 
 # Apply formatting to the g2 figures (remove legend from all but the last, format last legend, add labels)
 g2_figures <- lapply(seq_along(g2_figures), function(i) {
@@ -7380,11 +7432,7 @@ g2_figures <- lapply(seq_along(g2_figures), function(i) {
                             axis.title.x = element_blank(), #remove axis title
                             axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
                             axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
-                            ) + 
-                              labs(tag = get_custom_letter2(i)) + # Use every second letter for labels (b, d, f, ...)
-                              theme(plot.tag = element_text(size = 10, 
-                                                            face = "bold"), 
-                                    plot.tag.position = c(0,1)) 
+                            ) 
   } else {
     # Format the last legend here (e.g., change position, title, etc.)
     g2_figures[[i]] + theme(text = element_text(colour = "black"), #make all font black
@@ -7397,36 +7445,31 @@ g2_figures <- lapply(seq_along(g2_figures), function(i) {
                             legend.background = element_blank(), #remove legend background box
                             axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
                             axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
-    )   + 
-      labs(tag = get_custom_letter2(i) ) + # Use every second letter for labels (b, d, f, ...)
-      theme(plot.tag = element_text(size = 10, 
-                                    face = "bold"), 
-            plot.tag.position = c(0,1)) 
+    ) 
   } 
 })
 
 
 
-# Combine the figures side by side using arrangeGrob
-combined_figures <- grid.arrange(
-  g1_figures[[1]], g2_figures[[1]],
+# Combine the figures side by side with cowplot
+library(cowplot)
+combined.figures <- plot_grid(
+    g1_figures[[1]], g2_figures[[1]],
   g1_figures[[2]], g2_figures[[2]],
   g1_figures[[3]], g2_figures[[3]],
   g1_figures[[4]], g2_figures[[4]],
   g1_figures[[5]], g2_figures[[5]],
   g1_figures[[6]],  g2_figures[[6]],
   ncol = 2,
-  widths = c(1, 1)  # Adjust the widths of columns as needed
+  align = "v",
+  axis = "l"
 )
-
-combined_figures %>% class()
-
-
-
+combined.figures
+combined.figures %>% class()
 ##SAVE the object
 
 ggsave(filename = paste0(FIGS_PATH, "/combined.both.eps"),
-      combined_figures,
+      combined.figures,
       width = 17.4,
       height = 23.4,
       units = "cm",
