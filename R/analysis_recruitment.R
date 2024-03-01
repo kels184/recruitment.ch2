@@ -7459,10 +7459,25 @@ View(g2_figures)
 library(cowplot)
 library(grid)
 library(gridExtra)
+#library(ggpubr)
 
 #combine figs with plot_grid
 
-plot_grid(plotlist = c(g1_figures,g2_figures), nrow = 6)
+#combined.figures <- plot_grid(
+#  g1_figures[[1]], g2_figures[[1]],
+#  g1_figures[[2]], g2_figures[[2]],
+#  g1_figures[[3]], g2_figures[[3]],
+#  g1_figures[[4]], g2_figures[[4]],
+#  g1_figures[[5]], g2_figures[[5]],
+#  g1_figures[[6]],  g2_figures[[6]],
+#  ncol = 2,
+#  align = "v",
+#  axis = "l",
+#  heights = c(1,0.5,1)
+#)
+
+
+#plot_grid(plotlist = c(g1_figures,g2_figures), nrow = 6)
 
 #left first
 combined.left <- plot_grid(plotlist = g1_figures, 
@@ -7479,7 +7494,7 @@ y.grob <-  textGrob("Abundance",
 #combine rights
 combined.right <- plot_grid(plotlist = g2_figures,
   ncol = 1,
-  rel_heights = c(rep(.63,5), 1)
+  rel_heights = c(rep(.84,5), 1)
 ) 
 combined.right
 
@@ -7488,6 +7503,8 @@ combined.figures <- plot_grid(y.grob, combined.left, combined.right,
                                ncol = 3,
                                rel_widths = c(0.05,1,1) )
  
+#ggarrange(combined_left,combined.right) #gridextra package test
+
 combined.figures
 #combined.figures %>% class()
 ##SAVE the object
