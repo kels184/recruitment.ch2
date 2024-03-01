@@ -4122,8 +4122,8 @@ write.csv(sd.cont.tbl, "clipboard")
 ## ---- recruitment univariate sd figures
 
 
+sd.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm2.rds"))
 
-sd.em$contrast %>% factor %>% levelssd.brm2 <- readRDS(file = paste0(DATA_PATH, "modelled/sd.brm2.rds"))
 sd.brm2 %>% ggemmeans(~Treatment) %>% plot
 
 
@@ -4894,7 +4894,7 @@ ps.em$contrast <-  ps.em$contrast %>%
                      "DL" = "D3BH"))
 
 
-g.pt. <- ps.em %>%
+g.ps.all <- ps.em %>%
   ggplot() +
   geom_vline(xintercept = 1, linetype = "dashed") +
   stat_slab(aes(
@@ -7353,12 +7353,13 @@ g2_figures <- lapply(g2_fig_names_ordered, get)  # Extract the figures associate
 #}
 #get_custom_letter2(6)
 
-# Apply formatting to the g1 figures (remove legend and add labels)
+# Apply formatting to the g1 figures (remove legend and add labels. remove x text,
+# except on sf)
 g1_figures <- lapply(seq_along(g1_figures), function(i) {
   g1_figures[[i]] + theme(legend.position = "none", #no legends
                                 text = element_text(colour = "black"), #make all font black
                                 axis.text=element_text(size=8, colour = "black"), #change font size of axis text
-                                axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), #rotate x text
+                                axis.text.x = element_blank(), #remove x text
                                 axis.title=element_text(size=10), #change font size of axis titles
                         #  axis.title.y = element_blank(), #remove y axis title --- be sure you know which is which!
                                 axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
@@ -7370,59 +7371,60 @@ g1_figures <- lapply(seq_along(g1_figures), function(i) {
     #ylab("Abundance") #didn't work with the element_blank above
 })
 
-#Give each G1 figure it's species as an annotation, make Abundance the axis title
+#Give each G1 figure it's species as an annotation, make Abundance the y axis title
 
 g1_figures[[1]] <-  
   g1_figures[[1]] + 
-  theme(axis.title.x = element_blank() ) + #remove x axis title
-  labs(y = "Abundance") + # set ylab
+  theme(axis.title = element_blank() ) + #remove x and y axis title
      annotate("text", label = "Halichoeres miniatus", #add annotation text
               x = 0.5, y = g1_figures[[1]]$data$Fit %>% max(), hjust = "inward", #position, 
               size = 10/.pt, # size, divide by .pt
               fontface = "italic")
 
-g1_figures[[2]] <-  g1_figures[[2]] + 
-  theme(axis.title.x = element_blank() ) + #remove x axis title
-  labs(y = "Abundance") + # set ylab
-  annotate("text", label = "Petroscirtes sp.", #add annotation text
+#Petroscirtes needs 2 fontfaces:
+
+g1_figures[[2]] <-  
+g1_figures[[2]] + 
+  theme(axis.title = element_blank() ) + #remove x and y titles
+  annotate("text", label = expression(italic("Petroscirtes") ~ plain("sp.")), #add annotation text
            x = 0.5, y = g1_figures[[2]]$data$Fit %>% max()*1.05, hjust = "inward", #position,
-           size = 10/.pt, # size, divide by .pt
-           fontface = "italic")
+           size = 10/.pt # size, divide by .pt
+           #fontface = c("italic", "plain") 
+           )
 
 g1_figures[[3]] <-  g1_figures[[3]] + 
-  theme(axis.title.x = element_blank() ) + #remove x axis title
-  labs(y = "Abundance") + # set ylab
+  theme(axis.title = element_blank() ) + #remove axis title
   annotate("text", label = "Pomacentrus tripunctatus", #add annotation text
            x = 0.5, y = 8, hjust = "inward", #position,
            size = 10/.pt, # size, divide by .pt
            fontface = "italic")
 
 g1_figures[[4]] <-  g1_figures[[4]] + 
-  theme(axis.title.x = element_blank() ) + #remove x axis title
-  labs(y = "Abundance") + # set ylab
+  theme(axis.title = element_blank() ) + #removeaxis titles
   annotate("text", label = "Siganus doliatus", #add annotation text
            x = 0.5, y = 6.5,hjust = "inward", #position, 
            size = 10/.pt, # size, divide by .pt
            fontface = "italic")
 
 g1_figures[[5]] <-  g1_figures[[5]] + 
-  theme(axis.title.x = element_blank() ) + #remove x axis title
-  labs(y = "Abundance") + # set ylab
+  theme(axis.title = element_blank() ) + 
   annotate("text", label = "Lethrinus atkinsoni", #add annotation text
            x = 0.5, y = 2, hjust = "inward", #position, 
            size = 10/.pt, # size, divide by .pt
            fontface = "italic")
 
-g1_figures[[6]] <-  g1_figures[[6]] + 
-  #theme(axis.title.x = element_blank() ) + #keep x axis title
-  labs(y = "Abundance") + # set ylab
+g1_figures[[6]] <- 
+  g1_figures[[6]] + 
+  theme(axis.title.y = element_blank() ) + #remove y but keep x title
   annotate("text", label = "Siganus fuscescens", #add annotation text
            x = 0.5, y = 1.8, hjust = "inward", #position, 
            size = 10/.pt, # size, divide by .pt
-           fontface = "italic")
+           fontface = "italic") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) #give x text, rotate)
 
 
-# Apply formatting to the g2 figures (remove legend from all but the last, format last legend, add labels)
+# Apply formatting to the g2 figures (remove legend from all but the last, 
+# format last legend, add labels, remove y title)
 g2_figures <- lapply(seq_along(g2_figures), function(i) {
   if (i < length(g2_figures)) {
     g2_figures[[i]] + theme(legend.position = "none",
@@ -7430,6 +7432,7 @@ g2_figures <- lapply(seq_along(g2_figures), function(i) {
                             axis.text=element_text(size=8, colour = "black"), #change font size of axis text
                             axis.title=element_text(size=10), #change font size of axis titles
                             axis.title.x = element_blank(), #remove axis title
+                            axis.title.y = element_blank(),
                             axis.line = element_line(linewidth = 0.3), #adjust axis-line thickness
                             axis.ticks= element_line(linewidth = 0.3) #adjust tick linewidth) 
                             ) 
@@ -7438,6 +7441,7 @@ g2_figures <- lapply(seq_along(g2_figures), function(i) {
     g2_figures[[i]] + theme(text = element_text(colour = "black"), #make all font black
                             axis.text=element_text(size=8, colour = "black"), #change font size of axis text
                             axis.title=element_text(size=10), #change font size of axis titles
+                            axis.title.y = element_blank(),
                             legend.text=element_text(size=8), #change font size of legend text
                             legend.title=element_text(size=8), #change font size of legend title
                             legend.justification=c(1,0), legend.position=c(1,0), #move legend to bottom right corner
@@ -7450,25 +7454,45 @@ g2_figures <- lapply(seq_along(g2_figures), function(i) {
 })
 
 
-
+View(g2_figures)
 # Combine the figures side by side with cowplot
 library(cowplot)
-combined.figures <- plot_grid(
-    g1_figures[[1]], g2_figures[[1]],
-  g1_figures[[2]], g2_figures[[2]],
-  g1_figures[[3]], g2_figures[[3]],
-  g1_figures[[4]], g2_figures[[4]],
-  g1_figures[[5]], g2_figures[[5]],
-  g1_figures[[6]],  g2_figures[[6]],
-  ncol = 2,
-  align = "v",
-  axis = "l"
-)
+library(grid)
+library(gridExtra)
+
+#combine figs with plot_grid
+
+plot_grid(plotlist = c(g1_figures,g2_figures), nrow = 6)
+
+#left first
+combined.left <- plot_grid(plotlist = g1_figures, 
+                           ncol = 1,
+                           align = "v",#align vertically
+                           axis = "l", #align by left margin
+                           rel_heights = c(rep(0.63,5),1)#adjust relative heights
+                           )
+combined.left
+#make common y label
+y.grob <-  textGrob("Abundance", 
+                    gp=gpar(fontface="plain", fontsize=10), rot=90)
+
+#combine rights
+combined.right <- plot_grid(plotlist = g2_figures,
+  ncol = 1,
+  rel_heights = c(rep(.63,5), 1)
+) 
+combined.right
+
+#combine y title, left and right
+combined.figures <- plot_grid(y.grob, combined.left, combined.right,
+                               ncol = 3,
+                               rel_widths = c(0.05,1,1) )
+ 
 combined.figures
-combined.figures %>% class()
+#combined.figures %>% class()
 ##SAVE the object
 
-ggsave(filename = paste0(FIGS_PATH, "/combined.both.eps"),
+ggsave(filename = paste0(FIGS_PATH, "/combined.both.MODIFIED.eps"),
       combined.figures,
       width = 17.4,
       height = 23.4,
