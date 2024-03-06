@@ -1,2 +1,2 @@
 # recruitment.ch2
-Analysis of my macroalgal structure - fish recruitment experiment PhD chapter
+Analyses pertaining to the paper "The influence of Sargassum biomass and thallus density on the recruitment of coral reef fishes", Webber et al. 2024, Coral Reefs
