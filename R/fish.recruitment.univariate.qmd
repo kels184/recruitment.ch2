@@ -414,7 +414,7 @@ Interestingly the model appears to explain more of the variance compared with th
 ```{r recruitment univariate sp all contrasts, results = 'markup', eval = TRUE }
 
 ```
-Similarly to the abundance model, there is high (>95%) confidence in differences in all contrasts EXCEPT BQ-DL
+ - Renderuit at this point due to 'sp.end.brm1f' not found Similarly to the abundance model, there is high (>95%) confidence in differences in all contrasts EXCEPT BQ-DL
 
 # HALICHOERES MINIATUS Abundance
 ## Fit
